@@ -562,6 +562,7 @@ class DAMAGETYPE(Set):
             self.damage = damage
 
         def __call__(self, damage=None):
+            print(565, 'call')
             if damage:  # use to set, or get the damage
                 self.damage = damage
             else:
@@ -571,21 +572,40 @@ class DAMAGETYPE(Set):
             return int(self.damage)
 
         def __str__(self):
-            return str(self.damage)
+            print(574, 'str', end=' ')
+            return self.__repr__()# str(self.damage)# + ' ' + self.__class__.__name__
 
-    class ACID(__Damage): pass
-    class BLUNT(__Damage): pass  # blunt force attack, punches, hammers, falling, crushing, etc
-    class COLD(__Damage): pass
-    class FIRE(__Damage): pass
-    class FORCE(__Damage): pass  # pure magical energy
-    class LIGHTNING(__Damage): pass
-    class NECROTIC(__Damage): pass
-    class PIERCING(__Damage): pass  # puncturing/impaling - spears, bites, arrows, etc.
-    class POISON(__Damage): pass
-    class PSYCHIC(__Damage): pass  # attacks on the mind
-    class RADIANT(__Damage): pass
-    class SLASHING(__Damage): pass  # cutting attacks, swords, axes, claws
-    class THUNDER(__Damage): pass  # concussive effects, a shock wave of sorts.
+        def __repr__(self):
+            print(578, 'repr', end=' ')
+            return str(self.damage) + ' ' + self.__class__.__name__
+
+    class ACID(__Damage):
+        def __init__(self, damage): super().__init__(damage)
+    class BLUNT(__Damage):
+        def __init__(self, damage): super().__init__(damage)    # blunt force attack, punches, hammers, falling, crushing, etc
+    class COLD(__Damage):
+        def __init__(self, damage): super().__init__(damage)
+
+    class FIRE(__Damage):
+        def __init__(self, damage): super().__init__(damage)
+    class FORCE(__Damage):
+        def __init__(self, damage): super().__init__(damage)  # pure magical energy
+    class LIGHTNING(__Damage):
+        def __init__(self, damage): super().__init__(damage)
+    class NECROTIC(__Damage):
+        def __init__(self, damage): super().__init__(damage)
+    class PIERCING(__Damage):
+        def __init__(self, damage): super().__init__(damage)  # puncturing/impaling - spears, bites, arrows, etc.
+    class POISON(__Damage):
+        def __init__(self, damage): super().__init__(damage)
+    class PSYCHIC(__Damage):
+        def __init__(self, damage): super().__init__(damage)  # attacks on the mind
+    class RADIANT(__Damage):
+        def __init__(self, damage): super().__init__(damage)
+    class SLASHING(__Damage):
+        def __init__(self, damage): super().__init__(damage)  # cutting attacks, swords, axes, claws
+    class THUNDER(__Damage):
+        def __init__(self, damage): super().__init__(damage)  # concussive effects, a shock wave of sorts.
 
 
 class ARMOR(Set):

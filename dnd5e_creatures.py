@@ -67,7 +67,6 @@ class Creature:
     def check_attack(self, target):
         # self.effects.attack(self, target=target)  # call attack event handler - trigger any registered attack
 
-
     def get_attack(self):
         # todo: events handler for attack
         # todo: replace with individual attack functions?
@@ -99,9 +98,6 @@ class Creature:
         else:
             attack_roll = roll1
         critical = attack_roll == 20
-
-
-
 
         attack = attack_roll + ability + weapon_bonus
         print('attack =', attack, '(', attack_roll, '+', proficiency, '+', ability, ')')

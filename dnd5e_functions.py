@@ -16,12 +16,11 @@ class GenericAttack:
 class GenericMelee(GenericAttack):
     atype = enums.ATTACK.MELEE  # todo: make sure atype is passed around on attacks
 
-    def __init__(self, name, to_hit, reach, targets, damage, dtypes):
+    def __init__(self, name, to_hit, reach, targets, damage):
         self.name = name
         self.to_hit = to_hit
         self.reach = reach
         self.targets = targets
-        self.dtypes = dtypes
         self.die = misc.Die(damage['die_qty'], damage['die_sides'])
         self.dtype = damage['dtype']
 
@@ -38,8 +37,7 @@ class GenericMelee(GenericAttack):
         damage = self.die.roll()
         for d in self.dtype:
             d(damage)
-
-        return
+        return self.dtype
 
 
 

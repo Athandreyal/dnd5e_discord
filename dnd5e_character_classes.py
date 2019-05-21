@@ -19,7 +19,7 @@ def init_wulfgar():
     weight = 223
     uid = 1
     experience = 0
-    level = 0
+    level = 5
     player_race = RACE.Human()
     player_class = CLASS.Barbarian(level)
     class_skills = {enums.SKILL.ATHLETICS, enums.SKILL.PERCEPTION}
@@ -63,9 +63,9 @@ class Equipped:
             self.left_hand = None
 
         if enums.WEAPONFLAGS.VERSATILE in weapon.flags and self.shield is None:
-            self.right_hand.attackDie = self.right_hand.die2
+            self.right_hand.attack_die = self.right_hand.die2
         else:
-            self.right_hand.attackDie = self.right_hand.die1
+            self.right_hand.attack_die = self.right_hand.die1
 
     def equip_armor(self, armor):
         self.armor = armor
@@ -145,7 +145,7 @@ class CharacterSheet:
         CHA += self.proficiency_bonus if enums.ABILITY.CHA in throws else 0
         return enums.Ability(STR, CON, DEX, INT, WIS, CHA)
 
-    def __repr__(self):
+    def full_str(self):
         s = '\n'
         s += 'Name: \t\t\t\t\t' + self.name + '\n'
         s += 'Age: \t\t\t\t\t' + '{:,}'.format(self.age) + ' yrs\n'
@@ -171,7 +171,7 @@ class CharacterSheet:
         s += 'Proficiency: Weapons: \t' + str(self.proficiency_weapons) + '\n'
         s += 'Proficiency: Armor: \t' + str(self.proficiency_armor) + '\n'
         s += 'Proficiency: Tools: \t' + str(self.proficiency_tools) + '\n'
-        s += 'Hitpoints: \t\t\t\t' + '{:,}'.format(self.hp) + '/' +'{:,}'.format(self.hp_max)+'\n'
+        s += 'Hitpoints: \t\t\t\t' + '{:,}'.format(self.hp) + '/' + '{:,}'.format(self.hp_max)+'\n'
         s += 'HitDice: \t\t\t\t' + str(self.level) + ' d' + str(self.player_class.hitDie) + '\n'
         s += 'Initiative: \t\t\t' + str(self.initiative) + '\n'
         s += 'Speed: \t\t\t\t\t' + str(self.player_race.speed) + 'ft/round\n'
@@ -193,7 +193,7 @@ class CharacterSheet:
                 'hp': '{:,}'.format(self.hp) + '/' + '{:,}'.format(self.hp_max),
                 }
 
-    def get_armor_class(self, atype):  # todo: apply modifiers from various traits, statuses, and spell effects
+    def get_armor_class(self):  # todo: apply modifiers from various traits, statuses, and spell effects
         # DETERMINE WHAT AC FORMULAS CAN BE USED FOR CHARACTER
         #   CLASSES CAN HAVE DEFENSIVE ARMOR CALCULATIONS(BARBARIAN UNARMORED DEFENCE FOR EXAMPLE)
         # DETERMINE WHICH YIELDS HIGHEST RESULT
@@ -202,9 +202,6 @@ class CharacterSheet:
         #   SHIELDS TO NOT HAVE A CALCULATION, THEY SIMPLY ADD 2 TO AC, AS AN EXAMPLE
         # RETURN RESULT
 
-        # atype is type of attack, melee, ranged, arcane, etc.
-        # todo: ensure atype is obeyed
-        if atype: pass  # simply using it to silence the unused error for now.
         # todo: throw defence event related to specific attack type, modify ac if necessary - may need to return
         #  statuses from here for thorns like effects
 
@@ -224,20 +221,45 @@ class CharacterSheet:
 
             return armor_class
 
-    def right_hand_weapon_attack(self, target):
+    def melee_attack(self):
         # todo: deal with multiple damage types
-        self.effects.attack(self, target=target)  # call attack event handler - trigger any registered attack
-        advantage = enums.ADVANTAGE.ATTACK in self.advantage
-        disadvantage = enums.ADVANTAGE.ATTACK in self.disadvantage
-        lucky = enums.TRAIT.LUCKY in self.traits
-        attack_roll, critical = misc.attack_roll(advantage, disadvantage, lucky=lucky)
+        # todo: make effects.attack return the effects for the target to apply to itself.
+        effects = self.effects.attack(self)  # call attack event handler - trigger any registered attack
+        #     return any effects which require a target - like poison effects.
+#        advantage = enums.ADVANTAGE.ATTACK in self.advantage
+#        disadvantage = enums.ADVANTAGE.ATTACK in self.disadvantage
+#        lucky = enums.TRAIT.LUCKY in self.traits
+#        attack_roll, critical = misc.attack_roll(advantage, disadvantage, lucky=lucky)
+        # todo: implement usage of reach value
+#        damage = weapon.attack_die.roll() + weapon.bonus_die.roll() if weapon.bonus_die else 0 + weapon.bonus_damage
 
+        attacks = {'num': 1}
+        if enums.CLASS_TRAITS.EXTRA_ATTACK in self.traits:
+            attacks['num'] += 1
 
-    def check_attack(self, target):
+        # is storing two of the same reference
+
+        attacks['effects'] = effects
+        attacks['calculation'] = self.wpn
+        attacks['weapons'] = self.equipment.right_hand, self.equipment.left_hand
+        return attacks
+
+    def wpn(self, hand: weaponry.Weapon = None):
+        while True:
+            if hand is None:
+                yield 0
+            damage = hand.attack_die.roll()
+            if damage == 1 and enums.TRAIT.LUCKY in self.traits:
+                damage = hand.attack_die.roll()
+            damage += hand.bonus_die.roll() if hand.bonus_die is not None else 0
+            damage += hand.bonus_damage
+            yield [d(damage) for d in hand.damage_type], hand.attack_function
+
+    def check_attack(self):
         # todo: deal with multiple damage types
-        self.effects.attack(self, target=target)  # call attack event handler - trigger any registered attack
+        effects = self.effects.attack(self, target=True)
         attack, damage = self.get_attack()
-        return 0, None if attack < target.get_armor_class() else damage, self.equipment.right_hand.damage_types[0]
+        return damage, self.equipment.right_hand.damage_types[0]
 
     def take_damage(self, damage):
         # todo: handle death, incapacitation, etc.
@@ -262,7 +284,7 @@ class CharacterSheet:
         damage = damage * (2 if critical else 1)
 
         print('damage =', damage, 'critical =', critical)
-        return attack,
+        return attack, critical
 
     class Effect:
         # todo: complete the event system for player characters
@@ -303,7 +325,9 @@ class CharacterSheet:
 
             def __call__(self, *args, **kwargs):
                 for f in self:
-                    f(*args, **kwargs)
+                    respond = f(*args, **kwargs)
+                if 'target' in kwargs:
+                    return respond  # todo catch and return the results of each event for return to caller
 
             def __repr__(self):
                 return 'Event(%s)' % re.sub('["[\]]', '', json.dumps([x.__name__ for x in self]))
@@ -400,6 +424,40 @@ class CharacterSheet:
 #   determines by effect that causes it, spells are determined via spellcasting and proficiency bonus
 
 
-#wulfgar = init_wulfgar()
-#print(wulfgar)
+if __name__ == '__main__':
+    from inspect import getframeinfo, stack
+    import os
+    __LINE__ = lambda: os.path.basename(getframeinfo(stack()[1][0]).filename) \
+        + '_' + str(getframeinfo(stack()[1][0]).lineno) + ': '
+    wulfgar = init_wulfgar()
+    print(wulfgar, '\n\n', wulfgar.dict_short(), '\n', wulfgar.full_str())
+
+    print('\n\n\t\t****************************')
+    print('\t\t***   get attack debug   ***')
+    print('\t\t****************************\n\n')
+    print(__LINE__(), wulfgar.melee_attack())
+
+    attack = wulfgar.melee_attack()
+    print(__LINE__(), attack)
+    sys.stdout.flush()
+
+    results = [None, None]
+    calculation = attack['calculation']
+    for n in range(attack['num']):
+        results[n] = calculation(attack['weapons'][n])
+    print(__LINE__(), results)
+    results2 = []
+    for d in attack['weapons'][0].damage_type:
+        print(__LINE__(), d)
+    for n in range(len(results)):
+        for a in range(attack['num']):
+            print(__LINE__(), str(n)+'_'+str(a), attack['weapons'][n], attack['weapons'][n] is not None)
+            if attack['weapons'][n] is not None:
+                print(__LINE__(), attack['weapons'][n].damage_type)
+                damage = results[n].__next__()[0]
+                print(__LINE__(), damage)
+                [results2.append(damage) for x in attack['weapons'][n].damage_type]
+                print(__LINE__(), results2)
+    print(__LINE__(), 'attacks and damage types:', results2)
+
 

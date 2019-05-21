@@ -60,6 +60,10 @@ class Die:  # ....dice, not death...
         self.qty = qty
         self.sides = max(2, sides)
 
+    def random(self, upper):
+        while True:
+            yield int(random.random() * (self.sides - 1) + 0.5) + 1
+
     # n is number of dice to roll
     # d is number of sides for the die, minimum 2
     # bonus is roll bonus, added to sum after rolls, default 0
@@ -71,7 +75,7 @@ class Die:  # ....dice, not death...
         while iterations > 0:
             n_dice = self.qty
             while n_dice > 0:
-                result += random.randint(1, self.sides)
+                result += self.random(self.sides).__next__()
                 n_dice -= 1
             iterations -= 1
             result += bonus
@@ -127,3 +131,8 @@ def getAdvantage(a, b):
         return False, False
     else:
         return adv, dadv
+
+
+if __name__ == '__main__':
+    die = Die(1, 20)
+    print(die, die.roll(), die.roll(), die.roll())

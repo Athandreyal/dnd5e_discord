@@ -50,16 +50,16 @@ class Weapon(items.Item):
         self.hit_bonus = hit_bonus
         if self.hit_bonus is None:
             self.hit_bonus = 0
-        self.attackDie = None  # set at runtime when equipped
-        self.equipFunction = equip_function
+        self.attack_die = None  # set at runtime when equipped
+        self.equip_function = equip_function
         self.attack_function = attack_function  # todo, implement attack functions
 
     roll = lambda self: 0 if self.attackDie is None else self.attackDie.roll()
     damage = lambda self, hand: self.roll() + self.bonus_damage + (self.bonus_die.roll() if self.bonus_die else 0)
 
     def __repr__(self):
-        s = self.name + ', '
-        s += str(self.attackDie)
+        s = self.name + ': '
+        s += str(self.attack_die)
         s += '' if not self.bonus_damage else (' +%d' % self.bonus_damage)
         s += '' if not self.bonus_die else (' + ' + str(self.bonus_die))
         return s
@@ -83,6 +83,6 @@ greataxe = Weapon(  # todo: config limiting
                     reach=0,
                     ranges=(0, 0),  # for thrown / ranged attacks, (standard, extended) - disadvantage on extended
                     flags={WEAPONFLAGS.VERSATILE},
-                    equip_function=None,  # the name of a function which executes a special effect on the target
+                    equip_function=None,  # the function which executes a special effect on the  target
                     attack_function=None,
                     )

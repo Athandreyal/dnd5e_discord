@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="AnalysisUIOptions">
-    <option name="SCOPE_TYPE" value="3" />
-  </component>
   <component name="ChangeListManager">
-    <list default="true" id="ce54a110-60b4-4b2f-b783-675197c55daf" name="Default Changelist" comment="" />
+    <list default="true" id="ce54a110-60b4-4b2f-b783-675197c55daf" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dnd5e_character_classes.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_character_classes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dnd5e_creatures.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_creatures.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dnd5e_encounter.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_encounter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dnd5e_enums.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_enums.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dnd5e_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_functions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dnd5e_misc.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_misc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dnd5e_weaponry.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_weaponry.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -12,7 +20,121 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf />
+    <splitter split-orientation="horizontal" split-proportion="0.4551101">
+      <split-first>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/dnd5e_encounter.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="471">
+                  <caret line="52" column="44" lean-forward="true" selection-start-line="52" selection-start-column="44" selection-end-line="52" selection-end-column="44" />
+                  <folding>
+                    <element signature="e#36#79#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/dnd5e_enums.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="2406">
+                  <caret line="587" lean-forward="true" selection-start-line="587" selection-end-line="587" />
+                  <folding>
+                    <element signature="e#22944#22964#0" expanded="true" />
+                    <element signature="e#23032#23165#0" expanded="true" />
+                    <element signature="e#23193#23216#0" expanded="true" />
+                    <element signature="e#23288#23383#0" expanded="true" />
+                    <element signature="e#23442#23538#0" expanded="true" />
+                    <element signature="e#23478#23496#0" expanded="true" />
+                    <element signature="e#23574#23664#0" expanded="true" />
+                    <element signature="e#23727#23751#0" expanded="true" />
+                    <element signature="e#23815#23839#0" expanded="true" />
+                    <element signature="e#23903#23950#0" expanded="true" />
+                    <element signature="e#24018#24042#0" expanded="true" />
+                    <element signature="e#24109#24133#0" expanded="true" />
+                    <element signature="e#24200#24277#0" expanded="true" />
+                    <element signature="e#24342#24366#0" expanded="true" />
+                    <element signature="e#24432#24479#0" expanded="true" />
+                    <element signature="e#24545#24569#0" expanded="true" />
+                    <element signature="e#24636#24700#0" expanded="true" />
+                    <element signature="e#24766#24836#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-first>
+      <split-second>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/dnd5e_character_classes.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="163">
+                  <caret line="433" lean-forward="true" selection-start-line="433" selection-end-line="433" />
+                  <folding>
+                    <element signature="e#0#27#0" expanded="true" />
+                    <element signature="e#232#1440#0" expanded="true" />
+                    <element signature="e#1550#1655#0" expanded="true" />
+                    <element signature="e#1697#2044#0" expanded="true" />
+                    <element signature="e#2090#2474#0" expanded="true" />
+                    <element signature="e#6162#8531#0" expanded="true" />
+                    <element signature="e#8924#10372#0" expanded="true" />
+                    <element signature="e#10225#11306#0" expanded="true" />
+                    <element signature="e#11461#11881#0" expanded="true" />
+                    <element signature="e#12272#13386#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/dnd5e_weaponry.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="328">
+                  <caret line="64" column="16" lean-forward="true" selection-start-line="64" selection-start-column="16" selection-end-line="64" selection-end-column="16" />
+                  <folding>
+                    <element signature="e#0#27#0" expanded="true" />
+                    <element signature="e#1242#2427#0" expanded="true" />
+                    <element signature="e#2656#2874#0" expanded="true" />
+                    <element signature="e#2899#2921#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/dnd5e_creatures.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="226">
+                  <caret line="34" column="30" selection-start-line="34" selection-start-column="30" selection-end-line="34" selection-end-column="30" />
+                  <folding>
+                    <element signature="e#0#27#0" expanded="true" />
+                    <element signature="e#2544#2583#0" expanded="true" />
+                    <element signature="e#2768#4230#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/dnd5e_functions.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="481">
+                  <caret line="37" column="28" lean-forward="true" selection-start-line="37" selection-start-column="28" selection-end-line="37" selection-end-column="28" />
+                  <folding>
+                    <element signature="e#213#238#0" expanded="true" />
+                    <element signature="e#720#928#0" expanded="true" />
+                    <element signature="e#962#1000#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-second>
+    </splitter>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -49,6 +171,7 @@
       <find>deadly</find>
       <find>DRACON_</find>
       <find>Damage</find>
+      <find>def __init__(self): super().__init__()</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -73,10 +196,12 @@
       <replace>= {</replace>
       <replace>Deadly</replace>
       <replace>DRACONIC_</replace>
+      <replace>def __init__(self, damage): super().__init__(damage)</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
     <option name="ROOT_SYNC" value="DONT_SYNC" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -88,18 +213,19 @@
         <option value="$PROJECT_DIR$/dnd5e_armor.py" />
         <option value="$PROJECT_DIR$/dnd5e.py" />
         <option value="$PROJECT_DIR$/encounter.py" />
-        <option value="$PROJECT_DIR$/dnd5e_weaponry.py" />
         <option value="$PROJECT_DIR$/dnd5e_classes.py" />
         <option value="$PROJECT_DIR$/dnd5e_races.py" />
-        <option value="$PROJECT_DIR$/dnd5e_enums.py" />
         <option value="$PROJECT_DIR$/dnd5e_creatures.py" />
-        <option value="$PROJECT_DIR$/dnd5e_misc.py" />
         <option value="$PROJECT_DIR$/dnd5e_functions.py" />
+        <option value="$PROJECT_DIR$/dnd5e_encounter.py" />
+        <option value="$PROJECT_DIR$/dnd5e_weaponry.py" />
+        <option value="$PROJECT_DIR$/dnd5e_enums.py" />
+        <option value="$PROJECT_DIR$/dnd5e_misc.py" />
         <option value="$PROJECT_DIR$/dnd5e_character_classes.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="1">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="14" />
     <option name="y" value="186" />
     <option name="width" value="1658" />
@@ -111,24 +237,25 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
             <path>
-              <item name="DnD 5e" type="b2602c69:ProjectViewProjectNode" />
-              <item name="DnD 5e" type="462c0819:PsiDirectoryNode" />
+              <item name="dnd5e_discord" type="b2602c69:ProjectViewProjectNode" />
+              <item name="dnd5e_discord" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="last_opened_file_path" value="C:/Program Files/Git/bin/git.exe" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="vcs.Git" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -152,7 +279,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.dnd5e_races">
+  <component name="RunManager" selected="Python.dnd5e_character_classes">
     <configuration name="dnd5e_character_classes" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="DnD 5e" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -174,27 +301,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="dnd5e_creatures" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="DnD 5e" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/dnd5e_creatures.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="dnd5e_enums" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="DnD 5e" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -208,6 +314,27 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/dnd5e_enums.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="dnd5e_misc" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="DnD 5e" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/dnd5e_misc.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -260,11 +387,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.dnd5e_races" />
-        <item itemvalue="Python.encounter" />
-        <item itemvalue="Python.dnd5e_creatures" />
         <item itemvalue="Python.dnd5e_character_classes" />
         <item itemvalue="Python.dnd5e_enums" />
+        <item itemvalue="Python.dnd5e_misc" />
+        <item itemvalue="Python.dnd5e_races" />
+        <item itemvalue="Python.encounter" />
       </list>
     </recent_temporary>
   </component>
@@ -291,27 +418,55 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="14" y="186" width="1658" height="1000" extended-state="1" />
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info id="Favorites" order="0" side_tool="true" />
-      <window_info active="true" content_ui="combo" id="Project" order="1" visible="true" weight="0.12407407" />
+      <window_info content_ui="combo" id="Project" order="1" visible="true" weight="0.06691254" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Inspection Results" order="0" weight="0.32900432" />
+      <window_info anchor="bottom" id="Metrics" weight="0.18073593" />
+      <window_info active="true" anchor="bottom" id="Inspection Results" order="0" visible="true" weight="0.32900432" />
       <window_info anchor="bottom" id="Terminal" order="1" weight="0.32900432" />
       <window_info anchor="bottom" id="Event Log" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Python Console" order="3" />
+      <window_info active="true" anchor="bottom" id="Python Console" order="3" visible="true" weight="0.32900432" />
       <window_info anchor="bottom" id="Message" order="4" />
       <window_info anchor="bottom" id="Find" order="5" />
       <window_info anchor="bottom" id="Run" order="6" weight="0.267316" />
-      <window_info anchor="bottom" id="Version Control" order="7" />
+      <window_info anchor="bottom" id="Version Control" order="7" weight="0.32900432" />
       <window_info anchor="bottom" id="Debug" order="8" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="9" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="10" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="11" visible="true" weight="0.35023043" />
+      <window_info anchor="bottom" id="TODO" order="11" weight="0.08766234" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
     </layout>
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="RECENTLY_FILTERED_USER_GROUPS">
+                <collection />
+              </option>
+              <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
+                <collection />
+              </option>
+              <option name="COLUMN_ORDER">
+                <list>
+                  <option value="0" />
+                  <option value="1" />
+                  <option value="2" />
+                  <option value="3" />
+                </list>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="true" />
@@ -417,170 +572,123 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dnd5e_misc.py">
+    <entry file="file://$PROJECT_DIR$/encounter.py" />
+    <entry file="file://$PROJECT_DIR$/dnd5e_classes.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-247">
-          <caret line="17" column="40" selection-start-line="17" selection-start-column="40" selection-end-line="17" selection-end-column="40" />
+        <state relative-caret-position="214">
+          <caret line="22" column="22" lean-forward="true" selection-start-line="22" selection-start-column="22" selection-end-line="22" selection-end-column="22" />
           <folding>
-            <element signature="e#0#13#0" expanded="true" />
-            <element signature="e#3249#3289#0" expanded="true" />
-            <element signature="e#3322#3344#0" expanded="true" />
-            <element signature="e#3570#4157#0" expanded="true" />
-            <element signature="e#4213#4635#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dnd5e_enums.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="286">
-          <caret line="22" lean-forward="true" selection-start-line="22" selection-end-line="22" />
-          <folding>
-            <element signature="e#24#53#0" expanded="true" />
-            <element signature="e#442#699#0" expanded="true" />
-            <element signature="e#3547#4217#0" expanded="true" />
-            <element signature="e#4338#4531#0" expanded="true" />
-            <element signature="e#3513#3712#0" expanded="true" />
-            <element signature="e#4049#4198#0" expanded="true" />
-            <element signature="e#4888#5110#0" expanded="true" />
-            <element signature="e#5165#5307#0" expanded="true" />
-            <element signature="e#4694#5116#0" expanded="true" />
-            <element signature="e#5473#7912#0" expanded="true" />
-            <element signature="e#7940#8766#0" expanded="true" />
-            <element signature="e#8795#8846#0" expanded="true" />
-            <element signature="e#8791#8905#0" expanded="true" />
-            <element signature="e#9370#9466#0" expanded="true" />
-            <element signature="e#9704#9796#0" expanded="true" />
-            <element signature="e#9386#9419#0" expanded="true" />
-            <element signature="e#9477#9510#0" expanded="true" />
-            <element signature="e#9573#9602#0" expanded="true" />
-            <element signature="e#9650#9681#0" expanded="true" />
-            <element signature="e#9728#9759#0" expanded="true" />
-            <element signature="e#9812#9845#0" expanded="true" />
-            <element signature="e#20763#20803#0" expanded="true" />
-            <element signature="e#20846#20863#0" expanded="true" />
-            <element signature="e#20866#20884#0" expanded="true" />
-            <element signature="e#20966#20989#0" expanded="true" />
-            <element signature="e#21063#21086#0" expanded="true" />
-            <element signature="e#21159#21182#0" expanded="true" />
-            <element signature="e#21254#21277#0" expanded="true" />
-            <element signature="e#21351#21374#0" expanded="true" />
-            <element signature="e#21454#21477#0" expanded="true" />
-            <element signature="e#22944#22964#0" expanded="true" />
-            <element signature="e#23031#23131#0" expanded="true" />
-            <element signature="e#23063#23086#0" expanded="true" />
-            <element signature="e#23126#23149#0" expanded="true" />
+            <element signature="e#0#25#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/dnd5e_weaponry.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="259">
-          <caret line="31" selection-start-line="31" selection-end-line="33" selection-end-column="52" />
+        <state relative-caret-position="328">
+          <caret line="64" column="16" lean-forward="true" selection-start-line="64" selection-start-column="16" selection-end-line="64" selection-end-column="16" />
           <folding>
             <element signature="e#0#27#0" expanded="true" />
-            <element signature="e#2546#2748#0" expanded="true" />
-            <element signature="e#2772#2794#0" expanded="true" />
-            <element signature="e#2661#3033#0" expanded="true" />
+            <element signature="e#1242#2427#0" expanded="true" />
+            <element signature="e#2656#2874#0" expanded="true" />
+            <element signature="e#2899#2921#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dnd5e_classes.py">
+    <entry file="file://$PROJECT_DIR$/dnd5e_enums.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="13">
-          <caret line="1" column="25" lean-forward="true" selection-start-line="1" selection-start-column="25" selection-end-line="1" selection-end-column="25" />
+        <state relative-caret-position="2406">
+          <caret line="587" lean-forward="true" selection-start-line="587" selection-end-line="587" />
           <folding>
-            <element signature="e#0#25#0" expanded="true" />
-            <element signature="e#1311#1521#0" expanded="true" />
-            <element signature="e#1818#1968#0" expanded="true" />
-            <element signature="e#2029#2151#0" expanded="true" />
-            <element signature="e#2209#5259#0" expanded="true" />
-            <element signature="e#5573#5745#0" expanded="true" />
-            <element signature="e#5806#6155#0" expanded="true" />
-            <element signature="e#6326#6492#0" expanded="true" />
-            <element signature="e#6598#6661#0" expanded="true" />
-            <element signature="e#6812#6978#0" expanded="true" />
-            <element signature="e#7119#7285#0" expanded="true" />
-            <element signature="e#7431#7597#0" expanded="true" />
-            <element signature="e#7736#7901#0" expanded="true" />
-            <element signature="e#8046#8212#0" expanded="true" />
-            <element signature="e#8355#8521#0" expanded="true" />
-            <element signature="e#8662#8828#0" expanded="true" />
-            <element signature="e#8975#9141#0" expanded="true" />
-            <element signature="e#9286#9452#0" expanded="true" />
-            <element signature="e#9595#9761#0" expanded="true" />
+            <element signature="e#22944#22964#0" expanded="true" />
+            <element signature="e#23032#23165#0" expanded="true" />
+            <element signature="e#23193#23216#0" expanded="true" />
+            <element signature="e#23288#23383#0" expanded="true" />
+            <element signature="e#23442#23538#0" expanded="true" />
+            <element signature="e#23478#23496#0" expanded="true" />
+            <element signature="e#23574#23664#0" expanded="true" />
+            <element signature="e#23727#23751#0" expanded="true" />
+            <element signature="e#23815#23839#0" expanded="true" />
+            <element signature="e#23903#23950#0" expanded="true" />
+            <element signature="e#24018#24042#0" expanded="true" />
+            <element signature="e#24109#24133#0" expanded="true" />
+            <element signature="e#24200#24277#0" expanded="true" />
+            <element signature="e#24342#24366#0" expanded="true" />
+            <element signature="e#24432#24479#0" expanded="true" />
+            <element signature="e#24545#24569#0" expanded="true" />
+            <element signature="e#24636#24700#0" expanded="true" />
+            <element signature="e#24766#24836#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/encounter.py">
+    <entry file="file://$PROJECT_DIR$/dnd5e_misc.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="546">
-          <caret line="42" column="33" selection-start-line="42" selection-start-column="33" selection-end-line="42" selection-end-column="33" />
+        <state relative-caret-position="372">
+          <caret line="89" lean-forward="true" selection-start-line="89" selection-end-line="89" />
           <folding>
-            <element signature="e#36#79#0" expanded="true" />
-            <element signature="e#206#225#0" expanded="true" />
-            <element signature="e#221#266#0" expanded="true" />
-            <element signature="e#343#393#0" expanded="true" />
-            <element signature="e#495#539#0" expanded="true" />
-            <element signature="e#594#638#0" expanded="true" />
-            <element signature="e#574#886#0" expanded="true" />
-            <element signature="e#1233#2984#0" expanded="true" />
-            <element signature="e#2689#4136#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dnd5e_functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="455">
-          <caret line="36" column="47" lean-forward="true" selection-start-line="36" selection-start-column="47" selection-end-line="36" selection-end-column="47" />
-          <folding>
-            <element signature="e#213#238#0" expanded="true" />
-            <element signature="e#590#827#0" expanded="true" />
-            <element signature="e#1076#1108#0" expanded="true" />
+            <element signature="e#0#13#0" expanded="true" />
+            <element signature="e#175#208#0" />
+            <element signature="e#1553#2232#0" />
+            <element signature="e#2480#2589#0" expanded="true" />
+            <element signature="e#2628#2705#0" expanded="true" />
+            <element signature="e#2852#3243#0" expanded="true" />
+            <element signature="e#3598#4185#0" expanded="true" />
+            <element signature="e#4255#4637#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/dnd5e_character_classes.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="32" column="34" selection-start-line="32" selection-start-column="34" selection-end-line="32" selection-end-column="34" />
+        <state relative-caret-position="163">
+          <caret line="433" lean-forward="true" selection-start-line="433" selection-end-line="433" />
           <folding>
             <element signature="e#0#27#0" expanded="true" />
-            <element signature="e#8927#10124#0" expanded="true" />
-            <element signature="e#10172#10713#0" expanded="true" />
-            <element signature="e#10179#10438#0" expanded="true" />
-            <element signature="e#10821#12635#0" expanded="true" />
+            <element signature="e#232#1440#0" expanded="true" />
+            <element signature="e#1550#1655#0" expanded="true" />
+            <element signature="e#1697#2044#0" expanded="true" />
+            <element signature="e#2090#2474#0" expanded="true" />
+            <element signature="e#6162#8531#0" expanded="true" />
+            <element signature="e#8924#10372#0" expanded="true" />
+            <element signature="e#10225#11306#0" expanded="true" />
+            <element signature="e#11461#11881#0" expanded="true" />
+            <element signature="e#12272#13386#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dnd5e_functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="481">
+          <caret line="37" column="28" lean-forward="true" selection-start-line="37" selection-start-column="28" selection-end-line="37" selection-end-column="28" />
+          <folding>
+            <element signature="e#213#238#0" expanded="true" />
+            <element signature="e#720#928#0" expanded="true" />
+            <element signature="e#962#1000#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dnd5e_encounter.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="471">
+          <caret line="52" column="44" lean-forward="true" selection-start-line="52" selection-start-column="44" selection-end-line="52" selection-end-column="44" />
+          <folding>
+            <element signature="e#36#79#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/dnd5e_creatures.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-8">
-          <caret line="38" column="23" lean-forward="true" selection-start-line="38" selection-start-column="23" selection-end-line="38" selection-end-column="23" />
+        <state relative-caret-position="226">
+          <caret line="34" column="30" selection-start-line="34" selection-start-column="30" selection-end-line="34" selection-end-column="30" />
           <folding>
             <element signature="e#0#27#0" expanded="true" />
-            <element signature="e#638#1616#0" expanded="true" />
-            <element signature="e#1441#1657#0" expanded="true" />
-            <element signature="e#1448#1657#0" expanded="true" />
             <element signature="e#2544#2583#0" expanded="true" />
-            <element signature="e#2792#4681#0" expanded="true" />
-            <element signature="e#2378#4319#0" expanded="true" />
-            <element signature="e#2879#2989#0" expanded="true" />
-            <element signature="e#5609#6597#0" expanded="true" />
-            <element signature="e#3537#3891#0" expanded="true" />
-            <element signature="e#4619#6513#0" expanded="true" />
-            <element signature="e#4376#6333#0" expanded="true" />
-            <element signature="e#5444#6262#0" expanded="true" />
-            <element signature="e#5551#5905#0" expanded="true" />
-            <element signature="e#8712#11241#0" expanded="true" />
-            <element signature="e#7780#8904#0" expanded="true" />
-            <element signature="e#7887#8547#0" expanded="true" />
+            <element signature="e#2768#4230#0" expanded="true" />
           </folding>
         </state>
       </provider>

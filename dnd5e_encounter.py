@@ -2,7 +2,7 @@
 import dnd5e_character_classes as character
 import dnd5e_creatures as creatures
 import random
-
+import dnd5e_misc as misc
 
 class Party:
     def __init__(self, *args):
@@ -38,11 +38,34 @@ class Encounter:
         while self.hostile_party.is_able() and self.player_party.is_able():
             for entity in initiative_list:  # take turns in order of initiative
                 if entity in self.player_party:
-                    target = random.choice(self.hostile_party.able_bodied())
-                    #     todo: a more intelligent target selection process than random
-                    damage, dtype = entity.check_attack(target)
-                    target.receive_damage(damage, dtype)
+                    # todo: present choice of action to script/both parties players
+                    # todo: a more intelligent target selection process than random choice
+                    # todo: complete this attack process from outside both CharacterSheet and Creature
+                    # when entity attacks a target:
+                    #     get entity attack criteria
+                    #         throw entity attack event(s)
+                    #         respond with damage, dtypes, effects function(s) for application to target on success
+                    #             target executes on self if success
+                    #     get target defence criteria
+                    #         throw target defence events(s)
+                    #         respond with armor_class, effects function(s) for application to entity
+                    #             entity executes on self on attack success/fail
+                    #     if attack succeeds
+                    #         call target.receive_damage to give damage to target
+                    #         call target.receive_effects give effects to the target
+                    attacks = entity.melee_attack()
 
+                    for attack in attacks:
+
+                        target = random.choice(self.hostile_party.able_bodied())
+                        advantage, disadvantage = misc.getAdvantage(entity, target)
+                        attack_roll, critical = misc.attack_roll(advantage, disadvantage, entity.is_lucky())
+                        misc.Roll(1, 20) + attack_roll + atk_bonus
+
+                        # todo: currently assuming all attacks are melee attacks - allow selection and grabbing the
+                        #  appropriate functions.
+                        damage_die, dtypes, effects = entity.melee_attack(target)
+                        target.receive_damage(damage, dtype)
 
     def generate_hostile(self, difficulty):
         # todo: make this obey region themes - no dryads among the undead....
@@ -86,7 +109,6 @@ class Encounter:
 
 # todo: write a proper encounter generator which can poll the list of available creates, pick from there, and maintain
 #  a theme if relevant
-
 
 XP_thresholds = {
      1:  {'Easy':   25, 'Normal':   50, 'Hard':   75, 'Deadly':   100},
