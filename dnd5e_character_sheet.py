@@ -58,7 +58,7 @@ class CharacterSheet(Entity):
     def level_up(self):
         # todo: run all statuses/traits to get their combined additional effects
         #  subtract those effects from the character, re-init() the character, re-apply all the statuses/traits
-        print('Level up!')
+#        print('Level up!')
         self.level += 1
         self.hp_dice += misc.Die(1, self.player_class.hitDie).roll()
         self.__init__(name=self.name, age=self.age, height=self.height, weight=self.weight, uid=self.uid,
@@ -152,6 +152,7 @@ class CharacterSheet(Entity):
                 'name': self.name,
                 'race': self.player_race.name,
                 'class': self.player_class.name,
+                'level': self.level,
                 'hp': '{:,}'.format(self.hp) + '/' + '{:,}'.format(self.hp_max),
                 }
 
