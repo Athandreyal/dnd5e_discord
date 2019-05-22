@@ -53,7 +53,7 @@ class Weapon(items.Item):
         self.equip_function = equip_function
         self.attack_function = attack_function  # todo, implement attack functions
 
-    roll = lambda self: 0 if self.attackDie is None else self.attackDie.roll()
+    roll = lambda self: 0 if self.attack_die is None else self.attack_die.roll()
     damage = lambda self, hand: self.roll() + self.bonus_damage + (self.bonus_die.roll() if self.bonus_die else 0)
 
     def __repr__(self):

@@ -31,7 +31,8 @@ class Party:
             d = m.dict_short()
             s += d['name'] + ': '
             if isinstance(m, character.CharacterSheet):
-                s += 'EXP: ' + str(m.experience)+',  '
+                s += 'LVL: ' + str(m.level) + ',  '
+                s += 'EXP: ' + str(m.experience) + ',  '
             s += 'HP: ' + d['hp']
             s += '\n'
         return s
@@ -58,6 +59,7 @@ class Encounter:
                                  key=lambda x: x.initiative, reverse=True)
         attack_die = misc.Die(1,20)
         while self.hostile_party.is_able() and self.player_party.is_able():
+ #           terminate = False
             for entity in initiative_list:  # take turns in order of initiative
                 # todo: present choice of action to script/both parties players
                 # todo: a more intelligent target selection process than random choice
@@ -83,9 +85,8 @@ class Encounter:
                 damages = []
                 for atk in range(attacks['num']):
                     for weapon in attacks['weapons']:
-                        if weapon is not None:
-                            if isinstance(entity, character.CharacterSheet):
-                                player = True
+                        if weapon is not None and self.hostile_party.is_able() and self.player_party.is_able():
+                            player = isinstance(entity, character.CharacterSheet)
 
                             if player:
                                 target = random.choice(self.hostile_party.able_bodied())
@@ -117,10 +118,11 @@ class Encounter:
                                 else:
                                     self.player_party.members.remove(target)
                                 initiative_list.remove(target)
-                            input()
+
+        print('\n\n', str(self.player_party), end='')
         print('You have ' + ('won!' if self.player_party.is_able() else 'lost!'))
         input()
-        return self.reward if self.player_party.is_able() else 0
+        return self.reward if self.player_party.is_able() else {'xp': 0, 'gold': 0}
 
     def generate_hostile(self, difficulty):
         # todo: make this obey region themes - no dryads among the undead....
@@ -168,7 +170,9 @@ class Encounter:
                     hostiles.append(creature_list[0]())
                 else:
                     creature_list.pop(0)
-        reward_xp = int(hostile_xp ** 0.5)
+#        reward_xp = int(hostile_xp ** 0.5)
+        reward_xp = int(hostile_xp)
+        # todo, restore sqrt exp reward once done testing faster growth rates
         self.hostile_party = Party(*hostiles)
         self.reward = {'xp': reward_xp, 'gold': reward_gold}
 
@@ -206,8 +210,12 @@ XP_thresholds = {
 if __name__ == '__main__':
     from trace import __LINE__
     player = character.init_wulfgar()
-    while player.hp > 0:
-        encounter = Encounter(player_party=Party(player))
+    player2 = character.init_wulfgar()
+    while player.hp + player2.hp > 0:
+        encounter = Encounter(player_party=Party(player, player2))
         rewards = encounter.do_battle()
-        print(rewards)
-        player.experience += rewards['xp']
+        player.experience += rewards['xp']//2
+        player2.experience += rewards['xp']//2
+        player.hp = player.hp_max
+        player2.hp = player2.hp_max
+

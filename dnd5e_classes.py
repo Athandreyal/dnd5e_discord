@@ -38,7 +38,7 @@ class CommonFunctions:
 class Barbarian(CommonFunctions):
     name = 'Barbarian'
     hitDie = 12
-    class_ability = Ability(strength=15, constitution=14, dexterity=0, intelligence=0, wisdom=0, charisma=0)
+    #Ability(strength=0, constitution=0, dexterity=0, intelligence=0, wisdom=0, charisma=0)
     # unassigned [13,12,10,8]
     proficiencies = {PROFICIENCY.ARMOR.LIGHT, PROFICIENCY.ARMOR.MEDIUM, PROFICIENCY.SHIELDS,
                      PROFICIENCY.WEAPONS.SIMPLE, PROFICIENCY.WEAPONS.MARTIAL}
@@ -46,13 +46,22 @@ class Barbarian(CommonFunctions):
     skills = {SKILL.ANIMAL_HANDLING, SKILL.ATHLETICS, SKILL.INTIMIDATION, SKILL.NATURE, SKILL.PERCEPTION,
               SKILL.SURVIVAL}  # TODO : CHOOSE 2
 
-    def __init__(self, lvl):
+    def __init__(self, lvl, ability=None, skills=None, background=None, path=None):
+        self.class_ability = ability
+        if self.class_ability is None:
+            self.class_ability = Ability(strength=0, constitution=0, dexterity=0, intelligence=0, wisdom=0, charisma=0)
+
         if lvl == 0:
             self.lvl = 1
             self.wealth = 1000 * misc.Die(2, 4).roll()
-        self.skills = {SKILL.SURVIVAL, SKILL.NATURE}  # TODO: MAKE THIS A PLAYER CHOICE, PICK TWO FORM ABOVE.
+        self.skills = skills
+        if self.skills is None:
+            # TODO: MAKE THIS A PLAYER CHOICE, PICK TWO FROM ABOVE.
+            self.skills = {SKILL.SURVIVAL, SKILL.NATURE}
         self.proficiency_bonus = 2 + self.get_proficiency_bonus(lvl)
-        self.background = BACKGROUNDS.OUTLANDER  # TODO : make this player chosen
+        self.background = background
+        if self.background is None:
+            self.background = BACKGROUNDS.OUTLANDER  # TODO : make this player chosen
 
         # RAGE IS A BARBARIAN BONUS ACTION WITH FOLLOWING ADVANTAGES:
         #       ADV IN STR CHECKS AND SAVING THROWS
@@ -80,29 +89,42 @@ class Barbarian(CommonFunctions):
             self.traits.update({CLASS_TRAITS.PRIMAL_CHAMPION})
 
         # TODO: PERMIT CHOICE OF PATHS: BERSERKER, OR TOTEM WARRIOR
-        self.path = None
-        if lvl >= 3:
+        self.path = path
+        if self.path is None and lvl >= 3:
             self.path = 'Berserker'
         if self.path == 'Berserker':
             self.traits.update({CLASS_TRAITS.FRENZY})
-            self.traits.update({CLASS_TRAITS.MINDLESS_RAGE})
-            self.traits.update({CLASS_TRAITS.INTIMIDATING_PRESENCE})
-            self.traits.update({CLASS_TRAITS.RETALIATION})
+            if lvl >= 6:
+                self.traits.update({CLASS_TRAITS.MINDLESS_RAGE})
+            if lvl >= 10:
+                self.traits.update({CLASS_TRAITS.INTIMIDATING_PRESENCE})
+            if lvl >= 14:
+                self.traits.update({CLASS_TRAITS.RETALIATION})
         elif self.path == 'Bear_Totem_Warrior':
             self.traits.update({CLASS_TRAITS.SPIRIT_SEEKER, CLASS_TRAITS.BEAR_TOTEM})
-            self.traits.update({CLASS_TRAITS.ASPECT_OF_THE_BEAR})
-            self.traits.update({CLASS_TRAITS.SPIRIT_WALKER})
-            self.traits.update({CLASS_TRAITS.BEAR_ATTUNEMENT})
+            if lvl >= 6:
+                self.traits.update({CLASS_TRAITS.ASPECT_OF_THE_BEAR})
+            if lvl >= 10:
+                self.traits.update({CLASS_TRAITS.SPIRIT_WALKER})
+            if lvl >= 14:
+                self.traits.update({CLASS_TRAITS.BEAR_ATTUNEMENT})
         elif self.path == 'Eagle_Totem_Warrior':
             self.traits.update({CLASS_TRAITS.SPIRIT_SEEKER, CLASS_TRAITS.EAGLE_TOTEM})
-            self.traits.update({CLASS_TRAITS.ASPECT_OF_THE_EAGLE})
-            self.traits.update({CLASS_TRAITS.SPIRIT_WALKER})
-            self.traits.update({CLASS_TRAITS.EAGLE_ATTUNEMENT})
+            if lvl >= 6:
+                self.traits.update({CLASS_TRAITS.ASPECT_OF_THE_EAGLE})
+            if lvl >= 10:
+                self.traits.update({CLASS_TRAITS.SPIRIT_WALKER})
+            if lvl >= 14:
+                self.traits.update({CLASS_TRAITS.EAGLE_ATTUNEMENT})
         elif self.path == 'Wolf_Totem_Warrior':
             self.traits.update({CLASS_TRAITS.SPIRIT_SEEKER, CLASS_TRAITS.WOLF_TOTEM})
-            self.traits.update({CLASS_TRAITS.ASPECT_OF_THE_WOLF})
-            self.traits.update({CLASS_TRAITS.SPIRIT_WALKER})
-            self.traits.update({CLASS_TRAITS.WOLF_ATTUNEMENT})
+            if lvl >= 6:
+                self.traits.update({CLASS_TRAITS.ASPECT_OF_THE_WOLF})
+            if lvl >= 10:
+                self.traits.update({CLASS_TRAITS.SPIRIT_WALKER})
+            if lvl >= 14:
+                self.traits.update({CLASS_TRAITS.WOLF_ATTUNEMENT})
+        # todo: run all of the trait and status functions, so any bonuses are conferred immediately
 
         
 class Bard(CommonFunctions):

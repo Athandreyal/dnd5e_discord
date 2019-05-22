@@ -34,6 +34,7 @@ class Equipped:
                 self.equip_shield(e)
 
     def equip_weapon(self, weapon: weaponry.Weapon):
+        # todo: support dual wielding
         if weapon.wield_from is enums.EQUIP_SLOT.JAW:
             self.jaw = weapon
             self.jaw.attack_die = self.jaw.die1
@@ -50,6 +51,15 @@ class Equipped:
                     self.right_hand.attack_die = self.right_hand.die2
                 else:
                     self.right_hand.attack_die = self.right_hand.die1
+            else:
+                if self.right_hand.die1 is not None:
+                    self.right_hand.attack_die = self.right_hand.die1
+                elif self.right_hand.die2 is not None:
+                    self.right_hand.attack_die = self.right_hand.die2
+
+            if self.right_hand.attack_die is None:
+                from trace import __LINE__
+                print(__LINE__(), weapon.name, weapon.damage, weapon.flags)
 
     def equip_armor(self, _armor: armor.Armor):
         self.armor = _armor

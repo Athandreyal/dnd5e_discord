@@ -4,7 +4,7 @@ import dnd5e_misc as misc
 from dnd5e_enums import DAMAGETYPE, ATTACK, EQUIP_SLOT, WEAPONS
 from dnd5e_inventory import Equipped
 from dnd5e_events import Event
-
+from trace import __LINE__
 
 class Creature:
     # hp_dice is a 3 element tuple, or perhaps a dictionary for naming purposes.
@@ -29,6 +29,7 @@ class Creature:
         self.actions = actions
         self.equipment = Equipped()  # creatures technically have the full set of gear players do
         for action in self.actions:
+            print(__LINE__(), self.name, 'equipping', self.actions[action])
             self.equipment.equip(self.actions[action])  # todo, confirm this doesn't break anything
         self.initiative = self.abilities.DEX_MOD   # todo: proper initiative
         self.gold = None
@@ -103,7 +104,7 @@ class Creature:
         while True:
             if hand is None:
                 yield 0
-            damage = hand.attack_die.roll()
+            damage = hand.roll()
             if damage == 1 and enums.TRAIT.LUCKY in self.traits:
                 damage = hand.attack_die.roll()
             damage += hand.bonus_die.roll() if hand.bonus_die is not None else 0

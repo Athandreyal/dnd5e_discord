@@ -21,7 +21,7 @@ class CharacterSheet:
         self.weight = weight
         self.uid = uid
 
-        self.experience = experience
+        self._experience = experience
 
         self.player_race = race
         self.player_class = player_class
@@ -31,10 +31,15 @@ class CharacterSheet:
             self.level = 1
             self.hp_max = self.abilities.CON_MOD + self.player_class.hitDie
             self.hp = self.hp_max
+            self.hp_dice = self.hp_max
+
         else:
             self.level = level
             self.hp_max = hp_dice + (level - 1) * self.abilities.CON_MOD
             self.hp = hp_current
+            if self.hp is None:
+                self.hp = self.hp_max
+            self.hp_dice = hp_dice
 
         self.nextLevel = self.get_next_level_xp()
         self.proficiency_skills = skills
@@ -47,16 +52,43 @@ class CharacterSheet:
         self.initiative = self.abilities.DEX_MOD  # todo: proper initiative
         self.temporary_hitpoints = 0  # magical shielding, and such
         self.background = background
-        self.equipment = Equipped()
-        self.equipment.equip(equipment)  # todo: implement weapons/shields/armor
-        self.traits = self.player_race.traits
-        self.traits.update(self.player_class.traits)
+        if isinstance(equipment, Equipped):
+            self.equipment = equipment
+        elif equipment is None:
+            self.equipment = Equipped()
+        elif isinstance(equipment, list):
+            self.equipment = Equipped()
+            self.equipment.equip(equipment)  # todo: implement weapons/shields/armor
+        self.traits = self.player_race.traits.union(self.player_class.traits)
+#        self.traits.update(self.player_class.traits)
         self.effects = Event()  # use for trait/status effects - re-apply whenever character refreshes
         self.advantage = set()
         self.disadvantage = set()
         self.atk_bonus = 0
         self.damage_vulnerable = set()  # todo: implement damage vulnerabilities
         self.damage_resist = set()  # todo: implement damage resistances
+        # todo: execute init event - the always event
+
+    @property
+    def experience(self):
+        return self._experience
+
+    @experience.setter
+    def experience(self, xp):
+        self._experience = xp
+        if self.experience > self.get_next_level_xp():
+            self.level_up()
+
+    def level_up(self):
+        # todo: run all statuses/traits to get their combined additional effects
+        #  subtract those effects from the character, re-init() the character, re-apply all the statuses/traits
+        print('Level up!')
+        self.level += 1
+        self.hp_dice += misc.Die(1, self.player_class.hitDie).roll()
+        self.__init__(name=self.name, age=self.age, height=self.height, weight=self.weight, uid=self.uid,
+                      experience=self.experience, level=self.level, race=self.player_race,
+                      player_class=self.player_class, skills=self.proficiency_skills, background=self.background,
+                      abilities=self.abilities, hp_dice=self.hp_dice, hp_current=None, equipment=self.equipment)
 
     def set_saving_throws(self):  # todo: confirm if saving throws are modified by any races and include if so
         throws = self.player_class.saving_throws
@@ -207,7 +239,7 @@ class CharacterSheet:
         while True:
             if hand is None:
                 yield 0
-            damage = hand.attack_die.roll()
+            damage = hand.roll()
             if damage == 1 and enums.TRAIT.LUCKY in self.traits:
                 damage = hand.attack_die.roll()
             damage += hand.bonus_die.roll() if hand.bonus_die is not None else 0
