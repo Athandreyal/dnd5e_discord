@@ -4,69 +4,45 @@ import dnd5e_races as RACE
 import dnd5e_classes as CLASS
 import dnd5e_weaponry as weaponry
 import dnd5e_armor as armor
-from dnd5e_inventory import Equipped
 import json
-from dnd5e_events import Event
+from dnd5e_entity import Entity
 
 
-class CharacterSheet:
+class CharacterSheet(Entity):
     # todo: embed senses relevant to hostile detection for when it comes time to do battles  darkness is irrelevant
     #  if no one can see anyway and everyone knows where everyone is by default as a consequence.
 
-    def __init__(self, name, age, height, weight, uid, experience, level, race, player_class, skills, background,
+    def __init__(self, name, age, height, weight, uid, experience, level, player_race, player_class, skills, background,
                  abilities, hp_dice, hp_current, equipment):
-        self.name = name
+        if level == 0:  # fresh character init
+            self.level = 1
+            hp_max = abilities.CON_MOD + player_class.hitDie
+            self.hp_dice = hp_max
+        else:
+            self.level = level
+            hp_max = hp_dice + (level - 1) * abilities.CON_MOD
+            self.hp_dice = hp_dice
+        proficiency_bonus = player_class.get_proficiency_bonus(self.level)
+        traits = player_race.traits.union(player_class.traits)
+        super().__init__(name=name, traits=traits, abilities=abilities, hp=hp_current, hp_max=hp_max, skills=skills,
+                         saving_throws=player_class.saving_throws, equipment=equipment, speed=player_race.speed,
+                         proficiency_bonus=proficiency_bonus)
         self.age = age
         self.height = height
         self.weight = weight
         self.uid = uid
 
         self._experience = experience
-
-        self.player_race = race
+        self.player_race = player_race
         self.player_class = player_class
-        self.abilities = abilities
-
-        if level == 0:  # fresh character init
-            self.level = 1
-            self.hp_max = self.abilities.CON_MOD + self.player_class.hitDie
-            self.hp = self.hp_max
-            self.hp_dice = self.hp_max
-
-        else:
-            self.level = level
-            self.hp_max = hp_dice + (level - 1) * self.abilities.CON_MOD
-            self.hp = hp_current
-            if self.hp is None:
-                self.hp = self.hp_max
-            self.hp_dice = hp_dice
 
         self.nextLevel = self.get_next_level_xp()
-        self.proficiency_skills = skills
-        self.proficiency_bonus = self.player_class.get_proficiency_bonus(self.level)
         self.proficiency_weapons = self.player_class.proficiencies.intersection(enums.WEAPONS.Set())
         self.proficiency_armor = self.player_class.proficiencies.intersection(enums.ARMOR.Set())
-                            # todo: apply proficiencies from class/race to character
+        #                    todo: apply proficiencies from class/race to character
         self.proficiency_tools = set()  # todo: apply proficiencies from class/race to character
-        self.saving_throws = self.set_saving_throws()
         self.initiative = self.abilities.DEX_MOD  # todo: proper initiative
-        self.temporary_hitpoints = 0  # magical shielding, and such
         self.background = background
-        if isinstance(equipment, Equipped):
-            self.equipment = equipment
-        elif equipment is None:
-            self.equipment = Equipped()
-        elif isinstance(equipment, list):
-            self.equipment = Equipped()
-            self.equipment.equip(equipment)  # todo: implement weapons/shields/armor
-        self.traits = self.player_race.traits.union(self.player_class.traits)
-#        self.traits.update(self.player_class.traits)
-        self.effects = Event()  # use for trait/status effects - re-apply whenever character refreshes
-        self.advantage = set()
-        self.disadvantage = set()
-        self.atk_bonus = 0
-        self.damage_vulnerable = set()  # todo: implement damage vulnerabilities
-        self.damage_resist = set()  # todo: implement damage resistances
         # todo: execute init event - the always event
 
     @property
@@ -86,27 +62,28 @@ class CharacterSheet:
         self.level += 1
         self.hp_dice += misc.Die(1, self.player_class.hitDie).roll()
         self.__init__(name=self.name, age=self.age, height=self.height, weight=self.weight, uid=self.uid,
-                      experience=self.experience, level=self.level, race=self.player_race,
+                      experience=self.experience, level=self.level, player_race=self.player_race,
                       player_class=self.player_class, skills=self.proficiency_skills, background=self.background,
                       abilities=self.abilities, hp_dice=self.hp_dice, hp_current=None, equipment=self.equipment)
 
-    def set_saving_throws(self):  # todo: confirm if saving throws are modified by any races and include if so
-        throws = self.player_class.saving_throws
-        # base values
-        STR = self.abilities.STR_MOD
-        CON = self.abilities.CON_MOD
-        DEX = self.abilities.DEX_MOD
-        INT = self.abilities.INT_MOD
-        WIS = self.abilities.WIS_MOD
-        CHA = self.abilities.CHA_MOD
-        # proficiency boosted
-        STR += self.proficiency_bonus if enums.ABILITY.STR in throws else 0
-        CON += self.proficiency_bonus if enums.ABILITY.CON in throws else 0
-        DEX += self.proficiency_bonus if enums.ABILITY.DEX in throws else 0
-        INT += self.proficiency_bonus if enums.ABILITY.INT in throws else 0
-        WIS += self.proficiency_bonus if enums.ABILITY.WIS in throws else 0
-        CHA += self.proficiency_bonus if enums.ABILITY.CHA in throws else 0
-        return enums.Ability(STR, CON, DEX, INT, WIS, CHA)
+#     def set_saving_throws(self, ability, throws):  # todo: confirm if saving throws are modified by any races and
+#         # include if so
+# #        throws = self.player_class.saving_throws
+#         # base values
+#         STR = ability.STR_MOD
+#         CON = ability.CON_MOD
+#         DEX = ability.DEX_MOD
+#         INT = ability.INT_MOD
+#         WIS = ability.WIS_MOD
+#         CHA = ability.CHA_MOD
+#         # proficiency boosted
+#         STR += self.proficiency_bonus if enums.ABILITY.STR in throws else 0
+#         CON += self.proficiency_bonus if enums.ABILITY.CON in throws else 0
+#         DEX += self.proficiency_bonus if enums.ABILITY.DEX in throws else 0
+#         INT += self.proficiency_bonus if enums.ABILITY.INT in throws else 0
+#         WIS += self.proficiency_bonus if enums.ABILITY.WIS in throws else 0
+#         CHA += self.proficiency_bonus if enums.ABILITY.CHA in throws else 0
+#         return enums.Ability(STR, CON, DEX, INT, WIS, CHA)
 
     def get_next_level_xp(self):
         xp = {2:     300,
@@ -178,9 +155,9 @@ class CharacterSheet:
                 'hp': '{:,}'.format(self.hp) + '/' + '{:,}'.format(self.hp_max),
                 }
 
-    def is_lucky(self):
-        return enums.TRAIT.LUCKY in self.traits
-
+#     def is_lucky(self):
+#         return enums.TRAIT.LUCKY in self.traits
+#
     def get_armor_class(self):  # todo: apply modifiers from various traits, statuses, and spell effects
         # DETERMINE WHAT AC FORMULAS CAN BE USED FOR CHARACTER
         #   CLASSES CAN HAVE DEFENSIVE ARMOR CALCULATIONS(BARBARIAN UNARMORED DEFENCE FOR EXAMPLE)
@@ -210,69 +187,72 @@ class CharacterSheet:
             armor_class = base_armor_class + dex_bonus + proficiency_bonus
 
             return armor_class
+#
+#     def melee_attack(self):
+#         # todo: deal with multiple damage types
+#         # todo: make effects.attack return the effects for the target to apply to itself.
+#         effects = self.effects.attack(self)  # call attack event handler - trigger any registered attack
+#         #     return any effects which require a target - like poison effects.
+# #        advantage = enums.ADVANTAGE.ATTACK in self.advantage
+# #        disadvantage = enums.ADVANTAGE.ATTACK in self.disadvantage
+# #        lucky = enums.TRAIT.LUCKY in self.traits
+# #        attack_roll, critical = misc.attack_roll(advantage, disadvantage, lucky=lucky)
+#         # todo: implement usage of reach value
+# #        damage = weapon.attack_die.roll() + weapon.bonus_die.roll() if weapon.bonus_die else 0 + weapon.bonus_damage
+#
+#         attacks = {'num': 1}
+#         if enums.CLASS_TRAITS.EXTRA_ATTACK in self.traits:
+#             attacks['num'] += 1
+#
+#         # is storing two of the same reference
+#
+#         attacks['effects'] = effects
+#         attacks['calculation'] = self._wpn
+#         attacks['weapons'] = self.equipment.right_hand, self.equipment.left_hand, \
+#             self.equipment.jaw, self.equipment.fingers
+#         return attacks
+#
+#     def _wpn(self, hand: weaponry.Weapon = None):
+#         while True:
+#             if hand is None:
+#                 yield 0
+#             damage = hand.roll()
+#             if damage == 1 and enums.TRAIT.LUCKY in self.traits:
+#                 damage = hand.attack_die.roll()
+#             damage += hand.bonus_die.roll() if hand.bonus_die is not None else 0
+#             damage += hand.bonus_damage
+#             yield [d(damage) for d in hand.damage_type], hand.attack_function
+#
+#     def receive_damage(self, damage):
+#         # todo: handle death, incapacitation, etc.
+#         # todo: trigger defence events, return any that apply to attacker
+#         self.hp -= int(max(damage))
+#         return int(max(damage)), None  # todo: return actual damage taken and any counter effects
+#         # todo: cross check damage types against vulnerability/resist, and modify accordingly - take highest effect
+#
+#     def get_attack(self):
+#         # todo: should re-tag to get_weapon_attack and use the weapon's attack function
+#         self.effects.attack(self, Target=None)  # call attack event handler - trigger any registered attack
+#         advantage = enums.ADVANTAGE.ATTACK in self.advantage
+#         disadvantage = enums.ADVANTAGE.ATTACK in self.disadvantage
+#         lucky = enums.TRAIT.LUCKY in self.traits
+#         attack_roll, critical = misc.attack_roll(advantage, disadvantage, lucky=lucky)
+#
+#         proficiency = self.proficiency_bonus if self.equipment.right_hand.type in self.proficiency_weapons else 0
+#         if enums.WEAPONFLAGS.FINESSE in self.equipment.right_hand.flags:
+#             ability = max(self.abilities.STR_MOD, self.abilities.DEX_MOD)
+#         else:
+#             ability = self.abilities.STR_MOD
+#         attack = attack_roll + proficiency + ability
+#         print('attack =', attack, '(', attack_roll, '+', proficiency, '+', ability, ')')
+#         damage = self.equipment.right_hand.roll() + ability
+#         damage = damage * (2 if critical else 1)
+#
+#         print('damage =', damage, 'critical =', critical)
+#         return attack, critical
+#
 
-    def melee_attack(self):
-        # todo: deal with multiple damage types
-        # todo: make effects.attack return the effects for the target to apply to itself.
-        effects = self.effects.attack(self)  # call attack event handler - trigger any registered attack
-        #     return any effects which require a target - like poison effects.
-#        advantage = enums.ADVANTAGE.ATTACK in self.advantage
-#        disadvantage = enums.ADVANTAGE.ATTACK in self.disadvantage
-#        lucky = enums.TRAIT.LUCKY in self.traits
-#        attack_roll, critical = misc.attack_roll(advantage, disadvantage, lucky=lucky)
-        # todo: implement usage of reach value
-#        damage = weapon.attack_die.roll() + weapon.bonus_die.roll() if weapon.bonus_die else 0 + weapon.bonus_damage
 
-        attacks = {'num': 1}
-        if enums.CLASS_TRAITS.EXTRA_ATTACK in self.traits:
-            attacks['num'] += 1
-
-        # is storing two of the same reference
-
-        attacks['effects'] = effects
-        attacks['calculation'] = self._wpn
-        attacks['weapons'] = self.equipment.right_hand, self.equipment.left_hand, \
-            self.equipment.jaw, self.equipment.fingers
-        return attacks
-
-    def _wpn(self, hand: weaponry.Weapon = None):
-        while True:
-            if hand is None:
-                yield 0
-            damage = hand.roll()
-            if damage == 1 and enums.TRAIT.LUCKY in self.traits:
-                damage = hand.attack_die.roll()
-            damage += hand.bonus_die.roll() if hand.bonus_die is not None else 0
-            damage += hand.bonus_damage
-            yield [d(damage) for d in hand.damage_type], hand.attack_function
-
-    def receive_damage(self, damage):
-        # todo: handle death, incapacitation, etc.
-        # todo: trigger defence events, return any that apply to attacker
-        self.hp -= int(max(damage))
-        return int(max(damage)), None  # todo: return actual damage taken and any counter effects
-        # todo: cross check damage types against vulnerability/resist, and modify accordingly - take highest effect
-
-    def get_attack(self):
-        # todo: should re-tag to get_weapon_attack and use the weapon's attack function
-        self.effects.attack(self, Target=None)  # call attack event handler - trigger any registered attack
-        advantage = enums.ADVANTAGE.ATTACK in self.advantage
-        disadvantage = enums.ADVANTAGE.ATTACK in self.disadvantage
-        lucky = enums.TRAIT.LUCKY in self.traits
-        attack_roll, critical = misc.attack_roll(advantage, disadvantage, lucky=lucky)
-
-        proficiency = self.proficiency_bonus if self.equipment.right_hand.type in self.proficiency_weapons else 0
-        if enums.WEAPONFLAGS.FINESSE in self.equipment.right_hand.flags:
-            ability = max(self.abilities.STR_MOD, self.abilities.DEX_MOD)
-        else:
-            ability = self.abilities.STR_MOD
-        attack = attack_roll + proficiency + ability
-        print('attack =', attack, '(', attack_roll, '+', proficiency, '+', ability, ')')
-        damage = self.equipment.right_hand.roll() + ability
-        damage = damage * (2 if critical else 1)
-
-        print('damage =', damage, 'critical =', critical)
-        return attack, critical
 
 # class Character():  #rebuilt this already, lol
 #     pace=enums.PACE.NORMAL
@@ -348,12 +328,12 @@ def init_wulfgar():
     player_class = CLASS.Barbarian(level)
     class_skills = {enums.SKILL.ATHLETICS, enums.SKILL.PERCEPTION}
     background = enums.BACKGROUNDS.OUTLANDER
-    #    abilities = enums.Ability(24, 16, 22, 9, 14, 11)
+    # abilities = enums.Ability(24, 16, 22, 9, 14, 11)
     abilities = enums.Ability(15, 13, 14, 8, 12, 10)
-    #    hp_dice = 179  # sum total of all hp rolls to date - needs to be kept for recalculating hp on con_mod change
+    # hp_dice = 179  # sum total of all hp rolls to date - needs to be kept for recalculating hp on con_mod change
     hp_dice = 0
-    #    hp_current = 236
-    hp_current = 0
+    # hp_current = 236
+    hp_current = None
     weapon = weaponry.greataxe  # todo: implement weapons/shields/armor
     _armor = armor.plate_Armor  # todo: implement weapons/shields/armor
     shield = None  # todo: implement weapons/shields/armor
@@ -362,38 +342,38 @@ def init_wulfgar():
 
 
 if __name__ == '__main__':
-    from trace import __LINE__
-    import sys
+    from trace import print
 
     wulfgar = init_wulfgar()
     print(wulfgar, '\n\n', wulfgar.dict_short(), '\n', wulfgar.full_str())
 
-    print('\n\n\t\t****************************')
-    print('\t\t***   get attack debug   ***')
-    print('\t\t****************************\n\n')
-    print(__LINE__(), wulfgar.melee_attack())
+    block = '''\n\n
+    \t\t****************************
+    \t\t***   get attack debug   ***
+    \t\t****************************\n\n'''
+    print(block)
+    print(wulfgar.melee_attack())
 
     attack = wulfgar.melee_attack()
-    print(__LINE__(), attack)
-    sys.stdout.flush()
+    print(attack)
 
     results = [None, None]
     calculation = attack['calculation']
     for n in range(attack['num']):
         results[n] = calculation(attack['weapons'][n])
-    print(__LINE__(), results)
+    print(results)
     results2 = []
     for d in attack['weapons'][0].damage_type:
-        print(__LINE__(), d)
+        print(d)
     for n in range(len(results)):
         for a in range(attack['num']):
-            print(__LINE__(), str(n)+'_'+str(a), attack['weapons'][n], attack['weapons'][n] is not None)
+            print(str(n)+'_'+str(a), attack['weapons'][n], attack['weapons'][n] is not None)
             if attack['weapons'][n] is not None:
-                print(__LINE__(), attack['weapons'][n].damage_type)
+                print(attack['weapons'][n].damage_type)
                 damage = results[n].__next__()[0]
-                print(__LINE__(), damage)
+                print(damage)
                 [results2.append(damage) for x in attack['weapons'][n].damage_type]
-                print(__LINE__(), results2)
-    print(__LINE__(), 'attacks and damage types:', results2)
+                print(results2)
+    print('attacks and damage types:', results2)
 
 

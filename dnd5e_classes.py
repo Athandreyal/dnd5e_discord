@@ -59,9 +59,11 @@ class Barbarian(CommonFunctions):
             # TODO: MAKE THIS A PLAYER CHOICE, PICK TWO FROM ABOVE.
             self.skills = {SKILL.SURVIVAL, SKILL.NATURE}
         self.proficiency_bonus = 2 + self.get_proficiency_bonus(lvl)
+
         self.background = background
         if self.background is None:
             self.background = BACKGROUNDS.OUTLANDER  # TODO : make this player chosen
+            self.skills.update(self.background.SKILLS)
 
         # RAGE IS A BARBARIAN BONUS ACTION WITH FOLLOWING ADVANTAGES:
         #       ADV IN STR CHECKS AND SAVING THROWS

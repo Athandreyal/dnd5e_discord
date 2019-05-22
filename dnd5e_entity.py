@@ -1,0 +1,143 @@
+# parent class to both Character Sheet and creature, has things relevant to encounters.
+from dnd5e_enums import TRAIT, CLASS_TRAITS, ABILITY, Ability
+import dnd5e_weaponry as weaponry
+from dnd5e_events import Event
+from dnd5e_inventory import Equipped
+
+
+class Entity:
+    def __init__(self, name=None, traits=None, hp=None, hp_max=None, effects=None, equipment=None, abilities=None,
+                 skills=None, saving_throws=None, speed=None, proficiency_bonus=None):
+        self.name = name
+        self.speed = speed
+        if self.speed is None:
+            self.speed = 0  # todo, replace with full range of speeds, flight, swimming, etc.
+
+        if self.name is None:
+            self.name = 'Unknown Entity'
+        self.traits = traits
+        if self.traits is None:
+            self.traits = set()
+        self.hp_max = hp_max
+        self.hp = hp
+        if self.hp is None:
+            self.hp = self.hp_max
+        self.effects = effects
+        if self.effects is None:
+            self.effects = Event()  # use for trait/status effects - re-apply whenever character refreshes
+        self.equipment = equipment
+        if isinstance(equipment, Equipped):
+            self.equipment = equipment
+        elif equipment is None:
+            self.equipment = Equipped()
+        elif isinstance(equipment, list):
+            self.equipment = Equipped()
+            self.equipment.equip(equipment)  # todo: implement weapons/shields/armor
+        self.advantage = set()
+        self.disadvantage = set()
+        self.atk_bonus = 0
+        self.damage_vulnerable = set()  # todo: implement damage vulnerabilities
+        self.damage_resist = set()  # todo: implement damage resistances
+        self.abilities = abilities
+        if self.abilities is None:
+            self.abilities = Ability()
+        self.proficiency_skills = skills
+        if self.proficiency_skills is None:
+            self.proficiency_skills = set()
+        self.proficiency_bonus = proficiency_bonus
+        if self.proficiency_bonus is None:
+            self.proficiency_bonus = 0
+        self.saving_throws = self.set_saving_throws(saving_throws)
+        if self.saving_throws is None:
+            self.saving_throws = Ability()
+        self.temporary_hitpoints = 0
+
+    def is_lucky(self):
+        return TRAIT.LUCKY in self.traits
+
+    def receive_damage(self, damage):
+        # todo: handle death, incapacitation, etc.
+        # todo: trigger defence events, return any that apply to attacker
+        self.hp -= int(max(damage))
+        return int(max(damage)), None  # todo: return actual damage taken and any counter effects
+        # todo: cross check damage types against vulnerability/resist, and modify accordingly - take highest effect
+
+    def melee_attack(self):
+        # todo: deal with multiple damage types
+        # todo: make effects.attack return the effects for the target to apply to itself.
+        effects = self.effects.attack(self)  # call attack event handler - trigger any registered attack
+        #     return any effects which require a target - like poison effects.
+        #        advantage = enums.ADVANTAGE.ATTACK in self.advantage
+        #        disadvantage = enums.ADVANTAGE.ATTACK in self.disadvantage
+        #        lucky = enums.TRAIT.LUCKY in self.traits
+        #        attack_roll, critical = misc.attack_roll(advantage, disadvantage, lucky=lucky)
+        # todo: implement usage of reach value
+        #        damage = weapon.attack_die.roll() + weapon.bonus_die.roll() if weapon.bonus_die else 0 + weapon.bonus_damage
+        attacks = {'num': 1}
+        if CLASS_TRAITS.EXTRA_ATTACK in self.traits:
+            attacks['num'] += 1
+
+        # is storing two of the same reference
+        attacks['effects'] = effects
+        attacks['calculation'] = self._wpn
+
+        attacks['weapons'] = self.equipment.right_hand, self.equipment.left_hand, \
+            self.equipment.jaw, self.equipment.fingers
+        return attacks
+
+    def _wpn(self, hand: weaponry.Weapon = None):
+        while True:
+            if hand is None:
+                yield 0
+            damage = hand.roll()
+            if damage == 1 and self.is_lucky():
+                damage = hand.attack_die.roll()
+            damage += hand.bonus_die.roll() if hand.bonus_die is not None else 0
+            damage += hand.bonus_damage
+            yield [d(damage) for d in hand.damage_type], hand.attack_function
+
+#     def set_saving_throws(self, throws):  # todo: confirm if saving throws are modified by any races and
+#         # include if so
+# #        throws = self.player_class.saving_throws
+#         # base values
+#         STR = self.abilities.STR_MOD
+#         CON = self.abilities.CON_MOD
+#         DEX = self.abilities.DEX_MOD
+#         INT = self.abilities.INT_MOD
+#         WIS = self.abilities.WIS_MOD
+#         CHA = self.abilities.CHA_MOD
+#         # proficiency boosted
+#         STR += (self.proficiency_bonus if self.proficiency_bonus > 0 else throws.STR) if ABILITY.STR in throws else 0
+#         CON += (self.proficiency_bonus if self.proficiency_bonus > 0 else throws.CON) if ABILITY.CON in throws else 0
+#         DEX += (self.proficiency_bonus if self.proficiency_bonus > 0 else throws.DEX) if ABILITY.DEX in throws else 0
+#         INT += (self.proficiency_bonus if self.proficiency_bonus > 0 else throws.INT) if ABILITY.INT in throws else 0
+#         WIS += (self.proficiency_bonus if self.proficiency_bonus > 0 else throws.WIS) if ABILITY.WIS in throws else 0
+#         CHA += (self.proficiency_bonus if self.proficiency_bonus > 0 else throws.CHA) if ABILITY.CHA in throws else 0
+#         return Ability(STR, CON, DEX, INT, WIS, CHA)
+
+    def set_saving_throws(self, throws):
+        # todo: confirm if saving throws are modified by any races and include if so
+        # base values
+        STR = self.abilities.STR_MOD
+        CON = self.abilities.CON_MOD
+        DEX = self.abilities.DEX_MOD
+        INT = self.abilities.INT_MOD
+        WIS = self.abilities.WIS_MOD
+        CHA = self.abilities.CHA_MOD
+        # proficiency boosted
+        if self.proficiency_bonus == 0:  # is creature
+            STR += throws.STR
+            CON += throws.CON
+            DEX += throws.DEX
+            INT += throws.INT
+            WIS += throws.WIS
+            CHA += throws.CHA
+        else:
+            STR += self.proficiency_bonus if ABILITY.STR in throws else 0
+            CON += self.proficiency_bonus if ABILITY.CON in throws else 0
+            DEX += self.proficiency_bonus if ABILITY.DEX in throws else 0
+            INT += self.proficiency_bonus if ABILITY.INT in throws else 0
+            WIS += self.proficiency_bonus if ABILITY.WIS in throws else 0
+            CHA += self.proficiency_bonus if ABILITY.CHA in throws else 0
+        return Ability(STR, CON, DEX, INT, WIS, CHA)
+

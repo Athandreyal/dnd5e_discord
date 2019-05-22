@@ -119,7 +119,7 @@ class Encounter:
                                     self.player_party.members.remove(target)
                                 initiative_list.remove(target)
 
-        print('\n\n', str(self.player_party), end='')
+        print('\n\n' + str(self.player_party), end='')
         print('You have ' + ('won!' if self.player_party.is_able() else 'lost!'))
         input()
         return self.reward if self.player_party.is_able() else {'xp': 0, 'gold': 0}
@@ -208,9 +208,14 @@ XP_thresholds = {
 # Deadly
 
 if __name__ == '__main__':
-    from trace import __LINE__
+    from trace import print
     player = character.init_wulfgar()
+    player.name = 'Wulfgar 1'
     player2 = character.init_wulfgar()
+    player2.name = 'Wulfgar 2'
+    print(player.dict_short())
+    print(player2.dict_short())
+    print(player.hp, player2.hp)
     while player.hp + player2.hp > 0:
         encounter = Encounter(player_party=Party(player, player2))
         rewards = encounter.do_battle()
