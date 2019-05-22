@@ -1,5 +1,5 @@
 # from enum import Enum
-from dnd5e_misc import *
+import dnd5e_misc as misc
 import sys
 
 # todo: find ALL default argument expressions in my code, and replace them with =None and default it inside the
@@ -92,12 +92,12 @@ class Ability:
 
     def get_mods(self):
         return (
-                ability_mod(self.STR),
-                ability_mod(self.CON),
-                ability_mod(self.DEX),
-                ability_mod(self.INT),
-                ability_mod(self.WIS),
-                ability_mod(self.CHA),
+                misc.ability_mod(self.STR),
+                misc.ability_mod(self.CON),
+                misc.ability_mod(self.DEX),
+                misc.ability_mod(self.INT),
+                misc.ability_mod(self.WIS),
+                misc.ability_mod(self.CHA),
                 )
 
     def update_mods(self):
@@ -438,6 +438,7 @@ class ADVANTAGE(ABILITY):
     class DEFENCE: pass
     class SOCIAL: pass
     class ABILITY: pass  # all abilities.
+    # todo: add additional entries as needed for more and more advantage checks to work.
 
 
 class PACE(Set):  # travelling pace, not burst speed for combat rules
@@ -562,7 +563,6 @@ class DAMAGETYPE(Set):
             self.damage = damage
 
         def __call__(self, damage=None):
-            print(565, 'call')
             if damage:  # use to set, or get the damage
                 self.damage = damage
             else:
@@ -572,38 +572,47 @@ class DAMAGETYPE(Set):
             return int(self.damage)
 
         def __str__(self):
-            print(574, 'str', end=' ')
             return self.__repr__()# str(self.damage)# + ' ' + self.__class__.__name__
 
         def __repr__(self):
-            print(578, 'repr', end=' ')
             return str(self.damage) + ' ' + self.__class__.__name__
 
     class ACID(__Damage):
         def __init__(self, damage): super().__init__(damage)
+
     class BLUNT(__Damage):
         def __init__(self, damage): super().__init__(damage)    # blunt force attack, punches, hammers, falling, crushing, etc
+
     class COLD(__Damage):
         def __init__(self, damage): super().__init__(damage)
 
     class FIRE(__Damage):
         def __init__(self, damage): super().__init__(damage)
+
     class FORCE(__Damage):
         def __init__(self, damage): super().__init__(damage)  # pure magical energy
+
     class LIGHTNING(__Damage):
         def __init__(self, damage): super().__init__(damage)
+
     class NECROTIC(__Damage):
         def __init__(self, damage): super().__init__(damage)
+
     class PIERCING(__Damage):
         def __init__(self, damage): super().__init__(damage)  # puncturing/impaling - spears, bites, arrows, etc.
+
     class POISON(__Damage):
         def __init__(self, damage): super().__init__(damage)
+
     class PSYCHIC(__Damage):
         def __init__(self, damage): super().__init__(damage)  # attacks on the mind
+
     class RADIANT(__Damage):
         def __init__(self, damage): super().__init__(damage)
+
     class SLASHING(__Damage):
         def __init__(self, damage): super().__init__(damage)  # cutting attacks, swords, axes, claws
+
     class THUNDER(__Damage):
         def __init__(self, damage): super().__init__(damage)  # concussive effects, a shock wave of sorts.
 
@@ -698,8 +707,8 @@ class _WEAPONS_MARTIAL(Set):
 
 class WEAPONS(Set):
     SIMPLE = _WEAPONS_SIMPLE
-
     MARTIAL = _WEAPONS_MARTIAL
+    class GENERIC: pass
 
 
 class PROFICIENCY(Set):
@@ -927,3 +936,34 @@ class CREATURE_TYPES(Set):
     class PLANT: pass
     class UNDEAD: pass
 
+
+class EQUIP_SLOT(Set):
+    # todo: implement a get_qty, get_weight, get_etc functions
+    # todo: implement equipped, wielded, carried subvars for each
+    class __E(Set):
+        # todo: implement variable carriage of items
+        # todo: change equip process to use this rather than internal vars
+        class WIELDED:
+            def __init__(self):
+                self.items = set()
+
+        class EQUIPPED:
+            def __init__(self):
+                self.items = set()
+
+        class CARRIED:
+            def __init__(self):
+                self.items = set()
+
+    class HAND(__E): pass  # current weapon(s) and/or shield
+    class JAW(__E): pass  # creature bite/spit attacks
+    class ARMOR(__E): pass  # self explanatory?
+    class SHIELD(__E): pass  # self explanatory?
+    class BACK(__E): pass  # equipped but carried weapons, inventory, backpacks
+    class COLLAR(__E): pass  # neck slot, collars, single
+    class NECK(__E): pass  # neck slot, amulets, necklaces, multiple
+    class GLOVES(__E): pass  # for worn gloves, around the hands, not in them.
+    class FINGERS(__E): pass  # rings, creature talon/claw attacks
+    class BELT(__E): pass  # for belts, weapon sheaths/loops, and pouches, multiple
+    class SHOULDER(__E): pass  # for sling type gear, such as quivers, smaller sword sheaths
+    class INVENTORY(__E): pass  # for general inventory items, not actionable

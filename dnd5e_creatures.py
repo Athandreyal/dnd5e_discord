@@ -1,8 +1,9 @@
 import dnd5e_enums as enums
-import dnd5e_weaponry as weapons
+import dnd5e_weaponry as weaponry
 import dnd5e_misc as misc
-from dnd5e_enums import WEAPONS, WEAPONFLAGS, DAMAGETYPE
-import sys
+from dnd5e_enums import DAMAGETYPE, ATTACK, EQUIP_SLOT, WEAPONS
+from dnd5e_inventory import Equipped
+from dnd5e_events import Event
 
 
 class Creature:
@@ -26,15 +27,19 @@ class Creature:
 #        self.senses = senses
         self.traits = traits
         self.actions = actions
-
+        self.equipment = Equipped()  # creatures technically have the full set of gear players do
+        for action in self.actions:
+            self.equipment.equip(self.actions[action])  # todo, confirm this doesn't break anything
         self.initiative = self.abilities.DEX_MOD   # todo: proper initiative
         self.gold = None
         self.gems = None
         self.items = None  # could be potions, maps, equipment, mounts, etc
 #        self.temporary_hitpoints = 0  # magical shielding, and such
 #        self.effects = self.Effect()  # use for trait/status effects - re-apply whenever character refreshes
-        self.advantage = None
-        self.disadvantage = None
+        self.advantage = set()
+        self.disadvantage = set()
+        self.atk_bonus = 0
+        self.effects = Event()  # use for trait/status effects - re-apply whenever character refreshes
 
     def dict_short(self):
         return {
@@ -64,45 +69,97 @@ class Creature:
     def is_lucky(self):
         return enums.TRAIT.LUCKY in self.traits
 
-    def check_attack(self, target):
-        # self.effects.attack(self, target=target)  # call attack event handler - trigger any registered attack
+    def receive_damage(self, damage):
+        # todo: handle death, incapacitation, etc.
+        # todo: trigger defence events, return any that apply to attacker
+        self.hp -= int(max(damage))
+        return int(max(damage)), None  # todo: return actual damage taken and any counter effects
+        # todo: cross check damage types against vulnerability/resist, and modify accordingly - take highest effect
 
-    def get_attack(self):
-        # todo: events handler for attack
-        # todo: replace with individual attack functions?
-        #self.effects.attack(self, Target=None)  # call attack event handler - trigger any registered attack
-        advantage = enums.ADVANTAGE.ATTACK in self.advantage
-        disadvantage = enums.ADVANTAGE.ATTACK in self.disadvantage
-        # actions
-        # determine modifiers
-        #   target ahs cover?
-        #   do you have advantage or disadvantage?
-        #   any relevant self.effects?
-        # resolve attack
-        #   attack roll 1d20 to determine miss, hit_minor, hit_major, critical
-        #   roll weapon attack_die
-        attack_die = misc.Die(1, 20)
-        roll1 = attack_die.roll()
-        roll2 = attack_die.roll()
-        if roll1 == 1 or roll2 == 1 and enums.TRAIT.LUCKY in self.traits:
-            if roll1 == 1:
-                roll1 = attack_die.roll()
-            else:
-                roll2 = attack_die.roll()
+    def melee_attack(self):
+        # todo: deal with multiple damage types
+        # todo: make effects.attack return the effects for the target to apply to itself.
+        effects = self.effects.attack(self)  # call attack event handler - trigger any registered attack
+        #     return any effects which require a target - like poison effects.
+        #        advantage = enums.ADVANTAGE.ATTACK in self.advantage
+        #        disadvantage = enums.ADVANTAGE.ATTACK in self.disadvantage
+        #        lucky = enums.TRAIT.LUCKY in self.traits
+        #        attack_roll, critical = misc.attack_roll(advantage, disadvantage, lucky=lucky)
+        # todo: implement usage of reach value
+        #        damage = weapon.attack_die.roll() + weapon.bonus_die.roll() if weapon.bonus_die else 0 + weapon.bonus_damage
+        attacks = {'num': 1}
+        if enums.CLASS_TRAITS.EXTRA_ATTACK in self.traits:
+            attacks['num'] += 1
 
-        if advantage or disadvantage:
-            if advantage:
-                attack_roll = max(roll1, roll2)
-            else:
-                attack_roll = min(roll1, roll2)
-        else:
-            attack_roll = roll1
-        critical = attack_roll == 20
+        # is storing two of the same reference
+        attacks['effects'] = effects
+        attacks['calculation'] = self._wpn
 
-        attack = attack_roll + ability + weapon_bonus
-        print('attack =', attack, '(', attack_roll, '+', proficiency, '+', ability, ')')
-        print('damage =', damage, 'critical =', critical)
-        return attack, damage * (2 if critical else 1)
+        attacks['weapons'] = self.equipment.right_hand, self.equipment.left_hand, \
+            self.equipment.jaw, self.equipment.fingers
+        return attacks
+
+    def _wpn(self, hand: weaponry.Weapon = None):
+        while True:
+            if hand is None:
+                yield 0
+            damage = hand.attack_die.roll()
+            if damage == 1 and enums.TRAIT.LUCKY in self.traits:
+                damage = hand.attack_die.roll()
+            damage += hand.bonus_die.roll() if hand.bonus_die is not None else 0
+            damage += hand.bonus_damage
+            yield [d(damage) for d in hand.damage_type], hand.attack_function
+
+    def get_armor_class(self):
+        # todo: throw defence event related to specific attack type, modify ac if necessary - may need to return
+        #  statuses from here for thorns like effects
+
+        # todo: poll all gear(not just armor), and sum the AC values.
+        # todo: run racial/class defence functions, keep best AC value.
+        return self.armor_class
+
+
+class Crab(Creature):
+    challenge = (0, 10)
+
+    def __init__(self):
+        super().__init__(name='Crab',
+                         creature_type=enums.CREATURE_TYPES.BEAST,
+                         size=enums.SIZE.TINY,
+                         armor_class=11,
+                         hp_dice={'die_qty': 1,
+                                  'die_sides': 4,
+                                  'bonus': 0},
+                         speed=20,  # todo, swim speed, and fly, and...etc
+                         abilities=enums.Ability(strength=2,
+                                                 dexterity=11,
+                                                 constitution=10,
+                                                 intelligence=1,
+                                                 wisdom=8,
+                                                 charisma=2),
+                         saving_throws=enums.Ability(),  # no bonuses to throws
+                         skills={'STEALTH': 2},
+                         traits={enums.TRAIT.COMMON_PERCEPTION},
+                         actions={'melee': weaponry.Weapon(name='Claw',
+                                                           damage={
+                                                              '1_die': 1,  # wielded in two hands
+                                                              '1_sides': 1,  # wielded in two hands
+                                                              'types': [DAMAGETYPE.BLUNT],
+                                                              'bonus_dmg': 0,  # flat additional damage
+                                                          },
+                                                           enum_type={WEAPONS.GENERIC},
+                                                           hit_bonus=0,
+                                                           reach=5,
+                                                           atk_type={ATTACK.MELEE},
+                                                           wield_from=EQUIP_SLOT.FINGERS,
+                                                           ranges=(0, 0),  # (standard, extended w/disadvantage)
+                                                           equip_function=None,
+                                                           # the function which executes a special effect on the  target
+                                                           attack_function=None,
+                                                           ),
+                                  }  # todo: remaining orc actions, MM page 246
+                         )
+
 
 class GiantWeasel(Creature):
     challenge = (0.12, 25)
@@ -125,18 +182,23 @@ class GiantWeasel(Creature):
                          saving_throws=enums.Ability(),  # no bonuses to throws
                          skills={'PERCEPTION': 2, 'STEALTH': 5},
                          traits={enums.TRAIT.DARKVISION, enums.TRAIT.COMMON_PERCEPTION},
-                         actions={'melee': weapons.Weapon(name='Bite',
-                                                          damage={
+                         actions={'melee': weaponry.Weapon(name='Bite',
+                                                           damage={
                                                               '1_die': 1,  # wielded in two hands
                                                               '1_sides': 4,  # wielded in two hands
                                                               'types': [DAMAGETYPE.PIERCING],
                                                               'bonus_dmg': 3,  # flat additional damage
                                                           },
-                                                          hit_bonus=5,
-                                                          reach=0,
-                                                          ranges=(0, 0),  # (standard, extended w/disadvantage)
-                                                          attack_function=None,
-                                                          ),
+                                                           enum_type={WEAPONS.GENERIC},
+                                                           hit_bonus=5,
+                                                           reach=0,
+                                                           atk_type={ATTACK.MELEE},
+                                                           wield_from=EQUIP_SLOT.JAW,
+                                                           ranges=(0, 0),  # (standard, extended w/disadvantage)
+                                                           equip_function=None,
+                                                           # the function which executes a special effect on the  target
+                                                           attack_function=None,
+                                                           ),
                                   }  # todo: remaining orc actions, MM page 246
                          )
 
@@ -162,16 +224,19 @@ class Orc(Creature):
                          saving_throws=enums.Ability(),  # no bonuses to throws
                          skills={'INTIMIDATION': 2},
                          traits={enums.TRAIT.DARKVISION, enums.TRAIT.COMMON_PERCEPTION},
-                         actions={'melee': weapons.Weapon(name='GreatAxe',
-                                                          damage={
+                         actions={'melee': weaponry.Weapon(name='GreatAxe',
+                                                           damage={
                                                               '2_die': 1,  # wielded in two hands
                                                               '2_sides': 12,  # wielded in two hands
                                                               'types': [DAMAGETYPE.SLASHING],
                                                           },
-                                                          reach=0,
-                                                          ranges=(0, 0),  # (standard, extended w/disadvantage)
-                                                          attack_function=None,
-                                                          ),
+                                                           reach=0,
+                                                           atk_type={ATTACK.MELEE},
+                                                           wield_from=EQUIP_SLOT.HAND,
+                                                           ranges=(0, 0),  # (standard, extended w/disadvantage)
+                                                           equip_function=None,
+                                                           attack_function=None,
+                                                           ),
                                   }  # todo: remaining orc actions, MM page 246
                          )
 
@@ -197,16 +262,19 @@ class Orog(Creature):
                          saving_throws=enums.Ability(),  # no bonuses to throws
                          skills={'INTIMIDATION': 5, 'SURVIVAL': 2},
                          traits={enums.TRAIT.DARKVISION, enums.TRAIT.COMMON_PERCEPTION},
-                         actions={'melee': weapons.Weapon(name='GreatAxe',
-                                                          damage={
+                         actions={'melee': weaponry.Weapon(name='GreatAxe',
+                                                           damage={
                                                               '2_die': 1,  # wielded in two hands
                                                               '2_sides': 12,  # wielded in two hands
                                                               'types': [DAMAGETYPE.SLASHING],
                                                           },
-                                                          reach=0,
-                                                          ranges=(0, 0),  # (standard, extended w/disadvantage)
-                                                          attack_function=None,
-                                                          ),
+                                                           reach=0,
+                                                           wield_from=EQUIP_SLOT.HAND,
+                                                           atk_type={ATTACK.MELEE},
+                                                           ranges=(0, 0),  # (standard, extended w/disadvantage)
+                                                           equip_function=None,
+                                                           attack_function=None,
+                                                           ),
                                   }  # todo: remaining orc actions, MM page 246
                          )
 
@@ -237,8 +305,8 @@ class Orc_Chieftan(Creature):
                                                      charisma=0),
                          skills={'INTIMIDATION': 5},
                          traits={enums.TRAIT.DARKVISION, enums.TRAIT.COMMON_PERCEPTION},
-                         actions={'melee': weapons.Weapon(name='GreatAxe',
-                                                          damage={
+                         actions={'melee': weaponry.Weapon(name='GreatAxe',
+                                                           damage={
                                                              '2_die': 1,  # wielded in two hands
                                                              '2_sides': 12,  # wielded in two hands
                                                              'types': [DAMAGETYPE.SLASHING],
@@ -246,18 +314,34 @@ class Orc_Chieftan(Creature):
                                                              'bonus_die': 1,  # additional_damage_die
                                                              'bonus_sides': 8,  # additional_damage_die
                                                           },
-                                                          reach=0,
-                                                          ranges=(0, 0),  # (standard, extended w/disadvantage)
-                                                          attack_function=None,
-                                                          ),
+                                                           reach=0,
+                                                           atk_type={ATTACK.MELEE},
+                                                           wield_from=EQUIP_SLOT.HAND,
+                                                           ranges=(0, 0),  # (standard, extended w/disadvantage)
+                                                           equip_function=None,
+                                                           attack_function=None,
+                                                           ),
                                   }  # todo: remaining orc actions, MM page 246
                          )
 
 
-#print(Orc().dict_short())
-#print(Orc_Chieftan().dict_short())
-#print(Orog().dict_short())
+if __name__ == '__main__':
+    #print(Orc().dict_short())
+    #print(Orc_Chieftan().dict_short())
+    #print(Orog().dict_short())
+    orog = Orog()
+    print(orog.equipment.jaw)
+    print(orog.equipment.fingers)
+    print(orog.equipment.left_hand)
+    print(orog.equipment.right_hand)
+    print(GiantWeasel().dict_short())
+    weasel = GiantWeasel()
+    print(weasel.equipment.jaw)
+    print(weasel.equipment.fingers)
+    print(weasel.equipment.left_hand)
+    print(weasel.equipment.right_hand)
 
+# todo: add this same capability to items, weaponry, armors, shields, and any other listable object.
 creatures = []
 local_values = list(locals().values())
 for local in local_values:

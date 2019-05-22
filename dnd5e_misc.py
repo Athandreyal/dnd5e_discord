@@ -58,7 +58,7 @@ class Die:  # ....dice, not death...
         if qty is None or sides is None:
             return
         self.qty = qty
-        self.sides = max(2, sides)
+        self.sides = sides
 
     def random(self, upper):
         while True:
@@ -75,7 +75,7 @@ class Die:  # ....dice, not death...
         while iterations > 0:
             n_dice = self.qty
             while n_dice > 0:
-                result += self.random(self.sides).__next__()
+                result += 1 if self.sides == 1 else self.random(self.sides).__next__()
                 n_dice -= 1
             iterations -= 1
             result += bonus

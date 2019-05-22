@@ -1,8 +1,6 @@
-import dnd5e_enums as enums
 import dnd5e_items as items
 import dnd5e_misc as misc
-
-from dnd5e_enums import WEAPONS, WEAPONFLAGS, DAMAGETYPE
+from dnd5e_enums import WEAPONS, WEAPONFLAGS, DAMAGETYPE, ATTACK, EQUIP_SLOT
 
 
 # weaponry base class, holds the details common to all weapons
@@ -21,13 +19,14 @@ class Weapon(items.Item):
     #              },
     #   light or heavy, finesse, etc.
     # enum_type: enum describing weapon categories.
-    def __init__(self, name=None, cost=None, damage=None, hit_bonus=None, enum_type=None, weight=None, reach=None,
-                 ranges=None, flags=None, equip_function=None, attack_function=None):
+    def __init__(self, name=None, cost=None, damage=None, hit_bonus=None, enum_type=None, atk_type=None, weight=None,
+                 reach=None, ranges=None, flags=None, wield_from=None, equip_function=None, attack_function=None):
         # TODO: embed static weapon criteria in the weapon type enum?
         qty = 1
         super().__init__(name, cost, weight, qty, enum_type, equip_function)
+        self.atk_type = atk_type
+        self.wield_from = wield_from
         self.die1, self.die2 = None, None
-
         if '1_die' in damage:
             die_qty = damage['1_die']
             die_sides = damage['1_sides']
@@ -79,6 +78,8 @@ greataxe = Weapon(  # todo: config limiting
                             'types': [DAMAGETYPE.SLASHING]
                             },
                     enum_type={WEAPONS.MARTIAL.GREATAXE},
+                    atk_type={ATTACK.MELEE},
+                    wield_from=EQUIP_SLOT.HAND,
                     weight=7,
                     reach=0,
                     ranges=(0, 0),  # for thrown / ranged attacks, (standard, extended) - disadvantage on extended
@@ -86,3 +87,4 @@ greataxe = Weapon(  # todo: config limiting
                     equip_function=None,  # the function which executes a special effect on the  target
                     attack_function=None,
                     )
+

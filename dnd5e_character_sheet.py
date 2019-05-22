@@ -4,82 +4,9 @@ import dnd5e_races as RACE
 import dnd5e_classes as CLASS
 import dnd5e_weaponry as weaponry
 import dnd5e_armor as armor
+from dnd5e_inventory import Equipped
 import json
-import re
-import sys
-
-
-def init_wulfgar():
-    # THESE ARE WHAT WE NEED TO KNOW IN ORDER TO LOAD A CHARACTER
-    # INVENTORY IS GONNA BE AN EXPANSIVE MESS...PERHAPS JUST A DATABASE TABLE ID - LOAD EVERYTHING WE FIND THERE?
-    #
-    name = 'Wulfgar, son of Beornegar'
-    age = 21
-    height = 7 * 12 + 1  # 7` 1"
-    weight = 223
-    uid = 1
-    experience = 0
-    level = 5
-    player_race = RACE.Human()
-    player_class = CLASS.Barbarian(level)
-    class_skills = {enums.SKILL.ATHLETICS, enums.SKILL.PERCEPTION}
-    background = enums.BACKGROUNDS.OUTLANDER
-#    abilities = enums.Ability(24, 16, 22, 9, 14, 11)
-    abilities = enums.Ability(15, 13, 14, 8, 12, 10)
-#    hp_dice = 179  # sum total of all hp rolls to date - needs to be kept for recalculating hp on con_mod change
-    hp_dice = 0
-#    hp_current = 236
-    hp_current = 0
-    weapon = weaponry.greataxe  # todo: implement weapons/shields/armor
-    _armor = armor.plate_Armor  # todo: implement weapons/shields/armor
-    shield = None  # todo: implement weapons/shields/armor
-    return CharacterSheet(name, age, height, weight, uid, experience, level, player_race, player_class,
-                          class_skills, background, abilities, hp_dice, hp_current, [weapon, _armor, shield])
-
-
-class Equipped:
-    # todo: equip events - curses, attunement bonuses, etc
-    def __init__(self):
-        self.left_hand = None
-        self.right_hand = None
-        self.armor = None
-        self.shield = None
-
-    def equip(self, equipment):
-        if not isinstance(equipment, list):
-            equipment = [equipment]
-        for e in equipment:
-            if isinstance(e, weaponry.Weapon):
-                self.equip_weapon(e)
-            elif isinstance(e, armor.Armor):
-                self.equip_armor(e)
-            elif isinstance(e, armor.Shield):
-                self.equip_shield(e)
-
-    def equip_weapon(self, weapon):
-        self.right_hand = weapon
-        # un-equip shield if equipping a two-hander
-        if enums.WEAPONFLAGS.TWO_HANDED in weapon.flags:
-            self.left_hand = None
-
-        if enums.WEAPONFLAGS.VERSATILE in weapon.flags and self.shield is None:
-            self.right_hand.attack_die = self.right_hand.die2
-        else:
-            self.right_hand.attack_die = self.right_hand.die1
-
-    def equip_armor(self, armor):
-        self.armor = armor
-
-    def equip_shield(self, shield):
-        self.shield = shield
-        # un-equip two-hander if equipping a shield
-        if self.right_hand is not None and enums.WEAPONFLAGS.TWO_HANDED in self.right_hand.flags:
-            self.right_hand = None
-
-        if enums.WEAPONFLAGS.VERSATILE in self.right_hand.flags:
-            self.right_hand.attackDie = self.right_hand.die1
-        else:
-            self.right_hand.attackDie = self.right_hand.die2
+from dnd5e_events import Event
 
 
 class CharacterSheet:
@@ -93,6 +20,7 @@ class CharacterSheet:
         self.height = height
         self.weight = weight
         self.uid = uid
+
         self.experience = experience
 
         self.player_race = race
@@ -101,16 +29,16 @@ class CharacterSheet:
 
         if level == 0:  # fresh character init
             self.level = 1
-            self.hp_max = hp_dice + self.abilities.CON_MOD
+            self.hp_max = self.abilities.CON_MOD + self.player_class.hitDie
             self.hp = self.hp_max
         else:
             self.level = level
             self.hp_max = hp_dice + (level - 1) * self.abilities.CON_MOD
             self.hp = hp_current
 
+        self.nextLevel = self.get_next_level_xp()
         self.proficiency_skills = skills
         self.proficiency_bonus = self.player_class.get_proficiency_bonus(self.level)
-        sys.stdout.flush()
         self.proficiency_weapons = self.player_class.proficiencies.intersection(enums.WEAPONS.Set())
         self.proficiency_armor = self.player_class.proficiencies.intersection(enums.ARMOR.Set())
                             # todo: apply proficiencies from class/race to character
@@ -123,9 +51,12 @@ class CharacterSheet:
         self.equipment.equip(equipment)  # todo: implement weapons/shields/armor
         self.traits = self.player_race.traits
         self.traits.update(self.player_class.traits)
-        self.effects = self.Effect()  # use for trait/status effects - re-apply whenever character refreshes
-        self.advantage = enums.ADVANTAGE
-        self.disadvantage = enums.ADVANTAGE
+        self.effects = Event()  # use for trait/status effects - re-apply whenever character refreshes
+        self.advantage = set()
+        self.disadvantage = set()
+        self.atk_bonus = 0
+        self.damage_vulnerable = set()  # todo: implement damage vulnerabilities
+        self.damage_resist = set()  # todo: implement damage resistances
 
     def set_saving_throws(self):  # todo: confirm if saving throws are modified by any races and include if so
         throws = self.player_class.saving_throws
@@ -144,6 +75,28 @@ class CharacterSheet:
         WIS += self.proficiency_bonus if enums.ABILITY.WIS in throws else 0
         CHA += self.proficiency_bonus if enums.ABILITY.CHA in throws else 0
         return enums.Ability(STR, CON, DEX, INT, WIS, CHA)
+
+    def get_next_level_xp(self):
+        xp = {2:     300,
+              3:     900,
+              4:    2700,
+              5:    6500,
+              6:   14000,
+              7:   23000,
+              8:   34000,
+              9:   48000,
+              10:  64000,
+              11:  85000,
+              12: 100000,
+              13: 120000,
+              14: 140000,
+              15: 165000,
+              16: 195000,
+              17: 225000,
+              18: 265000,
+              19: 305000,
+              20: 355000}
+        return xp.get(self.level, -1)
 
     def full_str(self):
         s = '\n'
@@ -193,6 +146,9 @@ class CharacterSheet:
                 'hp': '{:,}'.format(self.hp) + '/' + '{:,}'.format(self.hp_max),
                 }
 
+    def is_lucky(self):
+        return enums.TRAIT.LUCKY in self.traits
+
     def get_armor_class(self):  # todo: apply modifiers from various traits, statuses, and spell effects
         # DETERMINE WHAT AC FORMULAS CAN BE USED FOR CHARACTER
         #   CLASSES CAN HAVE DEFENSIVE ARMOR CALCULATIONS(BARBARIAN UNARMORED DEFENCE FOR EXAMPLE)
@@ -205,6 +161,8 @@ class CharacterSheet:
         # todo: throw defence event related to specific attack type, modify ac if necessary - may need to return
         #  statuses from here for thorns like effects
 
+        # todo: poll all gear(not just armor), and sum the AC values.
+        # todo: run racial/class defence functions, keep best AC value.
         # CURRENTLY NO EQUIPMENT IN USE, SO ALWAYS RETURNS BASIC ARMOR FOR NOW.
         if self.equipment.armor is None:
             return 10 + self.abilities.DEX_MOD
@@ -240,11 +198,12 @@ class CharacterSheet:
         # is storing two of the same reference
 
         attacks['effects'] = effects
-        attacks['calculation'] = self.wpn
-        attacks['weapons'] = self.equipment.right_hand, self.equipment.left_hand
+        attacks['calculation'] = self._wpn
+        attacks['weapons'] = self.equipment.right_hand, self.equipment.left_hand, \
+            self.equipment.jaw, self.equipment.fingers
         return attacks
 
-    def wpn(self, hand: weaponry.Weapon = None):
+    def _wpn(self, hand: weaponry.Weapon = None):
         while True:
             if hand is None:
                 yield 0
@@ -255,15 +214,12 @@ class CharacterSheet:
             damage += hand.bonus_damage
             yield [d(damage) for d in hand.damage_type], hand.attack_function
 
-    def check_attack(self):
-        # todo: deal with multiple damage types
-        effects = self.effects.attack(self, target=True)
-        attack, damage = self.get_attack()
-        return damage, self.equipment.right_hand.damage_types[0]
-
-    def take_damage(self, damage):
+    def receive_damage(self, damage):
         # todo: handle death, incapacitation, etc.
-        self.hp -= damage
+        # todo: trigger defence events, return any that apply to attacker
+        self.hp -= int(max(damage))
+        return int(max(damage)), None  # todo: return actual damage taken and any counter effects
+        # todo: cross check damage types against vulnerability/resist, and modify accordingly - take highest effect
 
     def get_attack(self):
         # todo: should re-tag to get_weapon_attack and use the weapon's attack function
@@ -285,74 +241,6 @@ class CharacterSheet:
 
         print('damage =', damage, 'critical =', critical)
         return attack, critical
-
-    class Effect:
-        # todo: complete the event system for player characters
-        # re-organise?
-        #   register within appropriate event window for when to apply effect
-        #      event windows are:
-        #        combat events: before_battle, before_turn, after_turn, action, attack, defend, after_battle
-        #        standard events: before_battle, before_turn, after_turn, action, after_battle, init, levelup
-        #   before/after battle: init/end triggers for combat,
-        #                        used to convert ongoing timed events to iterative battle triggers, or battle to timed
-        #   before/after turn: in battle, these occur every 6 seconds.  Out of battle, these occur every time the bot
-        #                      decides you need to be contacted for clarification of an important decision.  If
-        #                      someone dies, the bot will contact you about retreating, or pressing on, for example.
-        #   action: events which trigger when you do things.  Flight for example - if an item grants you the power
-        #           to fly, then the flight effect would exist in the action trigger - you have to try to fly for it
-        #           to do anything
-        #   attack/defend:  these occur as part of battle.  attack events occur when you launch an attack,
-        #                   defend triggers when you are attacked
-
-        class Event(set):   # minimalist event handler abusing the set class
-            #     >>> e = Event({foo, bar})
-            #     >>> e('a', 'b')
-            #     foo(a b)
-            #     bar(a b)
-            #     >>> e
-            #     Event(foo, bar)
-            #     >>> e.add(baz)
-            #     >>> e
-            #     Event(foo, baz, bar)
-            #     >>> e('a', 'b')
-            #     foo(a b)
-            #     baz(a b)
-            #     bar(a b)
-            #     >>> e.remove(foo)
-            #     >>> e('a', 'b')
-            #     baz(a b)
-            #     bar(a b)
-
-            def __call__(self, *args, **kwargs):
-                for f in self:
-                    respond = f(*args, **kwargs)
-                if 'target' in kwargs:
-                    return respond  # todo catch and return the results of each event for return to caller
-
-            def __repr__(self):
-                return 'Event(%s)' % re.sub('["[\]]', '', json.dumps([x.__name__ for x in self]))
-
-        before_battle = Event(set())    # applies on battle start
-        before_turn = Event(set())      # applies on start of each turn
-        after_turn = Event(set())       # applies after each turn
-        action = Event(set())           # applies whenever a character acts
-        attack = Event(set())           # applies whenever a character attacks
-        defend = Event(set())           # applies whenever a character defends
-        after_battle = Event(set())     # applies whenever a battle ends
-        init = Event(set())             # applies on character creation - including loading
-        level_up = Event(set())         # applies on levelup
-        # class When:
-        #     def __init__(self):
-        #         self.status = []
-        #         self.temporary = []
-        #         self.permanent = []
-        #
-        # def __init__(self):
-        #     self.always = self.When()
-        #     self.before_turn = self.When()
-        #     self.on_action = self.When()
-        #     self.after_turn = self.When()
-
 
 # class Character():  #rebuilt this already, lol
 #     pace=enums.PACE.NORMAL
@@ -384,17 +272,6 @@ class CharacterSheet:
 #         calculate_hp_max(self,old_con_mod)
 #         self.level+=1
 #
-#     def calculate_hp_max(self, old_con_mod=None):
-#         if old_con_mod is None:
-#             old_con_mod = self.con['mod']
-#         new_con_mod = functions.ability_mod(self.con['base']+self.con['bonus'])
-#         if new_con_mod != old_con_mod:   #if constitution changes, recalculate HP max
-#             self.base_hp += self.level * (old_con_mod - new_con_mod)  #base HP max changes by levels times changes in constitution
-#         self.hp['base']+=functions.roll(1,20,new_con_mod)  #roll 1d20 +con_mod
-#
-#     def armor_class(self):
-#         return 10+functions.ability_mod(self.dex['current'])  #no armor or shield applied!  chapter 5
-#
 # melee attack
 #   add str modifier to attack roll and damage roll unless weapon has finesse, then _can_ use dex instead
 # ranged/finesse attack
@@ -424,11 +301,38 @@ class CharacterSheet:
 #   determines by effect that causes it, spells are determined via spellcasting and proficiency bonus
 
 
+def init_wulfgar():
+    # THESE ARE WHAT WE NEED TO KNOW IN ORDER TO LOAD A CHARACTER
+    # INVENTORY IS GONNA BE AN EXPANSIVE MESS...PERHAPS JUST A DATABASE TABLE ID - LOAD EVERYTHING WE FIND THERE?
+    #
+    name = 'Wulfgar, son of Beornegar'
+    age = 21
+    height = 7 * 12 + 1  # 7` 1"
+    weight = 223
+    uid = 1
+    experience = 0
+    level = 0
+    player_race = RACE.Human()
+    player_class = CLASS.Barbarian(level)
+    class_skills = {enums.SKILL.ATHLETICS, enums.SKILL.PERCEPTION}
+    background = enums.BACKGROUNDS.OUTLANDER
+    #    abilities = enums.Ability(24, 16, 22, 9, 14, 11)
+    abilities = enums.Ability(15, 13, 14, 8, 12, 10)
+    #    hp_dice = 179  # sum total of all hp rolls to date - needs to be kept for recalculating hp on con_mod change
+    hp_dice = 0
+    #    hp_current = 236
+    hp_current = 0
+    weapon = weaponry.greataxe  # todo: implement weapons/shields/armor
+    _armor = armor.plate_Armor  # todo: implement weapons/shields/armor
+    shield = None  # todo: implement weapons/shields/armor
+    return CharacterSheet(name, age, height, weight, uid, experience, level, player_race, player_class,
+                          class_skills, background, abilities, hp_dice, hp_current, [weapon, _armor, shield])
+
+
 if __name__ == '__main__':
-    from inspect import getframeinfo, stack
-    import os
-    __LINE__ = lambda: os.path.basename(getframeinfo(stack()[1][0]).filename) \
-        + '_' + str(getframeinfo(stack()[1][0]).lineno) + ': '
+    from trace import __LINE__
+    import sys
+
     wulfgar = init_wulfgar()
     print(wulfgar, '\n\n', wulfgar.dict_short(), '\n', wulfgar.full_str())
 

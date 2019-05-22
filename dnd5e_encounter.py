@@ -1,12 +1,13 @@
 # intended for battle specific code
-import dnd5e_character_classes as character
+import dnd5e_character_sheet as character
 import dnd5e_creatures as creatures
 import random
 import dnd5e_misc as misc
 
+
 class Party:
     def __init__(self, *args):
-        self.members = args
+        self.members = list(args)
 
     def dict(self):
         return [m.dict_short() for m in self.members]
@@ -15,57 +16,111 @@ class Party:
         for m in self.members:
             m.hp = m.hp_max
 
+    def size(self):
+        return len(self.members)
+
     def is_able(self):  # todo: consider status effects like incapacitated, petrified, etc.
         return sum((x.hp for x in self.members)) > 0
 
     def able_bodied(self):
         return [x for x in self.members if x.hp > 0]
 
+    def __str__(self):
+        s = ''
+        for m in self.members:
+            d = m.dict_short()
+            s += d['name'] + ': '
+            if isinstance(m, character.CharacterSheet):
+                s += 'EXP: ' + str(m.experience)+',  '
+            s += 'HP: ' + d['hp']
+            s += '\n'
+        return s
+
 
 class Encounter:
     def __init__(self, encounter_map=None, player_party=None, hostile_party=None, difficulty='Normal', reward=None):
         self.map = encounter_map
-        self.player_party = player_party
+        self.player_party = Party(*player_party.members.copy())
         self.difficulty = difficulty
         self.hostile_party = hostile_party
+        self.reward = reward  # todo: implement gem/item/coin rewards
         if hostile_party is None:  # generate one
             self.generate_hostile(self.difficulty)
-        self.reward = reward  # todo: implement gem/item/coin rewards
 
     def do_battle(self):
+        print('Encounter start!\n')
+        print('player_party: ')
+        print(str(self.player_party))
+        print('enemy_party: ')
+        print(str(self.hostile_party))
         # rank by initiative
-        initiative_list = sorted(self.player_party+self.hostile_party, key=lambda x: x.initiative, reverse=True)
+        initiative_list = sorted(self.player_party.members+self.hostile_party.members,
+                                 key=lambda x: x.initiative, reverse=True)
+        attack_die = misc.Die(1,20)
         while self.hostile_party.is_able() and self.player_party.is_able():
             for entity in initiative_list:  # take turns in order of initiative
-                if entity in self.player_party:
-                    # todo: present choice of action to script/both parties players
-                    # todo: a more intelligent target selection process than random choice
-                    # todo: complete this attack process from outside both CharacterSheet and Creature
-                    # when entity attacks a target:
-                    #     get entity attack criteria
-                    #         throw entity attack event(s)
-                    #         respond with damage, dtypes, effects function(s) for application to target on success
-                    #             target executes on self if success
-                    #     get target defence criteria
-                    #         throw target defence events(s)
-                    #         respond with armor_class, effects function(s) for application to entity
-                    #             entity executes on self on attack success/fail
-                    #     if attack succeeds
-                    #         call target.receive_damage to give damage to target
-                    #         call target.receive_effects give effects to the target
-                    attacks = entity.melee_attack()
+                # todo: present choice of action to script/both parties players
+                # todo: a more intelligent target selection process than random choice
+                # todo: complete this attack process from outside both CharacterSheet and Creature
+                # when entity attacks a target:
+                #     get entity attack criteria
+                #         throw entity attack event(s)
+                #         respond with damage, dtypes, effects function(s) for application to target on success
+                #             target executes on self if success
+                #     get target defence criteria
+                #         throw target defence events(s)
+                #         respond with armor_class, effects function(s) for application to entity
+                #             entity executes on self on attack success/fail
+                #     if attack succeeds
+                #         call target.receive_damage to give damage to target
+                #         call target.receive_effects give effects to the target
+                attacks = entity.melee_attack()
+                #  dict with keys num, weapons, calculation
+                #      num is number of attacks to be made in this attack
+                #      calculation is a list of lists, containing a damage function, and weapon function
+                #      weapons is a list of the weapons themselves, with their related criteria.
+                calculation = attacks['calculation']
+                damages = []
+                for atk in range(attacks['num']):
+                    for weapon in attacks['weapons']:
+                        if weapon is not None:
+                            if isinstance(entity, character.CharacterSheet):
+                                player = True
 
-                    for attack in attacks:
+                            if player:
+                                target = random.choice(self.hostile_party.able_bodied())
+                            else:
+                                target = random.choice(self.player_party.able_bodied())
+                            advantage, disadvantage = misc.getAdvantage(entity, target)
+                            attack_roll, critical = misc.attack_roll(advantage, disadvantage, entity.is_lucky())
+                            attack_roll += weapon.hit_bonus  # todo: get and include any status/trait bonuses
+                            if player:
+                                attack_roll += entity.abilities.STR_MOD
 
-                        target = random.choice(self.hostile_party.able_bodied())
-                        advantage, disadvantage = misc.getAdvantage(entity, target)
-                        attack_roll, critical = misc.attack_roll(advantage, disadvantage, entity.is_lucky())
-                        misc.Roll(1, 20) + attack_roll + atk_bonus
+                            if critical:
+                                damage = calculation(weapon).__next__()[0] * 2
+                            else:
+                                damage = calculation(weapon).__next__()[0]
+#                            damages.append([attack_roll, critical, damage])
+#                            print(__LINE__(), attack_roll, critical, damages)
 
-                        # todo: currently assuming all attacks are melee attacks - allow selection and grabbing the
-                        #  appropriate functions.
-                        damage_die, dtypes, effects = entity.melee_attack(target)
-                        target.receive_damage(damage, dtype)
+                            # todo: currently assuming all attacks are melee attacks - allow selection and grabbing the
+                            #  appropriate functions.
+#                            damage_die, dtypes, effects = entity.melee_attack(target)
+                            damage_done, counter_effects = target.receive_damage(damage)
+                            print(entity.name + ' attacks ' + target.name + ' with ' + str(weapon) +
+                                  ' and does ' + str(damage_done) + ' damage')
+                            if target.hp < 1:
+                                print(target.name + ' has been incapacitated')
+                                if player:
+                                    self.hostile_party.members.remove(target)
+                                else:
+                                    self.player_party.members.remove(target)
+                                initiative_list.remove(target)
+                            input()
+        print('You have ' + ('won!' if self.player_party.is_able() else 'lost!'))
+        input()
+        return self.reward if self.player_party.is_able() else 0
 
     def generate_hostile(self, difficulty):
         # todo: make this obey region themes - no dryads among the undead....
@@ -73,7 +128,6 @@ class Encounter:
         threshold = {}
         for m in self.player_party.members:
             member_threshold = XP_thresholds[m.level]
-            print(member_threshold)
             for k in member_threshold:
                 try:
                     threshold[k] += member_threshold[k]
@@ -88,7 +142,19 @@ class Encounter:
         hostiles = []
         reward_xp = 0
         reward_gold = 0
+
+        party_mod = {1: 2,  2: 1,   3: 0,   4: -1, 5: -1,  6: -2}.get(self.player_party.size(), -2) + 2
+        # the +2 offset is so that when combined with mobs_mod, we consider 0 as pos2, which allows the -2 to have value
+        #  in the array as well
+
+        nmobs_mod = [1, 2, 3, 5, 8, 11, 15, 20, 30]
+        multi = [0.25, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9]
+
+        # we are adding a creature, so add one now to always use the next value.
+
         while creature_list and XP:
+            mobs_mod = sum([1 for x in nmobs_mod if x <= len(hostiles)]) + 1
+            modifier = multi[mobs_mod + party_mod]
             if difficulty != 'Deadly' and creature_list[0].challenge[0] > player_average_level:
                 creature_list.pop(0)
             elif difficulty not in ['Deadly', 'Hard'] and creature_list[0].challenge[0] >= player_average_level:
@@ -96,13 +162,13 @@ class Encounter:
             elif difficulty not in ['Deadly', 'Hard', 'Normal'] and creature_list[0].challenge[0] >= int(player_average_level*.9):
                 creature_list.pop(0)
             else:
-                if XP >= creature_list[0].challenge[1]:
-                    XP -= creature_list[0].challenge[1]
-                    hostile_xp += creature_list[0].challenge[1]
+                if XP >= creature_list[0].challenge[1] * modifier:
+                    XP -= creature_list[0].challenge[1] * modifier
+                    hostile_xp += creature_list[0].challenge[1] * modifier
                     hostiles.append(creature_list[0]())
                 else:
                     creature_list.pop(0)
-
+        reward_xp = int(hostile_xp ** 0.5)
         self.hostile_party = Party(*hostiles)
         self.reward = {'xp': reward_xp, 'gold': reward_gold}
 
@@ -137,8 +203,11 @@ XP_thresholds = {
 # Hard
 # Deadly
 
-
-player = character.init_wulfgar()
-player = Party(player)
-encounter = Encounter(player_party=player)
-print(encounter.player_party.is_able(), encounter.hostile_party.is_able())
+if __name__ == '__main__':
+    from trace import __LINE__
+    player = character.init_wulfgar()
+    while player.hp > 0:
+        encounter = Encounter(player_party=Party(player))
+        rewards = encounter.do_battle()
+        print(rewards)
+        player.experience += rewards['xp']

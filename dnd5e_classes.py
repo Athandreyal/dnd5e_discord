@@ -38,7 +38,6 @@ class CommonFunctions:
 class Barbarian(CommonFunctions):
     name = 'Barbarian'
     hitDie = 12
-    hitpoints_lvl1 = lambda con, lvl: 12+ability_mod(con)*lvl
     class_ability = Ability(strength=15, constitution=14, dexterity=0, intelligence=0, wisdom=0, charisma=0)
     # unassigned [13,12,10,8]
     proficiencies = {PROFICIENCY.ARMOR.LIGHT, PROFICIENCY.ARMOR.MEDIUM, PROFICIENCY.SHIELDS,
@@ -109,7 +108,6 @@ class Barbarian(CommonFunctions):
 class Bard(CommonFunctions):
     name = 'Bard'
     hitDie = 8
-    hitpoints_max = lambda con, lvl: 8+ability_mod(con)*lvl
     class_ability = Ability(strength=0, constitution=0, dexterity=14, intelligence=0, wisdom=0, charisma=15)
     #                       unassigned [13,12,10,8]
     proficiencies = {PROFICIENCY.ARMOR.LIGHT, PROFICIENCY.WEAPONS.SIMPLE, PROFICIENCY.WEAPONS.MARTIAL.CROSSBOW_HAND,
@@ -136,7 +134,6 @@ class Bard(CommonFunctions):
 class Cleric(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Cleric'
     hitDie = 12
-    hitpoints_lvl = 12
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -148,7 +145,6 @@ class Cleric(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 class Druid(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Druid'
     hitDie = 12
-    hitpoints_lvl = 12
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -160,7 +156,6 @@ class Druid(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 class Fighter(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Fighter'
     hitDie = 12
-    hitpoints_lvl1 = 12
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -172,7 +167,6 @@ class Fighter(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 class Monk(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Monk'
     hitDie = 12
-    hitpoints_lvl = 12
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -184,7 +178,6 @@ class Monk(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 class Paladin(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Paladin'
     hitDie = 12
-    hitpoints_lvl = 12
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -196,7 +189,6 @@ class Paladin(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 class Ranger(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Ranger'
     hitDie = 12
-    hitpoints_lvl = 12
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -208,7 +200,6 @@ class Ranger(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 class Rogue(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Rogue'
     hitDie = 12
-    hitpoints_lvl = 12
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -220,7 +211,6 @@ class Rogue(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 class Sorcerer(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Sorcerer'
     hitDie = 12
-    hitpoints_lvl = 12
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -232,7 +222,6 @@ class Sorcerer(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 class Warlock(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Warlock'
     hitDie = 12
-    hitpoints_lvl = 12
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -244,7 +233,6 @@ class Warlock(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 class Wizard(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Wizard'
     hitDie = 12
-    hitpoints_lvl = 12
 
     def __init__(self, lvl):
         if lvl == 0:
