@@ -114,7 +114,7 @@ def attack_roll(advantage=False, disadvantage=False, lucky=False):
             roll = min(roll1, roll2)
     else:
         roll = roll1
-    critical = attack_roll == 20
+    critical = roll == 20
     return roll, critical
 
 

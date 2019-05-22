@@ -99,6 +99,7 @@ class Encounter:
                                 target = random.choice(self.player_party.able_bodied())
                             advantage, disadvantage = misc.getAdvantage(entity, target)
                             attack_roll, critical = misc.attack_roll(advantage, disadvantage, entity.is_lucky())
+                            print(critical)
                             attack_roll += weapon.hit_bonus  # todo: get and include any status/trait bonuses
                             if player:
                                 attack_roll += entity.abilities.STR_MOD
@@ -108,11 +109,10 @@ class Encounter:
                                 print(entity.name + ' attacks ' + target.name + ' with ' + str(weapon) +
                                       ' and misses')
                             else:
+                                damage = calculation(weapon).__next__()[0]
                                 if critical:
-                                    damage = calculation(weapon).__next__()[0] * 2
-                                else:
-                                    damage = calculation(weapon).__next__()[0]
-
+                                    for d in damage:
+                                        d *= 2
                                 # todo: currently assuming all attacks are melee attacks - allow selection and grabbing the
                                 #  appropriate functions.
                                 damage_done, counter_effects = target.receive_damage(damage)

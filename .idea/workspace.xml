@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="ce54a110-60b4-4b2f-b783-675197c55daf" name="Default Changelist" comment="A little update to the encounter test code&#10;&#10;character_sheet:&#10;- silenced the 'level up' print in CharacterSheet.level_up()&#10;&#10;encounter:&#10;- Encounter.init()&#10;  - added verbose, silent, auto_run and debug_rewards parameters&#10;- Encounter.do_battle()&#10;  - wrapped the prints behind tests for verbose and silent&#10;  - wrapped the input that halts iteration behind a test for auto_run&#10;  - killed some old commented code&#10;- XP_thresholds now has 7 difficulty levels&#10;  - each is 2/3 of the next">
+    <list default="true" id="ce54a110-60b4-4b2f-b783-675197c55daf" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dnd5e_character_sheet.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_character_sheet.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dnd5e_encounter.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_encounter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dnd5e_enums.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_enums.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dnd5e_misc.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_misc.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -14,50 +15,30 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/dnd5e_encounter.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-339">
-              <caret line="144" column="20" lean-forward="true" selection-start-line="144" selection-start-column="20" selection-end-line="144" selection-end-column="20" />
+            <state relative-caret-position="652">
+              <caret line="107" column="63" lean-forward="true" selection-start-line="107" selection-start-column="63" selection-end-line="107" selection-end-column="63" />
               <folding>
                 <element signature="e#36#77#0" expanded="true" />
                 <element signature="e#208#233#0" expanded="true" />
                 <element signature="e#263#308#0" expanded="true" />
-                <element signature="e#1319#1751#0" expanded="true" />
-                <element signature="e#1829#6759#0" expanded="true" />
-                <element signature="e#8992#12803#0" expanded="true" />
-                <element signature="e#13214#13354#0" expanded="true" />
+                <element signature="e#7031#9558#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/trace.py">
+        <entry file="file://$PROJECT_DIR$/dnd5e_misc.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="130">
-              <caret line="10" column="22" lean-forward="true" selection-start-line="10" selection-start-column="22" selection-end-line="10" selection-end-column="22" />
+            <state relative-caret-position="417">
+              <caret line="116" column="25" lean-forward="true" selection-start-line="116" selection-start-column="25" selection-end-line="116" selection-end-column="25" />
               <folding>
-                <element signature="e#0#39#0" expanded="true" />
-                <element signature="e#298#372#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/dnd5e_entity.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="303">
-              <caret line="123" column="36" lean-forward="true" selection-start-line="123" selection-start-column="36" selection-end-line="123" selection-end-column="36" />
-              <folding>
-                <element signature="e#88#131#0" expanded="true" />
-                <element signature="e#428#1885#0" expanded="true" />
-                <element signature="e#401#440#0" expanded="true" />
-                <element signature="e#488#854#0" expanded="true" />
-                <element signature="e#892#2089#0" expanded="true" />
-                <element signature="e#1957#2066#0" expanded="true" />
-                <element signature="e#2149#2558#0" expanded="true" />
+                <element signature="e#0#13#0" expanded="true" />
+                <element signature="e#175#208#0" />
+                <element signature="e#1553#2232#0" />
               </folding>
             </state>
           </provider>
@@ -117,17 +98,38 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/dnd5e_enums.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="811">
-              <caret line="754" column="14" lean-forward="true" selection-start-line="754" selection-start-column="14" selection-end-line="754" selection-end-column="14" />
+            <state relative-caret-position="444">
+              <caret line="590" selection-start-line="590" selection-end-line="590" />
               <folding>
                 <element signature="e#2189#2863#0" expanded="true" />
                 <element signature="e#2971#3164#0" expanded="true" />
                 <element signature="e#3272#3471#0" expanded="true" />
+                <element signature="e#23064#23084#0" expanded="true" />
                 <element signature="e#23313#23336#0" expanded="true" />
+                <element signature="e#23377#23450#0" expanded="true" />
+                <element signature="e#23492#23547#0" expanded="true" />
+                <element signature="e#23596#23640#0" expanded="true" />
+                <element signature="e#23688#23732#0" expanded="true" />
+                <element signature="e#23781#23825#0" expanded="true" />
                 <element signature="e#23611#23635#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/dnd5e_functions.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="364">
+              <caret line="28" lean-forward="true" selection-start-line="28" selection-end-line="28" />
+              <folding>
+                <element signature="e#213#238#0" expanded="true" />
+                <element signature="e#720#928#0" expanded="true" />
+                <element signature="e#962#1000#0" expanded="true" />
+                <element signature="e#1049#1457#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -226,15 +228,15 @@
         <option value="$PROJECT_DIR$/dnd5e_character_classes.py" />
         <option value="$PROJECT_DIR$/dnd5e_armor.py" />
         <option value="$PROJECT_DIR$/dnd5e_Events.py" />
-        <option value="$PROJECT_DIR$/dnd5e_misc.py" />
         <option value="$PROJECT_DIR$/dnd5e_weaponry.py" />
         <option value="$PROJECT_DIR$/dnd5e_inventory.py" />
         <option value="$PROJECT_DIR$/trace.py" />
         <option value="$PROJECT_DIR$/dnd5e_entity.py" />
-        <option value="$PROJECT_DIR$/dnd5e_enums.py" />
         <option value="$PROJECT_DIR$/dnd5e_classes.py" />
         <option value="$PROJECT_DIR$/dnd5e_creatures.py" />
         <option value="$PROJECT_DIR$/dnd5e_character_sheet.py" />
+        <option value="$PROJECT_DIR$/dnd5e_misc.py" />
+        <option value="$PROJECT_DIR$/dnd5e_enums.py" />
         <option value="$PROJECT_DIR$/dnd5e_encounter.py" />
       </list>
     </option>
@@ -449,7 +451,14 @@
       <option name="project" value="LOCAL" />
       <updated>1558556480240</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="quick bugfix and update to encounter test code&#10;  Forgot to check target armor class, so no one was ever missing, lol.&#10;&#10;&#10;character_sheet:&#10;- silenced the 'level up' print in CharacterSheet.level_up()&#10;- added level to .dict_short()&#10;&#10;encounter:&#10;- Encounter.init()&#10;  - added verbose, silent, auto_run and debug_rewards parameters&#10;- Encounter.do_battle()&#10;  - wrapped the prints behind tests for verbose and silent&#10;  - wrapped the input that halts iteration behind a test for auto_run&#10;  - killed some old commented code&#10;  - attacks now get target ac, attack rolls less than target ac miss&#10;- XP_thresholds now has 7 difficulty levels&#10;  - each is 2/3 of the next&#10;- test code now runs until level 20 is reached">
+      <created>1558562837027</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1558562837027</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TodoView">
@@ -474,7 +483,7 @@
       <window_info anchor="bottom" id="Python Console" order="3" weight="0.32900432" />
       <window_info anchor="bottom" id="Message" order="4" />
       <window_info anchor="bottom" id="Find" order="5" />
-      <window_info active="true" anchor="bottom" id="Run" order="6" visible="true" weight="0.084415585" />
+      <window_info active="true" anchor="bottom" id="Run" order="6" visible="true" weight="0.43939394" />
       <window_info anchor="bottom" id="Version Control" order="7" sideWeight="0.49947312" weight="0.32900432" />
       <window_info anchor="bottom" id="Debug" order="8" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="9" weight="0.25" />
@@ -534,7 +543,8 @@
     <MESSAGE value="Simple Melee combat at last!&#10;&#10;its come a long way, and it finally meets milestone 1, I can init a&#10;player, and some creatures, and they can try to kill eachother.&#10;&#10;renamed the file character_classes to character_sheet&#10;&#10;character_sheet:&#10;- moved init_wulfgar function to the end, so its out of the way&#10;- pushed the Equipment class out to its own file&#10;- pushed the events class out to its own file&#10;- added .is_lucky()&#10;- added .get_next_level_xp()&#10;- finished reworking get_attack&#10;- pushed __LINE__ debug function to its own file&#10;&#10;classes:&#10;- removed the hitpoints_lvl1, its set under character_sheet with hit_die&#10;&#10;creatures:&#10;- retagged the alias for dnd5e_weaponry to weaponry as I do elsewhere&#10;- gave creatures the equipment class, so they use same methods as player&#10;- changes default (dis)advantage vars to set() from None&#10;- added .atk_bonus and .effects vars&#10;- removed .check_attack()&#10;- removed .get_attack()&#10;- added .receive_damage()&#10;- added .melee_attack()&#10;- added ._wpn()&#10;- added .get_armor_class()&#10;- added Crab creature&#10;- added a few more fields to weapon:&#10;  - atk_type: enums.ATTACK, set&#10;  - wield_from: enums.EQUIP_SLOT, single&#10;- added more debug prints buried behind an if name == main block&#10;&#10;&#10;encounter:&#10;- Party.__init__ now converts its args to list, from tuple&#10;- Party.size() added&#10;- Party.__str__() added&#10;- Encounter:&#10;  - .init now copies Party Members rather than directly using&#10;  - .do_battle() now has some text feedback - will remove in time&#10;    - huge rewrite, pretty mch entirely new function&#10;  - .generate_hostile() no involves party size mods, and difficulties&#10;    - also not returns a reward dict - currently exp only&#10;- the simplistic battle routine buried in an if name == main block&#10;&#10;enums:&#10;- changed enums import from * to as misc, related changes throughout&#10;- killed a couple debug prints&#10;- added GENERIC to WEAPONS type&#10;- added EQUIP_SLOT enum&#10;&#10;events:&#10;- entirely new, though no new code, exiled from inside character_sheet&#10;&#10;inventory:&#10;- entirely new, exiled from inside character_sheet&#10;- more internal variables, for more places to put gear&#10;- equip_weapon() now checks for jaw, hands, and fingers slots.&#10;&#10;misc:&#10;- Die.__init__() no longer forces a min value of 2 sides - 1d1 possible&#10;- .random() altered to shortcut if 1 sided.&#10;&#10;weaponry:&#10;- importing ATTACK and EQUIP_SLOT enums&#10;- .__init__() args changed, added atk_type&#10;  -  sets self.atk_type and self.wield_from now as well&#10;- greataxe test def altered to set atk_type and wield_from&#10;&#10;trace:&#10;- entirely new, added to carry any debug related functions worth having&#10;- implemented __LINE__(), which behaves as __FILE__+_+__LINE__ does in C" />
     <MESSAGE value="Rudimentary leveling now works&#10;&#10;fixed an issue with creature weapons lacking weapon.flags not having&#10;their attack_die set.&#10;&#10;fixed encounter continuing and calling choice on a party which has &#10;already been eliminated.&#10;&#10;Character_sheet:&#10;- experience now hides behind a getter/setter.  Setter calls levelup&#10;  - levelup handled via re-calling __init__, inserting current stats&#10;- .__init__() modified to check if relevant attributes are None or set,&#10;  if none they are defaulted, if set they are used as is&#10;- ._wpn() now used hand.roll instead of hand.attack_die.roll()&#10;&#10;Classes:&#10;- Barbarian:&#10;  - class_ability is no longer defaulted unless not assigned &#10;  - .__init__() now takes many configuration arguments, to pass in state&#10;    - tests those for None, if None, defaults, else keeps what was passed&#10;&#10;Creatures:&#10;- like with character_sheet, ._wpn() now uses hand.roll()&#10;&#10;encounter:&#10;- Party.__str__() now includes character level in its return&#10;- Encounter.do_battle() now tests for active party internally too&#10;  - immediately after selecting a weapon, but before choosing a target&#10;    fixes trying to choose target from a party with no members&#10;  - removed the per-hit input(), now runs the entire encounter at once.&#10;  - now returns a dict for failure as well rather than just zero&#10;- Encounter.generate_hostile():&#10;  - currently returns exp equal to stated for creatures&#10;    - this is for testing purposes to accelerate growth.  &#10;    - it will not stay this fast&#10;- if name == main:&#10;  - now tests sum of hp for player one and two before terminating.&#10;  - divides the rewards among the players&#10;  - sets their hp to max after each iteration&#10;  &#10;inventory:&#10;- had a case where creatures were not setting flags on their weapons&#10;  - this caused Weapon.equip_weapon() to not assign its attack die&#10;    fixed&#10;&#10;weaponry:&#10;- Weapon.roll() was still using the old .attackDie name, retagged it" />
     <MESSAGE value="quick housecleaning update&#10;&#10;character_sheet:&#10;- CharacterSheet now inherits from common Entity class&#10;  - re-organised and stripped some variables that Entity now owns&#10;- .set_saving_throws() now belongs to Entity&#10;- .is_lucky() now belongs to Entity&#10;- .melee_attack() now belongs to Entity&#10;- ._wpn() now belongs to Entity&#10;- receive_damage() now belongs to entity&#10;- .get_attack() is eliminated&#10;- debug block now import print from trace&#10;  - minor edits to the print statements to reflect change&#10;&#10;classes:&#10;- appended background.skills to self.skills&#10;&#10;creatures:&#10;- Creature now inherits from common Entity class&#10;  - re-organised and stripped some variables that Entity now owns&#10;- .set_saving_throws() now belongs to Entity&#10;- .is_lucky() now belongs to Entity&#10;- .melee_attack() now belongs to Entity&#10;- ._wpn() now belongs to Entity&#10;- receive_damage() now belongs to entity&#10;- minor edits to the print statements int he debug block&#10;&#10;&#10;encounter:&#10;- debug block now import print from trace&#10;  - minor edits to the print statements to reflect change&#10;&#10;entity:&#10;- Entity created from common features of Creature and CharacterSheet&#10;&#10;enums:&#10;- BACKGROUND.SKILL renamed to .SKILLS, its a set of multiple, pluralise&#10;&#10;trace:&#10;- new function print()&#10;  - overrides default print function.&#10;  - inserts __LINE__() before given args" />
-    <option name="LAST_COMMIT_MESSAGE" value="quick housecleaning update&#10;&#10;character_sheet:&#10;- CharacterSheet now inherits from common Entity class&#10;  - re-organised and stripped some variables that Entity now owns&#10;- .set_saving_throws() now belongs to Entity&#10;- .is_lucky() now belongs to Entity&#10;- .melee_attack() now belongs to Entity&#10;- ._wpn() now belongs to Entity&#10;- receive_damage() now belongs to entity&#10;- .get_attack() is eliminated&#10;- debug block now import print from trace&#10;  - minor edits to the print statements to reflect change&#10;&#10;classes:&#10;- appended background.skills to self.skills&#10;&#10;creatures:&#10;- Creature now inherits from common Entity class&#10;  - re-organised and stripped some variables that Entity now owns&#10;- .set_saving_throws() now belongs to Entity&#10;- .is_lucky() now belongs to Entity&#10;- .melee_attack() now belongs to Entity&#10;- ._wpn() now belongs to Entity&#10;- receive_damage() now belongs to entity&#10;- minor edits to the print statements int he debug block&#10;&#10;&#10;encounter:&#10;- debug block now import print from trace&#10;  - minor edits to the print statements to reflect change&#10;&#10;entity:&#10;- Entity created from common features of Creature and CharacterSheet&#10;&#10;enums:&#10;- BACKGROUND.SKILL renamed to .SKILLS, its a set of multiple, pluralise&#10;&#10;trace:&#10;- new function print()&#10;  - overrides default print function.&#10;  - inserts __LINE__() before given args" />
+    <MESSAGE value="quick bugfix and update to encounter test code&#10;  Forgot to check target armor class, so no one was ever missing, lol.&#10;&#10;&#10;character_sheet:&#10;- silenced the 'level up' print in CharacterSheet.level_up()&#10;- added level to .dict_short()&#10;&#10;encounter:&#10;- Encounter.init()&#10;  - added verbose, silent, auto_run and debug_rewards parameters&#10;- Encounter.do_battle()&#10;  - wrapped the prints behind tests for verbose and silent&#10;  - wrapped the input that halts iteration behind a test for auto_run&#10;  - killed some old commented code&#10;  - attacks now get target ac, attack rolls less than target ac miss&#10;- XP_thresholds now has 7 difficulty levels&#10;  - each is 2/3 of the next&#10;- test code now runs until level 20 is reached" />
+    <option name="LAST_COMMIT_MESSAGE" value="quick bugfix and update to encounter test code&#10;  Forgot to check target armor class, so no one was ever missing, lol.&#10;&#10;&#10;character_sheet:&#10;- silenced the 'level up' print in CharacterSheet.level_up()&#10;- added level to .dict_short()&#10;&#10;encounter:&#10;- Encounter.init()&#10;  - added verbose, silent, auto_run and debug_rewards parameters&#10;- Encounter.do_battle()&#10;  - wrapped the prints behind tests for verbose and silent&#10;  - wrapped the input that halts iteration behind a test for auto_run&#10;  - killed some old commented code&#10;  - attacks now get target ac, attack rolls less than target ac miss&#10;- XP_thresholds now has 7 difficulty levels&#10;  - each is 2/3 of the next&#10;- test code now runs until level 20 is reached" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/dnd5e_status_effects.py">
@@ -596,35 +606,6 @@
           <caret line="42" selection-start-line="42" selection-end-line="42" />
           <folding>
             <element signature="e#0#27#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dnd5e_misc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="195">
-          <caret line="54" column="59" lean-forward="true" selection-start-line="54" selection-start-column="59" selection-end-line="54" selection-end-column="59" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-            <element signature="e#175#208#0" />
-            <element signature="e#1553#2232#0" />
-            <element signature="e#2480#2589#0" expanded="true" />
-            <element signature="e#2628#2707#0" expanded="true" />
-            <element signature="e#2970#3366#0" expanded="true" />
-            <element signature="e#3721#4308#0" expanded="true" />
-            <element signature="e#4378#4760#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dnd5e_functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="260">
-          <caret line="20" column="28" lean-forward="true" selection-start-line="20" selection-start-column="28" selection-end-line="20" selection-end-column="28" />
-          <folding>
-            <element signature="e#213#238#0" expanded="true" />
-            <element signature="e#962#1000#0" expanded="true" />
-            <element signature="e#1049#1457#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -701,33 +682,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dnd5e_enums.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="811">
-          <caret line="754" column="14" lean-forward="true" selection-start-line="754" selection-start-column="14" selection-end-line="754" selection-end-column="14" />
-          <folding>
-            <element signature="e#2189#2863#0" expanded="true" />
-            <element signature="e#2971#3164#0" expanded="true" />
-            <element signature="e#3272#3471#0" expanded="true" />
-            <element signature="e#23313#23336#0" expanded="true" />
-            <element signature="e#23611#23635#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dnd5e_classes.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="446">
-          <caret line="62" column="36" lean-forward="true" selection-start-line="62" selection-start-column="36" selection-end-line="62" selection-end-column="36" />
-          <folding>
-            <element signature="e#0#25#0" expanded="true" />
-            <element signature="e#1301#1511#0" expanded="true" />
-            <element signature="e#1729#1879#0" expanded="true" />
-            <element signature="e#1940#2062#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/dnd5e_entity.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="303">
@@ -779,18 +733,73 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/dnd5e_classes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="446">
+          <caret line="62" column="36" lean-forward="true" selection-start-line="62" selection-start-column="36" selection-end-line="62" selection-end-column="36" />
+          <folding>
+            <element signature="e#0#25#0" expanded="true" />
+            <element signature="e#1301#1511#0" expanded="true" />
+            <element signature="e#1729#1879#0" expanded="true" />
+            <element signature="e#1940#2062#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dnd5e_misc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="417">
+          <caret line="116" column="25" lean-forward="true" selection-start-line="116" selection-start-column="25" selection-end-line="116" selection-end-column="25" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+            <element signature="e#175#208#0" />
+            <element signature="e#1553#2232#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/dnd5e_encounter.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-339">
-          <caret line="144" column="20" lean-forward="true" selection-start-line="144" selection-start-column="20" selection-end-line="144" selection-end-column="20" />
+        <state relative-caret-position="652">
+          <caret line="107" column="63" lean-forward="true" selection-start-line="107" selection-start-column="63" selection-end-line="107" selection-end-column="63" />
           <folding>
             <element signature="e#36#77#0" expanded="true" />
             <element signature="e#208#233#0" expanded="true" />
             <element signature="e#263#308#0" expanded="true" />
-            <element signature="e#1319#1751#0" expanded="true" />
-            <element signature="e#1829#6759#0" expanded="true" />
-            <element signature="e#8992#12803#0" expanded="true" />
-            <element signature="e#13214#13354#0" expanded="true" />
+            <element signature="e#7031#9558#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dnd5e_functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="364">
+          <caret line="28" lean-forward="true" selection-start-line="28" selection-end-line="28" />
+          <folding>
+            <element signature="e#213#238#0" expanded="true" />
+            <element signature="e#720#928#0" expanded="true" />
+            <element signature="e#962#1000#0" expanded="true" />
+            <element signature="e#1049#1457#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dnd5e_enums.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="444">
+          <caret line="590" selection-start-line="590" selection-end-line="590" />
+          <folding>
+            <element signature="e#2189#2863#0" expanded="true" />
+            <element signature="e#2971#3164#0" expanded="true" />
+            <element signature="e#3272#3471#0" expanded="true" />
+            <element signature="e#23064#23084#0" expanded="true" />
+            <element signature="e#23313#23336#0" expanded="true" />
+            <element signature="e#23377#23450#0" expanded="true" />
+            <element signature="e#23492#23547#0" expanded="true" />
+            <element signature="e#23596#23640#0" expanded="true" />
+            <element signature="e#23688#23732#0" expanded="true" />
+            <element signature="e#23781#23825#0" expanded="true" />
+            <element signature="e#23611#23635#0" expanded="true" />
           </folding>
         </state>
       </provider>

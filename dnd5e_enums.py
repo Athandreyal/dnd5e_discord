@@ -577,6 +577,18 @@ class DAMAGETYPE(Set):
         def __repr__(self):
             return str(self.damage) + ' ' + self.__class__.__name__
 
+        def __imul__(self, other):
+            self.damage *= other
+            return self
+
+        def __mul__(self, other):
+            self.damage *= other
+            return self
+
+        def __rmul__(self, other):
+            self.damage *= other
+            return self
+
     class ACID(__Damage):
         def __init__(self, damage): super().__init__(damage)
 
