@@ -6,6 +6,8 @@ __LINE__ = lambda offset=0: os.path.basename(getframeinfo(stack()[1+offset][0]).
 
 
 # noinspection PyShadowingBuiltins
-def print(*args, **kwargs):
-    __builtins__['print'](__LINE__(1), *args, **kwargs)
+def print(*args, offset=None, **kwargs):
+    if offset is None:
+        offset = 1
+    __builtins__['print'](__LINE__(offset=offset), *args, **kwargs)
     sys.stdout.flush()

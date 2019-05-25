@@ -7,13 +7,14 @@ class Item:
 
 	# qty is the quantity of this item you currently interact with - someone has to know how many there are.
 	# enum_type is an enum referencing exactly what this is
-	def __init__(self, name, cost, weight, qty, enum_type, function):
+	def __init__(self, name, cost, weight, qty, enum_type, equip_to, function):
 		self.name = name
 		self.cost = cost
 		self.weight = weight
 		self.qty = qty
 		self.type = enum_type
 		self.function = function
+		self.equip_to = equip_to
 
 	# todo: item sales for economy purposes
 	# todo: write item function reference code

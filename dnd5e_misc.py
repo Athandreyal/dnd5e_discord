@@ -5,51 +5,6 @@ import dnd5e_enums as enums
 # miscellaneous errata used in many places, but not large enough to warrant their own file
 
 
-class Effect:
-    # todo: complete the event system
-    # re-organise?
-    #   register within appropriate event window for when to apply effect
-    #      event windows are:
-    #        combat events: before_battle, before_turn, after_turn, action, attack, defend, after_battle
-    #        standard events: before_battle, before_turn, after_turn, action, after_battle, init, levelup
-    #   before/after battle: init/end triggers for combat,
-    #                        used to convert ongoing timed events to iterative battle triggers, or battle to timed
-    #   before/after turn: in battle, these occur every 6 seconds.  Out of battle, these occur every time the bot
-    #                      decides you need to be contacted for clarification of an important decision.  If
-    #                      someone dies, the bot will contact you about retreating, or pressing on, for example.
-    #   action: events which trigger when you do things.  Flight for example - if an item grants you the power
-    #           to fly, then the flight effect would exist in the action trigger - you have to try to fly for it
-    #           to do anything
-    #   attack/defend:  these occur as part of battle.  attack events occur when you launch an attack,
-    #                   defend triggers when you are attacked
-
-    class Event(set):  # minimalist event handler abusing the set class
-        #     >>> e = Event({foo, bar})
-        #     >>> e('a', 'b')
-        #     foo(a b)
-        #     bar(a b)
-        #     >>> e
-        #     Event(foo, bar)
-        #     >>> e.add(baz)
-        #     >>> e
-        #     Event(foo, baz, bar)
-        #     >>> e('a', 'b')
-        #     foo(a b)
-        #     baz(a b)
-        #     bar(a b)
-        #     >>> e.remove(foo)
-        #     >>> e('a', 'b')
-        #     baz(a b)
-        #     bar(a b)
-
-        def __call__(self, *args, **kwargs):
-            for f in self:
-                f(*args, **kwargs)
-
-        def __repr__(self):
-            return 'Event(%s)' % re.sub('["[\]]', '', json.dumps([x.__name__ for x in self]))
-
-
 class Die:  # ....dice, not death...
     # qty is number of dice to roll
     # sides is ...erm... the number of sides the die has...
@@ -71,7 +26,7 @@ class Die:  # ....dice, not death...
     def roll(self, bonus=0, average=False):
         """n=# dice, d=sides per die"""
         result = 0
-        iterations = 1 if not average else 10000
+        iterations = 1 if not average else 1000000
         while iterations > 0:
             n_dice = self.qty
             while n_dice > 0:
@@ -79,7 +34,7 @@ class Die:  # ....dice, not death...
                 n_dice -= 1
             iterations -= 1
             result += bonus
-        return result if not average else result // 100 / 100
+        return result if not average else result // 10000 / 100
 
     def __repr__(self):
         return str(self.qty)+'d'+str(self.sides)
@@ -95,27 +50,60 @@ def ability_mod(ability):
 # def ability_check_pass(ability):
 #     return ability+ability_mod(ability) > roll(1, 20, 0)
 
+class Attack:
+    def __init__(self, advantage=False, disadvantage=False, num=1):
+        self.attack_die = Die(1, 20)
+        self.advantage = advantage
+        self.disadvantage = disadvantage
+        self.num = num
+        self.calculation = None
+        self.weapons = []
+        self.bonus_damage = 0
+        self.bonus_attack = 0
+        self.extra_attacks = 0
+        self.roll()
+        self.effects = set()
 
-def attack_roll(advantage=False, disadvantage=False, lucky=False):
-    attack_die = Die(1, 20)
-    roll1 = attack_die.roll()
-    roll2 = attack_die.roll()
-    if lucky:
-        if roll1 == 1 or roll2 == 1:
-            if roll1 == 1:
-                roll1 = attack_die.roll()
+    def roll(self):
+        self.roll1 = self.attack_die.roll()
+        self.roll2 = self.attack_die.roll()
+
+    def rolled_one(self):
+        return self.roll1 == 1 or self.roll2 == 1
+
+    def result(self):
+        if self.advantage or self.disadvantage and not self.advantage and self.disadvantage:
+            # exclusive or, one or the other, but not both
+            if self.advantage:
+                roll = max(self.roll1, self.roll2)
             else:
-                roll2 = attack_die.roll()
-    if advantage or disadvantage and not advantage and disadvantage:
-        # exclusive or, one or the other, but not both
-        if advantage:
-            roll = max(roll1, roll2)
+                roll = min(self.roll1, self.roll2)
         else:
-            roll = min(roll1, roll2)
-    else:
-        roll = roll1
-    critical = roll == 20
-    return roll, critical
+            roll = self.roll1
+        return roll, roll == 20
+
+
+
+# def attack_roll(advantage=False, disadvantage=False, lucky=False):
+#     attack_die = Die(1, 20)
+#     roll1 = attack_die.roll()
+#     roll2 = attack_die.roll()
+#     if lucky:
+#         if roll1 == 1 or roll2 == 1:
+#             if roll1 == 1:
+#                 roll1 = attack_die.roll()
+#             else:
+#                 roll2 = attack_die.roll()
+#     if advantage or disadvantage and not advantage and disadvantage:
+#         # exclusive or, one or the other, but not both
+#         if advantage:
+#             roll = max(roll1, roll2)
+#         else:
+#             roll = min(roll1, roll2)
+#     else:
+#         roll = roll1
+#     critical = roll == 20
+#     return roll, critical
 
 
 # noinspection SpellCheckingInspection
@@ -135,4 +123,4 @@ def getAdvantage(a, b):
 
 if __name__ == '__main__':
     die = Die(1, 20)
-    print(die, die.roll(), die.roll(), die.roll())
+    print(die, '\navg =', die.roll(average=True),'\nroll 1, 2, 3 =', die.roll(), die.roll(), die.roll())

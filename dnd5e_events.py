@@ -40,24 +40,37 @@ class Event:
         #     bar(a b)
 
         def __call__(self, *args, **kwargs):
-            respond = None
             for f in self:
-                respond = f(*args, **kwargs)
-            if 'target' in kwargs:
-                return respond  # todo catch and return the results of each event for return to caller
+                f(*args, **kwargs)
 
         def __repr__(self):
-            return 'Event(%s)' % re.sub('["[\]]', '', json.dumps([x.__name__ for x in self]))
+            import sys
+            sys.stdout.flush()
+            return 'Event(%s)' % re.sub('["[\]]', '', json.dumps([x.__class__.__name__ for x in self]))
+#            return 'Event(%s)' % re.sub('["[\]]', '', json.dumps([(x, dir(x)) for x in self]))
 
-    before_battle = Effect(set())  # applies on battle start
-    before_turn = Effect(set())  # applies on start of each turn
-    after_turn = Effect(set())  # applies after each turn
-    action = Effect(set())  # applies whenever a character acts
-    attack = Effect(set())  # applies whenever a character attacks
-    defend = Effect(set())  # applies whenever a character defends
-    after_battle = Effect(set())  # applies whenever a battle ends
-    init = Effect(set())  # applies on character creation - including loading
-    level_up = Effect(set())  # applies on levelup
+#    all = Effect(set())  # one big list - use temporarily while testing, migrate to separate lists for performance
+    def __init__(self):
+         self.init = self.Effect(set())  # applies on character creation - including loading
+         self.equip = self.Effect(set())
+         self.unequip = self.Effect(set())
+         self.before_battle = self.Effect(set())  # applies on battle start
+         self.after_battle = self.Effect(set())  # applies whenever a battle ends
+         self.before_turn = self.Effect(set())  # applies on start of each turn
+         self.after_turn = self.Effect(set())  # applies after each turn
+         self.before_action = self.Effect(set())  # applies whenever a character acts
+         self.after_action = self.Effect(set())  # applies whenever a character acts
+         self.attack = self.Effect(set())  # applies whenever a character attacks
+         self.defend = self.Effect(set())  # applies whenever a character defends
+         self.critical = self.Effect(set())
+         self.level_up = self.Effect(set())  # applies on levelup
+         self.rest_long = self.Effect(set())
+         self.rest_short = self.Effect(set())
+         self.roll_attack = self.Effect(set())
+         self.roll_damage = self.Effect(set())
+         self.roll_dc = self.Effect(set())
+         self.roll_hp = self.Effect(set())
+         self.death = self.Effect(set())
     # class When:
     #     def __init__(self):
     #         self.status = []
@@ -69,3 +82,53 @@ class Event:
     #     self.before_turn = self.When()
     #     self.on_action = self.When()
     #     self.after_turn = self.When()
+
+
+if __name__ == '__main__':
+    from trace import print
+
+    def foo(*args, **kwargs):
+        print('foo(', *args, ')')
+
+    def bar(*args, **kwargs):
+        print('bar(', *args, ')')
+
+    def baz(*args, **kwargs):
+        print('baz(', *args, ')')
+
+    print("\n>>> def foo(*args, **kwargs):\n\tprint('foo(', *args, ')')")
+    print("\n>>> def bar(*args, **kwargs):\n\tprint('bar(', *args, ')')")
+    print("\n>>> def baz(*args, **kwargs):\n\tprint('baz(', *args, ')')")
+
+    print('>>> e = Event.all')
+    e = Event.all
+    print('>>> e()')
+    e()
+    print('>>> e.update({foo, bar})')
+    e.update({foo, bar})
+    e()
+    print(">>> print(e('a', 'b'))")
+    e('a', 'b')
+    print('>>> e()')
+    e()
+    print('>>> e.add(baz)')
+    e.add(baz)
+    print(">>> e('a', 'b')")
+    e('a', 'b')
+    print('>>> e.remove(baz)')
+    e.remove(baz)
+    print(">>> e('a', 'b')")
+    e('a', 'b')
+
+#     Event(foo, bar)
+#     >>> e.add(baz)
+#     >>> e
+#     Event(foo, baz, bar)
+#     >>> e('a', 'b')
+#     foo(a b)
+#     baz(a b)
+#     bar(a b)
+#     >>> e.remove(foo)
+#     >>> e('a', 'b')
+#     baz(a b)
+#     bar(a b)

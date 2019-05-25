@@ -23,9 +23,10 @@ class Weapon(items.Item):
                  reach=None, ranges=None, flags=None, wield_from=None, equip_function=None, attack_function=None):
         # TODO: embed static weapon criteria in the weapon type enum?
         qty = 1
-        super().__init__(name, cost, weight, qty, enum_type, equip_function)
+        super().__init__(name=name, cost=cost, weight=weight, qty=qty, enum_type=enum_type, equip_to=wield_from,
+                         function=equip_function)
         self.atk_type = atk_type
-        self.wield_from = wield_from
+#        self.wield_from = wield_from
         self.die1, self.die2 = None, None
         if '1_die' in damage:
             die_qty = damage['1_die']

@@ -27,6 +27,7 @@
         <list>
           <option value="dnd5e_races.Race.racial_ability" />
           <option value="dnd5e_races.Race.traits" />
+          <option value="dnd5e_functions.TraitsBase.onEvent" />
         </list>
       </option>
     </inspection_tool>

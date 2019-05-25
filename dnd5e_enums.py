@@ -1,6 +1,6 @@
-# from enum import Enum
 import dnd5e_misc as misc
-import sys
+import dnd5e_functions as functions
+
 
 # todo: find ALL default argument expressions in my code, and replace them with =None and default it inside the
 #  function, see :   https://www.toptal.com/python#hiring-guide
@@ -375,38 +375,92 @@ class TRAIT(Set):
 # noinspection PyPep8Naming
 # ^^be silent damn you
 class CLASS_TRAITS(Set):
-    # todo: replace the ints with functions references expecting source and target objects
-    class RAGE: pass  # ADVANTAGE TO DC(STR) AND SAVE(STR), BONUS DAMAGE
-    class UNARMORED_DEFENCE: pass  # WHILE NOT WEARING ARMOR, DEFENCE IS 10+CON_MOD, PLUS SHIELD IF EQUIPPED.
-    class RECKLESS_ATTACK: pass  # FIRST ATTACK OF TURN HAS ADVANTAGE, BUT ATTACKS AGAINST YOU HAVE ADVANTAGE
-    class DANGER_SENSE: pass  # ADVANTAGE DC(DEX) ON PERCEption, INEFFECTIVE IF BLINDED, DEAFENED, INCAPACITATED
-    class EXTRA_ATTACK: pass  # MAY ATTACK ADDITIONAL TIMES PER TURN, SEE CLASS STATS FOR NUMBER OF ATTACKS
-    class FAST_MOVEMENT: pass  # GAIN 10FT/SEC IF NOT WEARING ARMOR
-    class FERAL_INSTINCT: pass  # ADVANTAGE ON INITIATIVE, CAN RAGE AND THEN ACT NORMALLY IF SURPRISED
-    class BRUTAL_CRITICAL: pass  # ADDS ADDITION ATTACK ROLLS ON CRITICAL, 1 AT LVL9, 2 AT LVL13, 3 AT LVL17
-    class RELENTLESS_RAGE: pass  # IF 0HP, +1 IF PASS DC10(CON), +DC5 EVERY TIME THIS IS USED UNTIL REST
-    class PERSISTENT_RAGE: pass  # RAGE ENDS ONLY IF UNCONSCIOUS, OR CHOSEN TO END
-    class INDOMITABLE_MIGHT: pass  # IF ROLL(STR) < STR, USE STR INSTEAD.
-    class PRIMAL_CHAMPION: pass  # MAXIMUM STR AND CON +4, MAXIMUM POSSIBLE +4 TO 24
-    class FRENZY: pass  # CAN MAKE BONUS ATTACK AT END OF EACH TURN, SUFFER EXHAUSTION +1 AT END OF RAGE
-    class MINDLESS_RAGE: pass  # IMMUNE TO CHARM AND FRIGHTEN WHILE RAGING, SUSPENDS EFFECT WHILE RAGING
-    class INTIMIDATING_PRESENCE: pass  # CAN USE AN ACTION TO FRIGHTEN VISIBLE TARGET WITHIN 30 FT,
+    # ADVANTAGE TO DC(STR) AND SAVE(STR), BONUS DAMAGE
+    RAGE = functions.ClassTraitRage
+
+    # WHILE NOT WEARING ARMOR, DEFENCE IS 10+CON_MOD, PLUS SHIELD IF EQUIPPED.
+    UNARMORED_DEFENCE = functions.ClassTraitUnarmoredDefence
+
+    # FIRST ATTACK OF TURN HAS ADVANTAGE, BUT ATTACKS AGAINST YOU HAVE ADVANTAGE
+    RECKLESS_ATTACK = functions.ClassTraitRecklessAttack
+
+    # ADVANTAGE DC(DEX) ON PERCEption, INEFFECTIVE IF BLINDED, DEAFENED, INCAPACITATED
+    DANGER_SENSE = functions.ClassTraitDangerSense
+
+    # MAY ATTACK ADDITIONAL TIMES PER TURN, SEE CLASS STATS FOR NUMBER OF ATTACKS
+    EXTRA_ATTACK = functions.ClassTraitExtraAttack
+
+    # GAIN 10FT/SEC IF NOT WEARING ARMOR
+    FAST_MOVEMENT = functions.ClassTraitFastMovement
+
+    # ADVANTAGE ON INITIATIVE, CAN RAGE AND THEN ACT NORMALLY IF SURPRISED
+    FERAL_INSTINCT = functions.ClassTraitFeralInstinct
+
+    # ADDS ADDITION ATTACK ROLLS ON CRITICAL, 1 AT LVL9, 2 AT LVL13, 3 AT LVL17
+    BRUTAL_CRITICAL = functions.ClassTraitBrutalCritical
+
+    # IF 0HP, +1 IF PASS DC10(CON), +DC5 EVERY TIME THIS IS USED UNTIL REST
+    RELENTLESS_RAGE = functions.ClassTraitRelentlessRage
+
+    # RAGE ENDS ONLY IF UNCONSCIOUS, OR CHOSEN TO END
+    PERSISTENT_RAGE = functions.ClassTraitPersistentRage
+
+    # IF ROLL(STR) < STR, USE STR INSTEAD.
+    INDOMITABLE_MIGHT = functions.ClassTraitIndomitableMight
+
+    # MAXIMUM STR AND CON +4, MAXIMUM POSSIBLE +4 TO 24
+    PRIMAL_CHAMPION = functions.ClassTraitPrimalChampion
+
+    # CAN MAKE BONUS ATTACK AT END OF EACH TURN, SUFFER EXHAUSTION +1 AT END OF RAGE
+    FRENZY = functions.ClassTraitFrenzy
+
+    # IMMUNE TO CHARM AND FRIGHTEN WHILE RAGING, SUSPENDS EFFECT WHILE RAGING
+    MINDLESS_RAGE = functions.ClassTraitMindlessRage
+
+    # CAN USE AN ACTION TO FRIGHTEN VISIBLE TARGET WITHIN 30 FT,
     # CHA_MOD UNTIL END OF YOUR NEXT TURN. ENDS IF 60FT AWAY, OR LOSES SIGHT OF YOU
-    class RETALIATION: pass  # CAN USE REACTION TO MELEE ATTACK A CREATURE WITHIN 5FT WHICH HARMS YOU
-    class SPIRIT_SEEKER: pass  # MAY CAST BEAST SENSE, AND SPEAK WITH ANIMALS, AS RITUALS
-    class SPIRIT_WALKER: pass  # CAST COMMUNE WITH NATURE AS RITUAL - SUMMONS SPIRIT ANIMAL TO CONVEY THE INFO YOU SEEK
-    class BEAR_TOTEM: pass  # WHILE RAGING, RESIST ALL DAMAGE EXCEPT PSYCHIC
-    class EAGLE_TOTEM: pass  # WHILE RAGING, IF NOT WEARING HEAVY ARMOR OTHER CREATURES HAVE DISADVANTAGE ON
+    INTIMIDATING_PRESENCE = functions.ClassTraitIntimidatingPresence
+
+    # CAN USE REACTION TO MELEE ATTACK A CREATURE WITHIN 5FT WHICH HARMS YOU
+    RETALIATION = functions.ClassTraitRetaliation
+
+    # MAY CAST BEAST SENSE, AND SPEAK WITH ANIMALS, AS RITUALS
+    SPIRIT_SEEKER = functions.ClassTraitSpiritSeeker
+
+    # CAST COMMUNE WITH NATURE AS RITUAL - SUMMONS SPIRIT ANIMAL TO CONVEY THE INFO YOU SEEK
+    SPIRIT_WALKER = functions.ClassTraitSpiritWalker
+
+    # WHILE RAGING, RESIST ALL DAMAGE EXCEPT PSYCHIC
+    BEAR_TOTEM = functions.ClassTraitTotemBear
+
+    # WHILE RAGING, IF NOT WEARING HEAVY ARMOR OTHER CREATURES HAVE DISADVANTAGE ON
     # OPPORTUNITY ATTACK ROLLS, CAN USE DASH AS BONUS ACTION
-    class WOLF_TOTEM: pass  # WHILE RAGING, PARTY HAS ADVANTAGE ON MELEE VS ANY HOSTILE WITHIN 5FT OF YOU
-    class ASPECT_OF_THE_BEAR: pass  # CARRYING CAPACITY DOUBLES, ADVANTAGE STR TO PUSH, PULL, LIFT, BREAK
-    class ASPECT_OF_THE_EAGLE: pass  # SEE 1 MILE AWAY AS IF 100FT AWAY. NO PERCEPTION DISADVANTAGE IN DIM LIGHT
-    class ASPECT_OF_THE_WOLF: pass  # CAN TRACK CREATURES WHILE AT FAST PACE, CAN MOVE STEALTHILY AT NORMAL
-    class BEAR_ATTUNEMENT: pass  # WHILE RAGING, CREATURES 5FT AWAY HAVE DISADVANTAGE AGAINST TARGETS OTHER THAN YOU,
+    EAGLE_TOTEM = functions.ClassTraitTotemEagle
+
+    # WHILE RAGING, PARTY HAS ADVANTAGE ON MELEE VS ANY HOSTILE WITHIN 5FT OF YOU
+    WOLF_TOTEM = functions.ClassTraitTotemWolf
+
+    # CARRYING CAPACITY DOUBLES, ADVANTAGE STR TO PUSH, PULL, LIFT, BREAK
+    ASPECT_OF_THE_BEAR = functions.ClassTraitAspectBear
+
+    # SEE 1 MILE AWAY AS IF 100FT AWAY. NO PERCEPTION DISADVANTAGE IN DIM LIGHT
+    ASPECT_OF_THE_EAGLE = functions.ClassTraitAspectEagle
+
+    # CAN TRACK CREATURES WHILE AT FAST PACE, CAN MOVE STEALTHILY AT NORMAL
+    ASPECT_OF_THE_WOLF = functions.ClassTraitAspectWolf
+
+    # WHILE RAGING, CREATURES 5FT AWAY HAVE DISADVANTAGE AGAINST TARGETS OTHER THAN YOU,
     # IMMUNE IF IT CANT SEE YOU OR IS IMMUNE TO FRIGHTEN
-    class EAGLE_ATTUNEMENT: pass  # WHILE RAGING, CAN 'FLY' AT WALKING PACE, END TURN ON GROUND OR FALL
-    class WOLF_ATTUNEMENT: pass  # WHILE RAGING, CAN KNOCK A CREATURE UP TO SIZE.LARGE PRONE
-    class JACK_OF_ALL_TRADES: pass  # HALF OF DEX_MOD(ROUNDED DOWN) ADDED TO ALL ABILITY CHECKS WITHOUT PROFICIENCY
+    BEAR_ATTUNEMENT = functions.ClassTraitAttuneBear
+
+    # WHILE RAGING, CAN 'FLY' AT WALKING PACE, END TURN ON GROUND OR FALL
+    EAGLE_ATTUNEMENT = functions.ClassTraitAttuneEagle
+
+    # WHILE RAGING, CAN KNOCK A CREATURE UP TO SIZE.LARGE PRONE
+    WOLF_ATTUNEMENT = functions.ClassTraitAttuneWolf
+
+    # HALF OF DEX_MOD(ROUNDED DOWN) ADDED TO ALL ABILITY CHECKS WITHOUT PROFICIENCY
+    JACK_OF_ALL_TRADES = None
 
 
 class STATUS(Set):
@@ -572,7 +626,7 @@ class DAMAGETYPE(Set):
             return int(self.damage)
 
         def __str__(self):
-            return self.__repr__()# str(self.damage)# + ' ' + self.__class__.__name__
+            return self.__repr__()  # str(self.damage)# + ' ' + self.__class__.__name__
 
         def __repr__(self):
             return str(self.damage) + ' ' + self.__class__.__name__
@@ -589,11 +643,49 @@ class DAMAGETYPE(Set):
             self.damage *= other
             return self
 
+        def __iadd__(self, other):
+            self.damage += other
+            return self
+
+        def __add__(self, other):
+            self.damage += other
+            return self
+
+        def __radd__(self, other):
+            self.damage += other
+            return self
+
+        def __isub__(self, other):
+            self.damage -= other
+            return self
+
+        def __sub__(self, other):
+            self.damage -= other
+            return self
+
+        def __rsub__(self, other):
+            self.damage -= other
+            return self
+
+        def __idiv__(self, other):
+            self.damage //= other
+            return self
+
+        def __truediv__(self, other):
+            self.damage //= other
+            return self
+
+        def __rdiv__(self, other):
+            self.damage //= other
+            return self
+
+
     class ACID(__Damage):
         def __init__(self, damage): super().__init__(damage)
 
     class BLUNT(__Damage):
-        def __init__(self, damage): super().__init__(damage)    # blunt force attack, punches, hammers, falling, crushing, etc
+        def __init__(self, damage): super().__init__(damage)
+        # blunt force attack, punches, hammers, falling, crushing, etc
 
     class COLD(__Damage):
         def __init__(self, damage): super().__init__(damage)
@@ -630,18 +722,56 @@ class DAMAGETYPE(Set):
 
 
 class ARMOR(Set):
-    class PADDED: pass
-    class LEATHER: pass
-    class STUDDED: pass
-    class HIDE: pass
-    class CHAIN_SHIRT: pass
-    class SCALE_MAIL: pass
-    class BREASTPLATE: pass
-    class HALF_PLATE: pass
-    class RING_MAIL: pass
-    class CHAIN_MAIL: pass
-    class SPLINT: pass
-    class PLATE: pass
+    class LIGHT(Set):
+        class PADDED(Set):
+            class METAL: pass
+            class NONMETAL: pass
+
+        class LEATHER(Set):
+            class METAL: pass
+            class NONMETAL: pass
+
+        class STUDDED(Set):
+            class METAL: pass
+            class NONMETAL: pass
+
+    class MEDIUM(Set):
+        class HIDE(Set):
+            class METAL: pass
+            class NONMETAL: pass
+
+        class CHAIN_SHIRT(Set):
+            class METAL: pass
+            class NONMETAL: pass
+
+        class SCALE_MAIL(Set):
+            class METAL: pass
+            class NONMETAL: pass
+
+        class BREASTPLATE(Set):
+            class METAL: pass
+            class NONMETAL: pass
+
+        class HALF_PLATE(Set):
+            class METAL: pass
+            class NONMETAL: pass
+
+    class HEAVY(Set):
+        class RING_MAIL(Set):
+            class METAL: pass
+            class NONMETAL: pass
+
+        class CHAIN_MAIL(Set):
+            class METAL: pass
+            class NONMETAL: pass
+
+        class SPLINT(Set):
+            class METAL: pass
+            class NONMETAL: pass
+
+        class PLATE(Set):
+            class METAL: pass
+            class NONMETAL: pass
 
 
 class _ARMOR(Set):
@@ -979,3 +1109,41 @@ class EQUIP_SLOT(Set):
     class BELT(__E): pass  # for belts, weapon sheaths/loops, and pouches, multiple
     class SHOULDER(__E): pass  # for sling type gear, such as quivers, smaller sword sheaths
     class INVENTORY(__E): pass  # for general inventory items, not actionable
+
+
+class EVENT(Set):
+    class INIT: pass
+    class EQUIP: pass
+    class UNEQUIP: pass
+    class BEFORE_BATTLE: pass
+    class AFTER_BATTLE: pass
+    class BEFORE_TURN: pass
+    class AFTER_TURN: pass
+    class BEFORE_ACTION: pass
+    class AFTER_ACTION: pass
+    class ATTACK: pass
+    class DEFEND: pass
+    class CRITICAL: pass
+    class LEVEL_UP: pass
+    class REST_LONG: pass
+    class REST_SHORT: pass
+    class ROLL_ATTACK: pass
+    class ROLL_DAMAGE: pass
+    class ROLL_DC: pass
+    class ROLL_HP: pass
+    class DEATH: pass
+    class HEAL: pass
+
+
+if __name__ == '__main__':
+    from trace import print
+    print(ARMOR)
+    print(ARMOR.MEDIUM)
+    print(ARMOR.MEDIUM.HIDE)
+    print(ARMOR.Set())
+    print(ARMOR.MEDIUM.Set())
+    for f in CLASS_TRAITS.Set():
+        try:
+            print(f, f(host=None))
+        except:
+            pass

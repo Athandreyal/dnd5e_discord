@@ -3,6 +3,7 @@ from dnd5e_enums import TRAIT, CLASS_TRAITS, ABILITY, Ability
 import dnd5e_weaponry as weaponry
 from dnd5e_events import Event
 from dnd5e_inventory import Equipped
+from dnd5e_misc import Attack
 
 
 class Entity:
@@ -25,6 +26,7 @@ class Entity:
         self.effects = effects
         if self.effects is None:
             self.effects = Event()  # use for trait/status effects - re-apply whenever character refreshes
+            self.effects_persist = Event()  # use for things which must persist across states initialisations
         self.equipment = equipment
         if isinstance(equipment, Equipped):
             self.equipment = equipment
@@ -52,6 +54,22 @@ class Entity:
             self.saving_throws = Ability()
         self.temporary_hitpoints = 0
 
+    def equip(self, gear):
+        if self.equipment is None:
+            self.equipment = Equipped()
+        if gear is None:
+            return
+        if isinstance(gear, Equipped):
+            gear = gear.get_equipped()
+        elif not isinstance(gear, list):
+            gear = [gear]
+
+        # todo: call the individual gear equip functions.
+        self.equipment.equip(gear)  # todo: implement weapons/shields/armor
+
+    def unequip(self, slot=None, gear=None):
+        self.equipment.unequip(slot, gear)
+
     def is_lucky(self):
         return TRAIT.LUCKY in self.traits
 
@@ -63,26 +81,23 @@ class Entity:
         # todo: cross check damage types against vulnerability/resist, and modify accordingly - take highest effect
 
     def melee_attack(self):
-        # todo: deal with multiple damage types
-        # todo: make effects.attack return the effects for the target to apply to itself.
-        effects = self.effects.attack(self)  # call attack event handler - trigger any registered attack
+        #
         #     return any effects which require a target - like poison effects.
         #        advantage = enums.ADVANTAGE.ATTACK in self.advantage
         #        disadvantage = enums.ADVANTAGE.ATTACK in self.disadvantage
         #        lucky = enums.TRAIT.LUCKY in self.traits
         #        attack_roll, critical = misc.attack_roll(advantage, disadvantage, lucky=lucky)
         # todo: implement usage of reach value
-        #        damage = weapon.attack_die.roll() + weapon.bonus_die.roll() if weapon.bonus_die else 0 + weapon.bonus_damage
-        attacks = {'num': 1}
-        if CLASS_TRAITS.EXTRA_ATTACK in self.traits:
-            attacks['num'] += 1
+        attacks = Attack(num=1)
+
+#        if CLASS_TRAITS.EXTRA_ATTACK in self.traits:
+#            attacks['num'] += 1
 
         # is storing two of the same reference
-        attacks['effects'] = effects
-        attacks['calculation'] = self._wpn
-
-        attacks['weapons'] = self.equipment.right_hand, self.equipment.left_hand, \
-            self.equipment.jaw, self.equipment.fingers
+#        attacks['effects'] = effects
+        attacks.calculation = self._wpn
+        attacks.weapons = self.equipment.right_hand, self.equipment.left_hand, \
+                          self.equipment.jaw, self.equipment.fingers
         return attacks
 
     def _wpn(self, hand: weaponry.Weapon = None):
@@ -140,4 +155,3 @@ class Entity:
             WIS += self.proficiency_bonus if ABILITY.WIS in throws else 0
             CHA += self.proficiency_bonus if ABILITY.CHA in throws else 0
         return Ability(STR, CON, DEX, INT, WIS, CHA)
-
