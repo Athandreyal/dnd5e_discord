@@ -1,5 +1,5 @@
 # parent class to both Character Sheet and creature, has things relevant to encounters.
-from dnd5e_enums import TRAIT, CLASS_TRAITS, ABILITY, Ability
+from dnd5e_enums import TRAIT, ABILITY, Ability
 import dnd5e_weaponry as weaponry
 from dnd5e_events import Event
 from dnd5e_inventory import Equipped
@@ -15,7 +15,7 @@ class Entity:
             self.speed = 0  # todo, replace with full range of speeds, flight, swimming, etc.
 
         if self.name is None:
-            self.name = 'Unknown Entity'
+            self.name = 'an Entity is No One'
         self.traits = traits
         if self.traits is None:
             self.traits = set()
@@ -35,17 +35,17 @@ class Entity:
         elif isinstance(equipment, list):
             self.equipment = Equipped()
             self.equipment.equip(equipment)  # todo: implement weapons/shields/armor
-        self.advantage = set()
-        self.disadvantage = set()
+        self.advantage = Event().none()
+        self.disadvantage = Event().none()
         self.atk_bonus = 0
-        self.damage_vulnerable = set()  # todo: implement damage vulnerabilities
-        self.damage_resist = set()  # todo: implement damage resistances
+        self.damage_vulnerable = Event().none()  # todo: implement damage vulnerabilities
+        self.damage_resist = Event().none()  # todo: implement damage resistances
         self.abilities = abilities
         if self.abilities is None:
             self.abilities = Ability()
         self.proficiency_skills = skills
         if self.proficiency_skills is None:
-            self.proficiency_skills = set()
+            self.proficiency_skills = Event().none()
         self.proficiency_bonus = proficiency_bonus
         if self.proficiency_bonus is None:
             self.proficiency_bonus = 0
@@ -53,6 +53,7 @@ class Entity:
         if self.saving_throws is None:
             self.saving_throws = Ability()
         self.temporary_hitpoints = 0
+        self.actions = Event().none()
 
     def equip(self, gear):
         if self.equipment is None:

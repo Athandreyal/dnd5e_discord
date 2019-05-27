@@ -50,6 +50,18 @@ def ability_mod(ability):
 # def ability_check_pass(ability):
 #     return ability+ability_mod(ability) > roll(1, 20, 0)
 
+
+# defence object, use for determining which defence to use, and storing the related defence values, and selecting the
+#  best from here to use in actually defending on self
+class Defend:
+    def __init__(self):
+        self.armor_classes = []
+
+    def get_armor_class(self):
+        # todo: make this consider arcane attacks
+        return max(self.armor_classes)
+
+
 class Attack:
     def __init__(self, advantage=False, disadvantage=False, num=1):
         self.attack_die = Die(1, 20)
@@ -83,7 +95,6 @@ class Attack:
         return roll, roll == 20
 
 
-
 # def attack_roll(advantage=False, disadvantage=False, lucky=False):
 #     attack_die = Die(1, 20)
 #     roll1 = attack_die.roll()
@@ -105,14 +116,19 @@ class Attack:
 #     critical = roll == 20
 #     return roll, critical
 
-
 # noinspection SpellCheckingInspection
 def getAdvantage(a, b):
-    # does A have advantage against B?
-    a_adv = enums.ADVANTAGE.ATTACK in a.advantage
-    a_dadv = enums.ADVANTAGE.ATTACK in a.disadvantage
-    b_adv = enums.ADVANTAGE.ATTACK in b.advantage
-    b_dadv = enums.ADVANTAGE.ATTACK in b.disadvantage
+    # todo: make this account for melee, ranges, and arcane
+    # does A have attack advantage?
+    a_adv = any(isinstance(adv, enums.ATTACK.MELEE) for adv in a.advantage)
+    # does B have attack advantage?
+    b_adv = any(isinstance(adv, enums.ATTACK.MELEE) for adv in b.advantage)
+    a_dadv = any(isinstance(adv, enums.DEFENCE.MELEE) for adv in a.disadvantage)
+    b_dadv = any(isinstance(adv, enums.DEFENCE.MELEE) for adv in b.disadvantage)
+    #    a_adv = enums.ADVANTAGE.ATTACK.Set().intersection(a.advantage)
+    #    a_dadv = enums.ADVANTAGE.ATTACK.Set().intersection(a.disadvantage)
+    #    b_adv = enums.ADVANTAGE.ATTACK.Set().intersection(b.advantage)
+    #    b_dadv = enums.ADVANTAGE.ATTACK.Set().intersection(b.disadvantage)
     adv = (a_adv or b_dadv)
     dadv = (a_dadv or b_adv)
     if adv == dadv:

@@ -22,8 +22,11 @@ class CharacterSheet(Entity):
             self.level = level
             hp_max = hp_dice + (level - 1) * abilities.CON_MOD
             self.hp_dice = hp_dice
+        player_race = player_race.__class__()
+        player_class = player_class.__class__(self.level)
         proficiency_bonus = player_class.get_proficiency_bonus(self.level)
         traits = player_race.traits.union(player_class.traits)
+        traits.add(enums.TRAIT.NATURAL_DEFENCE)
         super().__init__(name=name, traits=traits, abilities=abilities, hp=hp_current, hp_max=hp_max, skills=skills,
                          saving_throws=player_class.saving_throws, equipment=equipment, speed=player_race.speed,
                          proficiency_bonus=proficiency_bonus)
@@ -31,6 +34,11 @@ class CharacterSheet(Entity):
         self.height = height
         self.weight = weight
         self.uid = uid
+
+#        player_race = RACE.Human()
+#        player_class = CLASS.Barbarian(level)
+#        class_skills = {enums.SKILL.ATHLETICS, enums.SKILL.PERCEPTION}
+#        background = enums.BACKGROUNDS.OUTLANDER
 
         self._experience = experience
         self.player_race = player_race
@@ -43,12 +51,14 @@ class CharacterSheet(Entity):
         self.proficiency_tools = set()  # todo: apply proficiencies from class/race to character
         self.initiative = self.abilities.DEX_MOD  # todo: proper initiative
         self.background = background # todo: complete the init of backgrounds
+        self.traits.update(self.traits.union(traits))
 
         # register all the traits
         for trait in self.traits:
             trait(host=self)
 
         # todo: execute init event - the always event
+        self.effects.init()
 
     @property
     def experience(self):
@@ -70,6 +80,7 @@ class CharacterSheet(Entity):
                           experience=self.experience, level=self.level, player_race=self.player_race,
                           player_class=self.player_class, skills=self.proficiency_skills, background=self.background,
                           abilities=self.abilities, hp_dice=self.hp_dice, hp_current=None, equipment=self.equipment)
+            self.effects.level_up()
 
     def get_next_level_xp(self):
         xp = {2:     300,

@@ -23,12 +23,30 @@ class Set:
 
 class ABILITY(Set):
     # ATTRIBUTES
-    class STR: pass
-    class CON: pass
-    class DEX: pass
-    class INT: pass
-    class WIS: pass
-    class CHA: pass
+    class STR:
+        def __init__(self):
+            self.affectors = []
+
+
+    class CON:
+        def __init__(self):
+            self.affectors = []
+
+    class DEX:
+        def __init__(self):
+            self.affectors = []
+
+    class INT:
+        def __init__(self):
+            self.affectors = []
+
+    class WIS:
+        def __init__(self):
+            self.affectors = []
+
+    class CHA:
+        def __init__(self):
+            self.affectors = []
 
 
 class Ability:
@@ -251,9 +269,27 @@ class SIZE(Set):
 
 
 class ATTACK(Set):
-    class MELEE: pass
-    class RANGED: pass
-    class ARCANE: pass
+    class MELEE:
+        def __init__(self):
+            self.affectors = []
+    class RANGED:
+        def __init__(self):
+            self.affectors = []
+    class ARCANE:
+        def __init__(self):
+            self.affectors = []
+
+
+class DEFENCE(Set):
+    class MELEE:
+        def __init__(self):
+            self.affectors = []
+    class RANGED:
+        def __init__(self):
+            self.affectors = []
+    class ARCANE:
+        def __init__(self):
+            self.affectors = []
 
 
 class TRAIT(Set):
@@ -371,6 +407,8 @@ class TRAIT(Set):
     class TRANCE: pass  # ELVEN MEDITATION, REPLACES SLEEP FOR REST, 2X AS EFFECTIVE,
     # SHORT REST IN 1HR, LONG REST IN 4HR
 
+    # unarmored default defence of 10 + dex_mod
+    NATURAL_DEFENCE = functions.TraitNaturalDefence
 
 # noinspection PyPep8Naming
 # ^^be silent damn you
@@ -487,11 +525,12 @@ class STATUS(Set):
     class UNCONSCIOUS: pass
 
 
-class ADVANTAGE(ABILITY):
-    class ATTACK: pass
-    class DEFENCE: pass
-    class SOCIAL: pass
-    class ABILITY: pass  # all abilities.
+class ADVANTAGE(ABILITY, Set):
+    ATTACK = ATTACK
+    DEFENCE = DEFENCE
+
+    class SOCIAL(Set): pass
+    class ABILITY(Set): pass  # all abilities.
     # todo: add additional entries as needed for more and more advantage checks to work.
 
 
@@ -613,8 +652,10 @@ class __WEAPON(Set):  # todo: replace the ints with functions references expecti
 
 class DAMAGETYPE(Set):
     class __Damage:
-        def __init__(self, damage):
-            self.damage = damage
+        def __init__(self, damage=None):
+            if damage is not None:
+                self.damage = damage
+            self.affectors = []
 
         def __call__(self, damage=None):
             if damage:  # use to set, or get the damage
@@ -629,7 +670,7 @@ class DAMAGETYPE(Set):
             return self.__repr__()  # str(self.damage)# + ' ' + self.__class__.__name__
 
         def __repr__(self):
-            return str(self.damage) + ' ' + self.__class__.__name__
+            return (str(self.damage) + ' ' if hasattr(self, 'damage') else '') + self.__class__.__name__
 
         def __imul__(self, other):
             self.damage *= other
@@ -681,44 +722,44 @@ class DAMAGETYPE(Set):
 
 
     class ACID(__Damage):
-        def __init__(self, damage): super().__init__(damage)
+        def __init__(self, damage=None): super().__init__(damage)
 
     class BLUNT(__Damage):
-        def __init__(self, damage): super().__init__(damage)
+        def __init__(self, damage=None): super().__init__(damage)
         # blunt force attack, punches, hammers, falling, crushing, etc
 
     class COLD(__Damage):
-        def __init__(self, damage): super().__init__(damage)
+        def __init__(self, damage=None): super().__init__(damage)
 
     class FIRE(__Damage):
-        def __init__(self, damage): super().__init__(damage)
+        def __init__(self, damage=None): super().__init__(damage)
 
     class FORCE(__Damage):
-        def __init__(self, damage): super().__init__(damage)  # pure magical energy
+        def __init__(self, damage=None): super().__init__(damage)  # pure magical energy
 
     class LIGHTNING(__Damage):
-        def __init__(self, damage): super().__init__(damage)
+        def __init__(self, damage=None): super().__init__(damage)
 
     class NECROTIC(__Damage):
-        def __init__(self, damage): super().__init__(damage)
+        def __init__(self, damage=None): super().__init__(damage)
 
     class PIERCING(__Damage):
-        def __init__(self, damage): super().__init__(damage)  # puncturing/impaling - spears, bites, arrows, etc.
+        def __init__(self, damage=None): super().__init__(damage)  # puncturing/impaling - spears, bites, arrows, etc.
 
     class POISON(__Damage):
-        def __init__(self, damage): super().__init__(damage)
+        def __init__(self, damage=None): super().__init__(damage)
 
     class PSYCHIC(__Damage):
-        def __init__(self, damage): super().__init__(damage)  # attacks on the mind
+        def __init__(self, damage=None): super().__init__(damage)  # attacks on the mind
 
     class RADIANT(__Damage):
-        def __init__(self, damage): super().__init__(damage)
+        def __init__(self, damage=None): super().__init__(damage)
 
     class SLASHING(__Damage):
-        def __init__(self, damage): super().__init__(damage)  # cutting attacks, swords, axes, claws
+        def __init__(self, damage=None): super().__init__(damage)  # cutting attacks, swords, axes, claws
 
     class THUNDER(__Damage):
-        def __init__(self, damage): super().__init__(damage)  # concussive effects, a shock wave of sorts.
+        def __init__(self, damage=None): super().__init__(damage)  # concussive effects, a shock wave of sorts.
 
 
 class ARMOR(Set):

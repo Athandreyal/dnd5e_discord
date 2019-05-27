@@ -54,7 +54,7 @@ class Encounter:
         self.auto_run = auto_run
 
     def do_battle(self):
-        from dnd5e_enums import EVENT
+        #from dnd5e_enums import EVENT
         if not self.silent:
             print('\n\n******************************************************')
             print(self.difficulty + ' Difficulty Encounter start!\n')
@@ -67,11 +67,9 @@ class Encounter:
                                  key=lambda x: x.initiative, reverse=True)
 
         for entity in initiative_list:  # take turns in order of initiative
-#            entity.effects.all(event_type=EVENT.BEFORE_BATTLE)  # todo properly trigger the before battle
             entity.effects.before_battle()
         while self.hostile_party.is_able() and self.player_party.is_able():
             for entity in initiative_list:  # take turns in order of initiative
-#                entity.effects.all(event_type=EVENT.BEFORE_TURN)  # todo properly trigger the before battle
                 entity.effects.before_turn()
                 # todo: present choice of action to script/both parties players
                 # todo: a more intelligent target selection process than random choice
@@ -107,7 +105,6 @@ class Encounter:
                             # status effects that require a hit should be applied to target's list, with a state var
                             # to indicate awaiting a hit, and prep to clear on turn end if not triggered.
                             attack.advantage, attack.disadvantage = misc.getAdvantage(entity, target)
-
                             attack_roll, critical = attack.result()  # todo: have lucky check the rolls here.
                             attack_roll += weapon.hit_bonus + attack.bonus_attack  # todo: get and include any
                             # status/trait bonuses
@@ -115,29 +112,35 @@ class Encounter:
                                 attack_roll += entity.abilities.STR_MOD
 
                             # pass entity for return effects.  pass
-                            target_ac = target.get_armor_class()
+                            multi = 1
+                            if critical:
+                                multi = 2
+                                entity.effects.critical(attacker=entity, attack=attack)
+                            damage = calculation(weapon).__next__()[0]
+                            for d in damage:
+                                d += attack.bonus_damage
+                                d *= multi
+
+                            attack.damage = damage
+                            defence = misc.Defend()  # passes defence object to catch trait/skill AC calculations.
+                            target.effects.defend(attacker=entity, attack=attack, defender=target, defence=defence)
+                            defence.armor_classes.append(target.get_armor_class())
+                            target_ac = defence.get_armor_class()
+
                             if target_ac > attack_roll:  # miss
-                                print(entity.name + ' attacks ' + target.name + ' with ' + str(weapon) +
-                                      ' and misses')
+                                if not self.silent and self.verbose:
+                                    print(entity.name + ' attacks ' + target.name + ' with ' + str(weapon) +
+                                          ' and misses')
                             else:
-                                multi = 1
-                                if critical:
-                                    multi = 2
-                                    entity.effects.critical(attacker=entity, attack=attack)
-                                damage = calculation(weapon).__next__()[0]
-                                for d in damage:
-                                    d += attack.bonus_damage
-                                    d *= multi
                                 # todo: currently assuming all attacks are melee attacks
                                 #  - allow selection and grabbing the appropriate functions.
-                                target.effects.defend(attacker=entity, attack=attack, defnder=target)
-                                damage_done, counter_effects = target.receive_damage(damage)
+                                damage_done, counter_effects = target.receive_damage(attack.damage)
                                 if not self.silent and self.verbose:
                                     print(entity.name + ' attacks ' + target.name + ' with ' + str(weapon) +
                                           ' and does ' + str(damage_done) + (' critical' if critical else '') +
                                           ' damage')
                                 if target.hp < 1:
-                                    target.effects.death()
+                                    target.effects.death()  # todo: use incapacitated instead
                                     if not self.silent and self.verbose:
                                         print(target.name + ' has been incapacitated')
                                     if player:
@@ -270,8 +273,8 @@ def difficulty_change(diff, offset):
 
 
 if __name__ == '__main__':
-    from trace import print
-    import trace
+    from trace import print, line
+
 
     player = character.init_wulfgar()
     player.name = 'Wulfgar 1'
@@ -283,9 +286,11 @@ if __name__ == '__main__':
     ttl_losses = 0
     win_rate = []
     difficulty = 'Normal'
+    print('Note: battle output currently silenced for testing purposes - accelerates the climb though lvl 20 when '
+          'I/O is not involved.  To see what is occurring, edit the Encounter call on line', str(line()+2))
     while sum(p.hp for p in players) > 0 and player.level < 20:
-        encounter = Encounter(player_party=Party(player, player2), difficulty=difficulty, verbose=True, silent=False,
-                              auto_run=False, debug_rewards=True)
+        encounter = Encounter(player_party=Party(player, player2), difficulty=difficulty, verbose=False, silent=True,
+                              auto_run=True, debug_rewards=True)
         rewards = encounter.do_battle()
         result = 1 if rewards['xp'] > 0 else -1
         if result > 0:

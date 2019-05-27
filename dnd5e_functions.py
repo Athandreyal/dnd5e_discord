@@ -5,6 +5,8 @@ import dnd5e_enums as enums
 #from dnd5e_entity import Entity
 from trace import print
 
+
+# todo: assign traits which are actions, to entity actions list for choice as an action when interactive
 # todo: use status effects type class to pass/apply damage?
 
 # because the events are sets, you can abruptly terminate a function's existence via raise StopIteration
@@ -70,14 +72,34 @@ class TraitsBase:
 #        host.effects.all.add(self)
         self.install()
 
-    def __call__(self, *args, **kwargs):
-        try:
-            self.onEvent(*args, **kwargs)
-        except TypeError as e:
-            pass  # todo: un-pass this, and let the errors flow forth - find and kill.
+#     def __call__(self, *args, **kwargs):
+#         try:
+#             self.onEvent(*args, **kwargs)
+#         except TypeError as e:
+#             pass  # todo: un-pass this, and let the errors flow forth - find and kill.
 
     def install(self): pass
     def uninstall(self): pass
+
+    def add_affector(self, what, where):
+        for effect in what:
+            if effect in where:
+                affected = where.get(effect)
+                affected.affectors.append(self)
+            else:
+                affected = effect()
+                affected.affectors.append(self)
+                where.add(affected)
+
+    def remove_affector(self, what, where):
+        remove = []
+        for w in what:
+            effect = where.get(w)
+            effect.affectors.remove(self)
+            if not effect.affectors:
+                remove.append(effect)
+        for r in remove:
+            where.remove(r)
 
      # def install(self):
      #     self.host.effects.init.add(self)
@@ -132,6 +154,28 @@ class TraitsBase:
 # target kwarg for applying to someone not yourself.
 
 
+class TraitNaturalDefence(TraitsBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
+        self.armor_class = self.host.abilities.DEX_MOD + 10
+
+    def init(self, *args, **kwargs):
+        self.armor_class = self.host.abilities.DEX_MOD + 10
+
+    def install(self):
+        self.host.effects.init.add(self.init)
+        self.host.effects.defend.add(self.defend)
+
+    def defend(self, *args, **kwargs):
+        try:
+            defence = kwargs['defence']
+            defence.armor_classes.append(self.armor_class)
+        except ValueError as e:
+            print(e)
+
+
 class ClassTraitRage(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -166,6 +210,8 @@ class ClassTraitRage(TraitsBase):
         self.host.effects.attack.add(self.attack)
         self.host.effects.rest_long.add(self.reset)
         self.host.effects.death.add(self.death)
+        self.add_affector({enums.DAMAGETYPE.BLUNT, enums.DAMAGETYPE.PIERCING, enums.DAMAGETYPE.SLASHING},
+                          self.host.damage_resist)
 
     def uninstall(self):
         self.host.effects.init.remove(self.reset)
@@ -175,6 +221,18 @@ class ClassTraitRage(TraitsBase):
         self.host.effects.attack.remove(self.attack)
         self.host.effects.rest_long.remove(self.reset)
         self.host.effects.death.remove(self.death)
+        # todo: make these instances, or carry an int for number of times applied so as to know when to remove or not.
+#        self.host.damage_resist.remove({enums.DAMAGETYPE.BLUNT, enums.DAMAGETYPE.PIERCING, enums.DAMAGETYPE.SLASHING})
+        self.remove_affector({enums.DAMAGETYPE.BLUNT, enums.DAMAGETYPE.PIERCING, enums.DAMAGETYPE.SLASHING},
+                             self.host.damage_resist)
+        # remove = []  # todo: test that this does what it says on the tin
+        # for damage in {enums.DAMAGETYPE.BLUNT, enums.DAMAGETYPE.PIERCING, enums.DAMAGETYPE.SLASHING}:
+        #     resist = self.host.damage_resist.get(damage)
+        #     resist.affectors.remove(self)
+        #     if not resist.affectors:
+        #         remove.append(resist)
+        # for r in remove:
+        #     self.host.damage_resist.remove(r)
 
     def reset(self, *args, **kwargs):
         self.rages = self.get_rage_count()
@@ -204,7 +262,8 @@ class ClassTraitRage(TraitsBase):
             self.rages = self.get_rage_count()
             self.bonus = self.get_rage_bonus()
             self.install()
-        self.uninstall()
+        else:
+            self.uninstall()
 
     def before_turn(self, *args, **kwargs):
         if self.raging:
@@ -233,209 +292,1304 @@ class ClassTraitRage(TraitsBase):
 class ClassTraitUnarmoredDefence(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
+        self.armor_class = 10 + self.host.abilities.DEX_MOD + self.host.abilities.CON_MOD
 
-    def onEvent(self, event_type=None):
-        pass
+    def install(self):
+        self.host.effects.equip.add(self.equip_change)
+        self.host.effects.unequip.add(self.equip_change)
+        self.host.effects.defend.add(self.defend)
+        self.host.effects.level_up.add(self.level_up)
+
+    def uninstall(self):
+        self.host.effects.equip.remove(self.equip_change)
+        self.host.effects.unequip.remove(self.equip_change)
+        self.host.effects.defend.remove(self.defend)
+        self.host.effects.level_up.remove(self.level_up)
+
+    def equip_change(self, *args, **kwargs):
+        if self.host.equipment.armor is None:
+            self.install()
+        else:
+            self.uninstall()
+
+    def init(self):
+        self.armor_class = 10 + self.host.abilities.DEX_MOD + self.host.abilities.CON_MOD
+
+    def level_up(self):
+        self.init()
+
+    def defend(self, *args, **kwargs):
+        defence = kwargs['defence']
+        attack = kwargs['attack']
+        defence.armor_classes.append(self.armor_class)
+        for damage in attack.damage:
+            if damage in self.host.damage_resist:
+                damage //= 2
+            elif damage in self.host.damage_vulnerable:
+                damage *= 2
 
 
 class ClassTraitRecklessAttack(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
+        self.activated = False
 
-    def onEvent(self, event_type=None):
+    def before_turn(self, *args, **kwargs):
+        if self.activated: return
+        self.add_affector({enums.ATTACK.MELEE}, self.host.advantage)
+        self.add_affector({enums.DEFENCE.MELEE}, self.host.disadvantage)
+        self.activated = True
+
+    def init(self, *args, **kwargs):
+        self.activated = False
+
+    def after_turn(self, *args, **kwargs):
+        self.activated = False
+        self.remove_affector({enums.ATTACK.MELEE}, self.host.advantage)
+        self.remove_affector({enums.DEFENCE.MELEE}, self.host.disadvantage)
+
+    def install(self):
+        # todo: leave this disabled until player choice is a thing - may need before/after attack events to [dis/en]able
         pass
+        # self.host.effects.init.add(self.init)
+        # self.host.effects.before_turn.add(self.before_turn)
+        # self.host.effects.after_turn.add(self.after_turn)
+
+    def uninstall(self):
+        # todo: leave this disabled until player choice is a thing - may need before/after attack events to [dis/en]able
+        pass
+        # self.host.effects.init.remove(self)
+        # self.host.effects.before_turn.remove(self)
+        # self.host.effects.after_turn.remove(self)
 
 
 class ClassTraitDangerSense(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitExtraAttack(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitFastMovement(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitFeralInstinct(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitBrutalCritical(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitRelentlessRage(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitPersistentRage(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitIndomitableMight(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitPrimalChampion(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitFrenzy(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitMindlessRage(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitIntimidatingPresence(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitRetaliation(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitSpiritSeeker(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitSpiritWalker(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitTotemBear(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitAspectBear(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitAttuneBear(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+     # def install(self):
+     #     self.host.effects.init.add(self)
+     #     self.host.effects.equip.add(self)
+     #     self.host.effects.unequip.add(self)
+     #     self.host.effects.before_battle.add(self)
+     #     self.host.effects.after_battle.add(self)
+     #     self.host.effects.before_turn.add(self)
+     #     self.host.effects.after_turn.add(self)
+     #     self.host.effects.before_action.add(self)
+     #     self.host.effects.after_action.add(self)
+     #     self.host.effects.attack.add(self)
+     #     self.host.effects.defend.add(self)
+     #     self.host.effects.critical.add(self)
+     #     self.host.effects.level_up.add(self)
+     #     self.host.effects.rest_long.add(self)
+     #     self.host.effects.rest_short.add(self)
+     #     self.host.effects.roll_attack.add(self)
+     #     self.host.effects.roll_damage.add(self)
+     #     self.host.effects.roll_dc.add(self)
+     #     self.host.effects.roll_hp.add(self)
+     #     self.host.effects.death.add(self)
+     #
+     # def uninstall(self):
+     #     self.host.effects.init.remove(self)
+     #     self.host.effects.equip.remove(self)
+     #     self.host.effects.unequip.remove(self)
+     #     self.host.effects.before_battle.remove(self)
+     #     self.host.effects.after_battle.remove(self)
+     #     self.host.effects.before_turn.remove(self)
+     #     self.host.effects.after_turn.remove(self)
+     #     self.host.effects.before_action.remove(self)
+     #     self.host.effects.after_action.remove(self)
+     #     self.host.effects.attack.remove(self)
+     #     self.host.effects.defend.remove(self)
+     #     self.host.effects.critical.remove(self)
+     #     self.host.effects.level_up.remove(self)
+     #     self.host.effects.rest_long.remove(self)
+     #     self.host.effects.rest_short.remove(self)
+     #     self.host.effects.roll_attack.remove(self)
+     #     self.host.effects.roll_damage.remove(self)
+     #     self.host.effects.roll_dc.remove(self)
+     #     self.host.effects.roll_hp.remove(self)
+     #     self.host.effects.death.remove(self)
+
 
 
 class ClassTraitTotemEagle(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitAspectEagle(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitAttuneEagle(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitTotemWolf(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitAspectWolf(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 class ClassTraitAttuneWolf(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if kwargs.get('host', None) is None:
+            return
 
-    def onEvent(self, event_type=None):
-        pass
+    # def install(self):
+    #     self.host.effects.init.add(self)
+    #     self.host.effects.equip.add(self)
+    #     self.host.effects.unequip.add(self)
+    #     self.host.effects.before_battle.add(self)
+    #     self.host.effects.after_battle.add(self)
+    #     self.host.effects.before_turn.add(self)
+    #     self.host.effects.after_turn.add(self)
+    #     self.host.effects.before_action.add(self)
+    #     self.host.effects.after_action.add(self)
+    #     self.host.effects.attack.add(self)
+    #     self.host.effects.defend.add(self)
+    #     self.host.effects.critical.add(self)
+    #     self.host.effects.level_up.add(self)
+    #     self.host.effects.rest_long.add(self)
+    #     self.host.effects.rest_short.add(self)
+    #     self.host.effects.roll_attack.add(self)
+    #     self.host.effects.roll_damage.add(self)
+    #     self.host.effects.roll_dc.add(self)
+    #     self.host.effects.roll_hp.add(self)
+    #     self.host.effects.death.add(self)
+    #
+    # def uninstall(self):
+    #     self.host.effects.init.remove(self)
+    #     self.host.effects.equip.remove(self)
+    #     self.host.effects.unequip.remove(self)
+    #     self.host.effects.before_battle.remove(self)
+    #     self.host.effects.after_battle.remove(self)
+    #     self.host.effects.before_turn.remove(self)
+    #     self.host.effects.after_turn.remove(self)
+    #     self.host.effects.before_action.remove(self)
+    #     self.host.effects.after_action.remove(self)
+    #     self.host.effects.attack.remove(self)
+    #     self.host.effects.defend.remove(self)
+    #     self.host.effects.critical.remove(self)
+    #     self.host.effects.level_up.remove(self)
+    #     self.host.effects.rest_long.remove(self)
+    #     self.host.effects.rest_short.remove(self)
+    #     self.host.effects.roll_attack.remove(self)
+    #     self.host.effects.roll_damage.remove(self)
+    #     self.host.effects.roll_dc.remove(self)
+    #     self.host.effects.roll_hp.remove(self)
+    #     self.host.effects.death.remove(self)
 
 
 if __name__ == '__main__':
