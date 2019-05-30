@@ -1,6 +1,8 @@
 import re
 import json
-from trace import print
+from trace import print, called_with
+
+debug = False
 
 
 class Event:
@@ -41,8 +43,30 @@ class Event:
         #     bar(a b)
 
         def __call__(self, *args, **kwargs):
+            # import inspect
+            # stack = inspect.stack()
+            # for i in [0,1,2]:
+            #     print('stack'+str(i), end='')
+            #     for j in range(6):
+            #         __builtins__['print']('\n\t', stack[i][j], end='')
+            #     __builtins__['print']('')
+            # print(stack[1][4])
+            if debug:
+                caller = called_with()
+                print(caller)
             for f in self:
-                f(*args, **kwargs)
+                try:
+                    # for key in dir(f):
+                    #     print(key)
+                    #     print('\t', dir(getattr(f, key)))
+                    if debug:
+                        print(f.__name__, 'event function triggered for', f.__self__.host.name, 'from',
+                              f.__self__.__class__.__name__)
+                    f(*args, **kwargs)
+                except Exception as e:
+                    print(e)
+                    print(f.__name__)
+                    raise e
 
         def __repr__(self):
             return '{%s}' % re.sub('["[\]]', '', json.dumps([x.__class__.__name__ for x in self]))
@@ -78,8 +102,11 @@ class Event:
         self.roll_damage = self.Effect(set())
         self.roll_dc = self.Effect(set())
         self.roll_hp = self.Effect(set())
+        self.incapacitated = self.Effect(set())
         self.death = self.Effect(set())
         self.heal = self.Effect(set())
+        self.move = self.Effect(set())
+        self.proficiency_check = self.Effect(set())
         self._none = self.Effect(set())  # use this for related but non event locations
 
     # class When:
@@ -130,10 +157,6 @@ if __name__ == '__main__':
     e.remove(baz)
     print(">>> e('a', 'b')")
     e('a', 'b')
-    print('>>> e.get(foo)')
-    x = e.get(foo)
-    print(">>> x('get')")
-    x('get')
 
 #     Event(foo, bar)
 #     >>> e.add(baz)

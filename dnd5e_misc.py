@@ -75,13 +75,15 @@ class Attack:
         self.extra_attacks = 0
         self.roll()
         self.effects = set()
+        self.critical_multi = 2
 
     def roll(self):
         self.roll1 = self.attack_die.roll()
         self.roll2 = self.attack_die.roll()
 
+
     def rolled_one(self):
-        return self.roll1 == 1 or self.roll2 == 1
+        return 1 in (self.roll1, self.roll2)
 
     def result(self):
         if self.advantage or self.disadvantage and not self.advantage and self.disadvantage:

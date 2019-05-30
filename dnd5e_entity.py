@@ -1,14 +1,14 @@
 # parent class to both Character Sheet and creature, has things relevant to encounters.
-from dnd5e_enums import TRAIT, ABILITY, Ability
+from dnd5e_enums import TRAIT, ABILITY, Ability, SKILL
 import dnd5e_weaponry as weaponry
 from dnd5e_events import Event
 from dnd5e_inventory import Equipped
-from dnd5e_misc import Attack
+from dnd5e_misc import Attack, Die
 
 
 class Entity:
     def __init__(self, name=None, traits=None, hp=None, hp_max=None, effects=None, equipment=None, abilities=None,
-                 skills=None, saving_throws=None, speed=None, proficiency_bonus=None):
+                 skills=None, saving_throws=None, speed=None, proficiency_bonus=None, unspent_ability=None):
         self.name = name
         self.speed = speed
         if self.speed is None:
@@ -54,6 +54,10 @@ class Entity:
             self.saving_throws = Ability()
         self.temporary_hitpoints = 0
         self.actions = Event().none()
+        self.status = Event().none()
+        self.unspent_ability = unspent_ability
+        if self.unspent_ability is None:
+            self.unspent_ability = 0
 
     def equip(self, gear):
         if self.equipment is None:
@@ -65,11 +69,14 @@ class Entity:
         elif not isinstance(gear, list):
             gear = [gear]
 
-        # todo: call the individual gear equip functions.
+        # todo: call the individual gear equip functions. - test for cursed
         self.equipment.equip(gear)  # todo: implement weapons/shields/armor
+        self.effects.equip()
 
     def unequip(self, slot=None, gear=None):
+        # todo: check for cursed - unable to remove item
         self.equipment.unequip(slot, gear)
+        self.effects.unequip()
 
     def is_lucky(self):
         return TRAIT.LUCKY in self.traits
@@ -112,25 +119,6 @@ class Entity:
             damage += hand.bonus_damage
             yield [d(damage) for d in hand.damage_type], hand.attack_function
 
-#     def set_saving_throws(self, throws):  # todo: confirm if saving throws are modified by any races and
-#         # include if so
-# #        throws = self.player_class.saving_throws
-#         # base values
-#         STR = self.abilities.STR_MOD
-#         CON = self.abilities.CON_MOD
-#         DEX = self.abilities.DEX_MOD
-#         INT = self.abilities.INT_MOD
-#         WIS = self.abilities.WIS_MOD
-#         CHA = self.abilities.CHA_MOD
-#         # proficiency boosted
-#         STR += (self.proficiency_bonus if self.proficiency_bonus > 0 else throws.STR) if ABILITY.STR in throws else 0
-#         CON += (self.proficiency_bonus if self.proficiency_bonus > 0 else throws.CON) if ABILITY.CON in throws else 0
-#         DEX += (self.proficiency_bonus if self.proficiency_bonus > 0 else throws.DEX) if ABILITY.DEX in throws else 0
-#         INT += (self.proficiency_bonus if self.proficiency_bonus > 0 else throws.INT) if ABILITY.INT in throws else 0
-#         WIS += (self.proficiency_bonus if self.proficiency_bonus > 0 else throws.WIS) if ABILITY.WIS in throws else 0
-#         CHA += (self.proficiency_bonus if self.proficiency_bonus > 0 else throws.CHA) if ABILITY.CHA in throws else 0
-#         return Ability(STR, CON, DEX, INT, WIS, CHA)
-
     def set_saving_throws(self, throws):
         # todo: confirm if saving throws are modified by any races and include if so
         # base values
@@ -156,3 +144,10 @@ class Entity:
             WIS += self.proficiency_bonus if ABILITY.WIS in throws else 0
             CHA += self.proficiency_bonus if ABILITY.CHA in throws else 0
         return Ability(STR, CON, DEX, INT, WIS, CHA)
+
+    def save_roll(self, roll_type, roll_difficulty):
+        die = Die(1, 20)
+        proficiency = 0
+        if roll_type in self.proficiency_skills:
+            proficiency = self.proficiency_bonus
+        return die.roll() + proficiency > roll_difficulty

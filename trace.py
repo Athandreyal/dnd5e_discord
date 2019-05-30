@@ -11,6 +11,14 @@ def line(offset=None):
     return getframeinfo(stack()[1 + offset][0]).lineno
 
 
+def called_with():
+    text = stack()[2][4][0]  # stack()[1] is the caller, but as this is called to get a previous caller, use ()[2]
+    if '#' in text:  #strip off the comment
+        index = text.find('#')
+        text = text[:index]
+    return text.strip()  # toss leading/trailing spaces
+
+
 # noinspection PyShadowingBuiltins
 def print(*args, offset=None, **kwargs):
     if offset is None:

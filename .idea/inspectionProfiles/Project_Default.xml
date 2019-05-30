@@ -28,6 +28,8 @@
           <option value="dnd5e_races.Race.racial_ability" />
           <option value="dnd5e_races.Race.traits" />
           <option value="dnd5e_functions.TraitsBase.onEvent" />
+          <option value="dnd5e_functions.TraitsBase.install" />
+          <option value="dnd5e_functions.TraitsBase.uninstall" />
         </list>
       </option>
     </inspection_tool>

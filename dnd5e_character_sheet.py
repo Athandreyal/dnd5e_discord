@@ -12,8 +12,8 @@ class CharacterSheet(Entity):
     # todo: embed senses relevant to hostile detection for when it comes time to do battles  darkness is irrelevant
     #  if no one can see anyway and everyone knows where everyone is by default as a consequence.
 
-    def __init__(self, name, age, height, weight, uid, experience, level, player_race, player_class, skills, background,
-                 abilities, hp_dice, hp_current, equipment):
+    def __init__(self, name, age, height, weight, uid, experience, level, unspent, player_race, player_class, skills,
+                 background, abilities, hp_dice, hp_current, equipment):
         if level == 0:  # fresh character init
             self.level = 1
             hp_max = abilities.CON_MOD + player_class.hitDie
@@ -29,7 +29,7 @@ class CharacterSheet(Entity):
         traits.add(enums.TRAIT.NATURAL_DEFENCE)
         super().__init__(name=name, traits=traits, abilities=abilities, hp=hp_current, hp_max=hp_max, skills=skills,
                          saving_throws=player_class.saving_throws, equipment=equipment, speed=player_race.speed,
-                         proficiency_bonus=proficiency_bonus)
+                         proficiency_bonus=proficiency_bonus, unspent_ability=unspent)
         self.age = age
         self.height = height
         self.weight = weight
@@ -50,7 +50,7 @@ class CharacterSheet(Entity):
         #                    todo: apply proficiencies from class/race to character
         self.proficiency_tools = set()  # todo: apply proficiencies from class/race to character
         self.initiative = self.abilities.DEX_MOD  # todo: proper initiative
-        self.background = background # todo: complete the init of backgrounds
+        self.background = background  # todo: complete the init of backgrounds
         self.traits.update(self.traits.union(traits))
 
         # register all the traits
@@ -79,7 +79,8 @@ class CharacterSheet(Entity):
             self.__init__(name=self.name, age=self.age, height=self.height, weight=self.weight, uid=self.uid,
                           experience=self.experience, level=self.level, player_race=self.player_race,
                           player_class=self.player_class, skills=self.proficiency_skills, background=self.background,
-                          abilities=self.abilities, hp_dice=self.hp_dice, hp_current=None, equipment=self.equipment)
+                          abilities=self.abilities, hp_dice=self.hp_dice, hp_current=None, equipment=self.equipment,
+                          unspent=self.unspent_ability)
             self.effects.level_up()
 
     def get_next_level_xp(self):
@@ -173,7 +174,7 @@ class CharacterSheet(Entity):
         else:  # have armor, calculate it.
             base_armor_class = self.equipment.armor.armor_class
             dex_bonus = min(self.abilities.DEX_MOD, self.equipment.armor.dex_limit)
-            proficiency = self.equipment.armor.flags.intersection(self.proficiency_armor)
+            proficiency = self.equipment.armor.enum_type.intersection(self.proficiency_armor)
             if proficiency:
                 proficiency_bonus = self.proficiency_bonus
             else:
@@ -195,6 +196,7 @@ def init_wulfgar():
     uid = 1
     experience = 0
     level = 0
+    unspent_pts = 0
     player_race = RACE.Human()
     player_class = CLASS.Barbarian(level)
     class_skills = {enums.SKILL.ATHLETICS, enums.SKILL.PERCEPTION}
@@ -206,9 +208,9 @@ def init_wulfgar():
     # hp_current = 236
     hp_current = None
     weapon = weaponry.greataxe  # todo: implement weapons/shields/armor
-    _armor = armor.plate_Armor  # todo: implement weapons/shields/armor
+    _armor = armor.breastplate_Armor  # todo: implement weapons/shields/armor
     shield = None  # todo: implement weapons/shields/armor
-    return CharacterSheet(name, age, height, weight, uid, experience, level, player_race, player_class,
+    return CharacterSheet(name, age, height, weight, uid, experience, level, unspent_pts, player_race, player_class,
                           class_skills, background, abilities, hp_dice, hp_current, [weapon, _armor, shield])
 
 

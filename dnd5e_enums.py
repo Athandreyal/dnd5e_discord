@@ -27,7 +27,6 @@ class ABILITY(Set):
         def __init__(self):
             self.affectors = []
 
-
     class CON:
         def __init__(self):
             self.affectors = []
@@ -134,24 +133,77 @@ class Ability:
 
 
 class SKILL(Set):
-    class ATHLETICS: pass
-    class ACROBATICS: pass
-    class SLEIGHT: pass
-    class STEALTH: pass
-    class ARCANA: pass
-    class HISTORY: pass
-    class INVESTIGATION: pass
-    class NATURE: pass
-    class RELIGION: pass
-    class ANIMAL_HANDLING: pass
-    class INSIGHT: pass
-    class MEDICINE: pass
-    class PERCEPTION: pass
-    class SURVIVAL: pass
-    class DECEPTION: pass
-    class INTIMIDATION: pass
-    class PERFORMANCE: pass
-    class PERSUASION: pass
+    class ATHLETICS:
+        def __init__(self):
+            self.affectors = []
+
+    class ACROBATICS:
+        def __init__(self):
+            self.affectors = []
+
+    class SLEIGHT:
+        def __init__(self):
+            self.affectors = []
+
+    class STEALTH:
+        def __init__(self):
+            self.affectors = []
+
+    class ARCANA:
+        def __init__(self):
+            self.affectors = []
+
+    class HISTORY:
+        def __init__(self):
+            self.affectors = []
+
+    class INVESTIGATION:
+        def __init__(self):
+            self.affectors = []
+
+    class NATURE:
+        def __init__(self):
+            self.affectors = []
+
+    class RELIGION:
+        def __init__(self):
+            self.affectors = []
+
+    class ANIMAL_HANDLING:
+        def __init__(self):
+            self.affectors = []
+
+    class INSIGHT:
+        def __init__(self):
+            self.affectors = []
+
+    class MEDICINE:
+        def __init__(self):
+            self.affectors = []
+
+    class PERCEPTION:
+        def __init__(self):
+            self.affectors = []
+
+    class SURVIVAL:
+        def __init__(self):
+            self.affectors = []
+
+    class DECEPTION:
+        def __init__(self):
+            self.affectors = []
+
+    class INTIMIDATION:
+        def __init__(self):
+            self.affectors = []
+
+    class PERFORMANCE:
+        def __init__(self):
+            self.affectors = []
+
+    class PERSUASION:
+        def __init__(self):
+            self.affectors = []
 
 
 class Skill:
@@ -1188,3 +1240,6 @@ if __name__ == '__main__':
             print(f, f(host=None))
         except:
             pass
+    test1 = ABILITY.CON
+    test2 = ABILITY
+    print(test1 in test2.Set())

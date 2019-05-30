@@ -3,7 +3,7 @@ import dnd5e_enums as enums
 
 
 class Armor(items.Item):
-    def __init__(self, name, cost, armor_class, dex_limit, str_req, enum_type, weight, can_stealth, flags, don_doff_t,
+    def __init__(self, name, cost, armor_class, dex_limit, str_req, enum_type, weight, can_stealth, don_doff_t,
                  equip_function, defend_function):
         # TODO: embed static armor criteria in the armor type enum?
         qty = 1
@@ -15,7 +15,6 @@ class Armor(items.Item):
         self.str_req = str_req  # todo: implement str_req for armors.
         self.enum_type = enum_type
         self.can_stealth = can_stealth
-        self.flags = flags
         self.equipFunction = equip_function  # used to put this item's effect into the event system
         self.defend_function = defend_function  # used to put this items effect into the event system
         self.don = don_doff_t[0]
@@ -43,10 +42,24 @@ plate_Armor = Armor(
                     dex_limit=0,
                     str_req=15,
                     enum_type={enums.ARMOR.HEAVY.PLATE},
-                    weight=7,
+                    weight=65,
                     can_stealth=False,
-                    flags={enums.PROFICIENCY.ARMOR.METAL, enums.PROFICIENCY.ARMOR.PLATE},
                     don_doff_t=(10, 6),  # time to put on, take off, in minutes.
                     equip_function=None,  # the name of a function which executes a special effect on the target
                     defend_function=None,  # the name of a function which executes a special effect on the target
                     )
+
+breastplate_Armor = Armor(
+                    name='Breastplate Armor',
+                    cost=40000,
+                    armor_class=15,
+                    dex_limit=2,
+                    str_req=0,
+                    enum_type={enums.ARMOR.MEDIUM.BREASTPLATE},
+                    weight=20,
+                    can_stealth=False,
+                    don_doff_t=(5, 3),  # time to put on, take off, in minutes.
+                    equip_function=None,  # the name of a function which executes a special effect on the target
+                    defend_function=None,  # the name of a function which executes a special effect on the target
+                    )
+
