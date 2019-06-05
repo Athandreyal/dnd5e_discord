@@ -74,7 +74,9 @@ class Barbarian(CommonFunctions):
         self.rage_damage = 2 + (1 if lvl >= 9 else 0) + (1 if lvl >= 16 else 0)
         self.brutal_crit_die = (1 if lvl >= 9 else 0) + (1 if lvl >= 13 else 0) + (1 if lvl >= 17 else 0)
         #       ADDITIONAL WEAPON DAMAGE ROLLS ON CRITICAL MELEE ATTACK
+        # self.traits = {CLASS_TRAITS.RAGE, CLASS_TRAITS.UNARMORED_DEFENCE, TRAIT.LUCKY}  #lucky added for testing
         self.traits = {CLASS_TRAITS.RAGE, CLASS_TRAITS.UNARMORED_DEFENCE}
+        # todo: remove lucky from barbarian, just here for testing
         if lvl >= 2:
             self.traits.update({CLASS_TRAITS.RECKLESS_ATTACK, CLASS_TRAITS.DANGER_SENSE})
         if lvl >= 5:
@@ -82,8 +84,10 @@ class Barbarian(CommonFunctions):
         if lvl >= 7:
             self.traits.update({CLASS_TRAITS.FERAL_INSTINCT})
         if lvl >= 11:
+            self.traits.remove(CLASS_TRAITS.RAGE)
             self.traits.update({CLASS_TRAITS.RELENTLESS_RAGE})
         if lvl >= 15:
+            self.traits.remove(CLASS_TRAITS.RELENTLESS_RAGE)
             self.traits.update({CLASS_TRAITS.PERSISTENT_RAGE})
         if lvl >= 18:
             self.traits.update({CLASS_TRAITS.INDOMITABLE_MIGHT})

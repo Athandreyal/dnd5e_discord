@@ -3,9 +3,11 @@
 #import dnd5e_misc as misc
 import dnd5e_enums as enums
 #from dnd5e_entity import Entity
-from trace import print
 
-debug = False
+debug = lambda *args, **kwargs: False  #dummy out the debug prints when disabled
+if debug():
+    from trace import print as debug
+    debug = debug
 # todo: assign traits which are actions, to entity actions list for choice as an action when interactive
 # todo: use status effects type class to pass/apply damage?
 
@@ -66,6 +68,7 @@ class TraitsBase:
         if host is None:
             raise ValueError
         self.host = host  # reference to who owns this particular trait.
+        self.events = self.host.effects
         self._install()
 
     def _install(self, *args, **kwargs):
@@ -93,50 +96,43 @@ class TraitsBase:
             pass
 
     def add_affector(self, what, where):
-        if debug:
+        if debug() is not False:
             printout = {}
-            print('attempting to add', what, 'in ', 'self.host.' + where)
+            debug('attempting to add', what, 'in ', 'self.host.' + where)
         where_set = getattr(self.host, where)
         for effect in what:
             where_set = getattr(self.host, where)
             if effect in where_set:
-                if debug:
-                    print('found', effect, ', with affectors:', effect.affectors)
+                debug('found', effect, ', with affectors:', effect.affectors)
                 affected = where_set.get(effect)
                 affected.affectors.append(self)
             else:
-                if debug:
-                    print('didn\'t find', effect, ', instantiating it with affector', self)
+                debug('didn\'t find', effect, ', instantiating it with affector', self)
                 affected = effect()
                 affected.affectors.append(self)
                 where_set.add(affected)
-            if debug:
-                print(affected, 'affectors is now', affected.affectors)
-        if debug:
-            print('final self.host.' + where, 'is', where_set)
+            debug(affected, 'affectors is now', affected.affectors)
+        debug('final self.host.' + where, 'is', where_set)
 
     def remove_affector(self, what, where):
         remove = []
-        if debug:
+        if debug() is not False:
             printout = {}
-            print('attempting to remove', what, 'in ', 'self.host.' + where)
+            debug('attempting to remove', what, 'in ', 'self.host.' + where)
         where_set = getattr(self.host, where)
         for w in what:
             effect = where_set.get(w)
-            if debug:
-                print('found', what, ', with affectors:', effect.affectors)
+            if debug() is not False:
+                debug('found', what, ', with affectors:', effect.affectors)
                 printout[effect] = effect.affectors.copy()
             effect.affectors.remove(self)
             if not effect.affectors:
-                if debug:
-                    print('removing', self, 'from', effect.affectors)
+                debug('removing', self, 'from', effect.affectors)
                 remove.append(effect)
         for r in remove:
-            if debug:
-                print('trying to remove', r, ', from', where, 'due to no affectors')
+            debug('trying to remove', r, ', from', where, 'due to no affectors')
             where_set.remove(r)
-            if debug:
-                print(where_set)
+            debug(where_set)
 
      # def install(self):
      #     self.host.effects.init.add(self)
@@ -236,6 +232,175 @@ class TraitNaturalDefence(TraitsBase):
         defence = kwargs['defence']
         defence.armor_classes.append(self.armor_class)
 
+class StatusBlinded(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusCharmed(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusDead(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusDeafened(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusExhausted(TraitsBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.level = 0
+        self.host_hp = self.host.max_hp
+        self.host_speed = self.host.speed
+
+    def exhaustion(self, *args, **kwargs):
+        old = self.level
+        self.level += kwargs['exhaustion']
+        new = self.level
+
+        change = self.add_affector if old_level < self.level else self.remove_affector
+        increase = old_level < self.level
+
+        if old < new:
+            if old < 1 <= new:
+                self.add_affector({enums.ADVANTAGE.ABILITY}, 'disadvantage')
+            if old < 2 <= new:
+                # todo: when movement is a thing, change this to apply a modifier, rather than directly adjust the base
+                #  value
+                self.host.speed = self.host_speed // 2
+            if old < 3 <= new:
+                self.add_affector({enums.ADVANTAGE.ATTACK, enums.SKILL}, 'disadvantage')
+            if old < 4 <= new:
+                # todo: need a way to preserve the original entity hp maximum, perhaps another affectors set?
+                self.host.max_hp = self.host_hp // 2
+            if old < 5 <= new:
+                self.host.speed = 0
+            if old < 6 <= new:
+                self.add_affector({enums.STATUS.DEAD}, 'status')
+        else: # reduced exhaustion
+            if new < 1 <= old:
+                self.remove_affector({enums.ADVANTAGE.ABILITY}, 'disadvantage')
+            if new < 2 <= old:
+                # todo: when movement is a thing, change this to apply a modifier, rather than directly adjust the base
+                #  value
+                self.host.speed = self.host_speed
+            if new < 3 <= old:
+                self.remove_affector({enums.ADVANTAGE.ATTACK, enums.SKILL}, 'disadvantage')
+            if new < 4 <= old:
+                # todo: need a way to preserve the original entity hp maximum, perhaps another affectors set?
+                self.host.max_hp = self.host_hp
+            if new < 5 <= old:
+                self.host.speed = self.host_speed
+            if new < 6 <= old:
+                self.remove_affector({enums.STATUS.DEAD}, 'status')
+
+    def rest_long(self, *args, **kwargs):
+        # todo: check if recently ate and drank as condition to this trigger occuring.
+        self.level -= 1 if self.level is not 0 else 0
+
+
+class StatusFrightened(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusGrappled(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusIncapacitated(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusInvisible(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusParalyzed(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusPetrified(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusPoisioned(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusProne(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusRestrained(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusStunned(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusUnconscious(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusEnraged(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+class StatusFrenzied(TraitsBase):
+    def __init__(self):
+        super().__init__()
+        pass #todo: implement status effect
+
+
+# class TraitExhaustion2(TraitExhaustion1):
+#     # todo: ensure exhaustion events are present where necessary
+#     def exhaustion(self, *args, **kwargs):
+#         super.exhaustion()
+#         pass
+#
+# class TraitExhaustion3(TraitExhaustion2):
+#     # todo: ensure exhaustion events are present where necessary
+#     def exhaustion(self, *args, **kwargs):
+#         super.exhaustion()
+#         pass
+#
+# class TraitExhaustion4(TraitExhaustion3):
+#     # todo: ensure exhaustion events are present where necessary
+#     def exhaustion(self, *args, **kwargs):
+#         super.exhaustion()
+#         pass
+#
+# class TraitExhaustion5(TraitExhaustion4):
+#     # todo: ensure exhaustion events are present where necessary
+#     def exhaustion(self, *args, **kwargs):
+#         super.exhaustion()
+#         pass
+#
+# class TraitExhaustion6(TraitExhaustion5):
+#     # todo: ensure exhaustion events are present where necessary
+#     def exhaustion(self, *args, **kwargs):
+#         super.exhaustion()
+#         pass
+#
 
 class ClassTraitRage(TraitsBase):
     def __init__(self, *args, **kwargs):
@@ -245,6 +410,8 @@ class ClassTraitRage(TraitsBase):
         self.raging = False  # current state, are we raging now?
         self.duration = 0  # how long have we been raging
         self.last_attack = 0  # how many increments ago did we last attack something?
+        self.since_last_attack = 1
+        self.rage_length_max = 10
         self.hvy_armor = False
         self.added_effects = False
         self.added_rage_effects = False
@@ -265,8 +432,7 @@ class ClassTraitRage(TraitsBase):
         pass
 
     def init(self, *args, **kwargs):
-        if debug:
-            print('rage init')
+        debug('rage init')
         self.rages = self.get_rage_count()
         self.bonus = self.get_rage_bonus()
         self.raging = False
@@ -275,13 +441,11 @@ class ClassTraitRage(TraitsBase):
         self.added_effects = False
         self.hvy_armor = any(a in self.hvy_armor_types for a in self.host.equipment.armor.enum_type)
         if self.hvy_armor:
-            if debug:
-                print('hvy armor, rage cancelling init')
+            debug('hvy armor, rage cancelling init')
             return
         elif not self.added_effects:
             self.added_effects = True
-            if debug:
-                print('rage init, no hvy armor, adding STR and CON advantages')
+            debug('rage init, no hvy armor, adding STR and CON advantages')
             self.add_affector({enums.ADVANTAGE.STR, enums.ADVANTAGE.CON}, 'advantage')
 
     rest_long = init
@@ -299,6 +463,7 @@ class ClassTraitRage(TraitsBase):
             raise ValueError
         if self not in attack.effects:
             attack.bonus_damage += self.bonus
+            attack.effects.add(self)
         self.last_attack = -1  # use end_turn to increment to zero
 
     def equip_change(self, *args, **kwargs):
@@ -322,10 +487,9 @@ class ClassTraitRage(TraitsBase):
 
     def before_turn(self, *args, **kwargs):
         if self.hvy_armor: return
-        if debug:
-            print('rage before_turn, no hvy armor')
+        debug('rage before_turn, no hvy armor')
         if self.raging:
-            if self.last_attack == 1 or self.duration > 10:
+            if self.last_attack == self.since_last_attack or self.duration > self.rage_length_max:
                 self.raging = False
                 self.rages -= 1
                 self.duration = 0
@@ -348,14 +512,12 @@ class ClassTraitRage(TraitsBase):
 
     def after_battle(self, *args, **kwargs):
         if self.hvy_armor: return
-        if debug:
-            print('rage after_battle, no hvy armor')
+        debug('rage after_battle, no hvy armor')
         self.raging = False
 
     def after_turn(self, *args, **kwargs):
         if self.hvy_armor: return
-        if debug:
-            print('rage after_turn, no hvy armor')
+        debug('rage after_turn, no hvy armor')
         if self.raging:
             self.duration += 1
             self.last_attack += 1
@@ -365,18 +527,6 @@ class ClassTraitUnarmoredDefence(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.armor_class = 10 + self.host.abilities.DEX_MOD + self.host.abilities.CON_MOD
-
-    # def install(self, *args, **kwargs):
-    #     self.host.effects.equip.add(self.equip_change)
-    #     self.host.effects.unequip.add(self.equip_change)
-    #     self.host.effects.defend.add(self.defend)
-    #     self.host.effects.level_up.add(self.level_up)
-    #
-    # def uninstall(self, *args, **kwargs):
-    #     self.host.effects.equip.remove(self.equip_change)
-    #     self.host.effects.unequip.remove(self.equip_change)
-    #     self.host.effects.defend.remove(self.defend)
-    #     self.host.effects.level_up.remove(self.level_up)
 
     def equip_change(self, *args, **kwargs):
         if self.host.equipment.armor is None:
@@ -410,32 +560,29 @@ class ClassTraitRecklessAttack(TraitsBase):
         self.activated = False
 
     def before_turn(self, *args, **kwargs):
-        if debug:
-            print(self.host.name, 'reckless before_turn, activated =', self.activated, end=', ')
+        debug(self.host.name, 'reckless before_turn, activated =', self.activated, end=', ')
         if self.activated: return
-        if debug:
+        if debug() is not False:
             __builtins__['print']('proceeding...')
         self.add_affector({enums.ATTACK.MELEE}, 'advantage')
 
     def attack(self, *args, **kwargs):
-        if debug:
-            print(self.host.name, 'reckless attack, activated =', self.activated, end=', ')
+        debug(self.host.name, 'reckless attack, activated =', self.activated, end=', ')
         if self.activated: return
-        if debug:
+        if debug() is not False:
             __builtins__['print']('proceeding...')
         self.remove_affector({enums.ATTACK.MELEE}, 'advantage')
         self.add_affector({enums.DEFENCE.MELEE}, 'disadvantage')
         self.activated = True
 
     def after_turn(self, *args, **kwargs):
-        if debug:
-            print(self.host.name, 'reckless after_turn, activated =', self.activated, end=', ')
+        debug(self.host.name, 'reckless after_turn, activated =', self.activated, end=', ')
         if not self.activated: return
-        if debug:
+        if debug() is not False:
             __builtins__['print']('proceeding...')
         self.activated = False
-        if debug:
-            print(self.host.name, self.host.advantage, 'disadvantage')
+        if debug() is not False:
+            debug(self.host.name, self.host.advantage, 'disadvantage')
             for adv in self.host.advantage:
                 print(adv,  end='')
                 if hasattr(adv, 'affectors'):
@@ -532,41 +679,96 @@ class ClassTraitBrutalCritical(TraitsBase):
             attack.critical_multi += 1
 
 
-class ClassTraitRelentlessRage(TraitsBase):
+class ClassTraitRelentlessRage(ClassTraitRage):
+    # inherits rage, and includes an incapacitated event
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        debug('init RelentlessRage')
         self.dc = 5
 
     def incapacitated(self, *args, **kwargs):
-        # todo: create an incapacitated event
-        # todo: change do_battle to use the incapacitated event, and trigger revive / death checks
-        self.host.hp = 1
+        # todo: trigger revive / death checks
+        debug('incapacitated event thrown for ClassTraitRelentlessRage')
+        if self.host.roll_dc(enums.ABILITY.CON, self.dc+5):
+            debug('dc%d' % self.dc, 'roll succeeded, reviving with 1hp')
+            self.host.hp = 1
+            self.dc += 5
+
+    def rest_long(self, *args, **kwargs):
+        self.dc = 5
+
+    def rest_short(self, *args, **kwargs):
+        self.dc = max(5, self.dc - 5)
 
 
-class ClassTraitPersistentRage(TraitsBase):
+class ClassTraitPersistentRage(ClassTraitRelentlessRage):
+    # inherits relentless rage, and modifies its duration.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.since_last_attack = 999999999
+        self.rage_length_max = 999999999
 
 
 class ClassTraitIndomitableMight(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def roll_dc(self, *args, **kwargs):
+        rolls = kwargs['rolls']
+        if rolls.type is enums.ABILITY.STR:
+            rolls.roll1 = max(rolls.roll1, self.host.abilities.STR)
+            if hasattr(rolls, 'roll2') and rolls.roll2 is not None:
+                rolls.roll2 = max(rolls.roll2, self.host.abilities.STR)
+
 
 class ClassTraitPrimalChampion(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def init(self, *args, **kwargs):
+        self.host.abilities.set_max(STR=24, CON=24)
+        self.host.abilities.add(strength=4, constitution=4)
+
 
 class ClassTraitFrenzy(TraitsBase):
+    # mutate the rage trait
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.enraged = False # is the entity ragins
+        self.frenzied = False # has the character triggered its frenzy
+        self.exhausted = False # have we finished a frenzy and applied out exhaustion effect
+
+    def before_turn(self, *args, **kwargs):
+        self.enraged = self.host.status.get(enums.STATUS.ENRAGED) is not None
+
+    def before_action(self, *args, **kwargs):
+        if self.enraged and not self.frenzied:
+            self.frenzied = True  # todo: make this a player choice
+
+    def attack(self, *args, **kwargs):
+        if not self.frenzied: return
+        attack = kwargs['attack']
+        if self not in attack.effects:
+            attack.num += 1
+            attack.effects.add(self)
+
+    def after_turn(self, *args, **kwargs):
+        if self.frenzied and not self.enraged and not self.exhausted:
+            self.events.exhaustion(exhaustion=1)  # additive call.
+            self.exhausted = True
+            self.frenzied = False  # end the frenzy if rage has ended
+
+    def after_battle(self, *args, **kwargs):
+        if self.frenzied and not self.enraged and not self.exhausted:
+            self.events.exhaustion(exhaustion=1)  # additive call.
+            self.exhausted = True
+            self.frenzied = False  # end the frenzy if rage has ended
 
 
 class ClassTraitMindlessRage(TraitsBase):
+    # todo: change this to piggy back on rage events
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
 
 class ClassTraitIntimidatingPresence(TraitsBase):
     def __init__(self, *args, **kwargs):
@@ -636,22 +838,31 @@ class RaceTraitLucky(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def roll_dc(self, *args, **kwargs):
-        pass  # todo: implement lucky's roll_dc
+    def roll(self, *args, **kwargs):
+        rolls = kwargs.get('rolls', kwargs.get('attack', None))
+        debug('rolls were ', rolls.roll1, rolls.roll2)
+        if rolls.roll1 == 1:
+            debug('event lucky rerolling die 1')
+            rolls.roll1 = rolls.die.roll()
+        elif hasattr(rolls, 'roll2') and rolls.roll2 is not None and rolls.roll2 == 1:
+            debug('event lucky rerolling die 2')
+            rolls.roll2 = rolls.die.roll()
 
-    def roll_hp(self, *args, **kwargs):
-        pass  # todo: implement lucky's roll_hp
+    roll_hp = roll
+    roll_dc = roll
+    roll_attack = roll
+    roll_damage = roll
 
-    def roll_attack(self, *args, **kwargs):
-        attack = kwargs.get('attack', None)
-        if attack.roll1 == 1:
-            attack.roll1 = attack.attack_die.roll()
-        elif attack.roll2 == 1:
-            attack.roll2 = attack.attack_die.roll()
 
-    def roll_damage(self, *args, **kwargs):
-        attack = kwargs.get('attack', None)
+class WeaponEffectGSTQ2H(TraitsBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
+    def defend(self, *args, **kwargs):
+#        defence = kwargs['defence']
+        attack = kwargs['attack']
+        for damage in attack.damage:
+            damage //= 2
 
 if __name__ == '__main__':
     from trace import print
@@ -664,3 +875,4 @@ if __name__ == '__main__':
     print(wulfgar.effects.init)
     for f in wulfgar.effects.init:
         print(f)
+

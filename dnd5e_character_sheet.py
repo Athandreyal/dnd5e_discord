@@ -7,6 +7,11 @@ import dnd5e_armor as armor
 import json
 from dnd5e_entity import Entity
 
+debug = lambda *args, **kwargs: False  #dummy out the debug prints when disabled
+if debug():
+    from trace import print as debug
+    debug = debug
+
 
 class CharacterSheet(Entity):
     # todo: embed senses relevant to hostile detection for when it comes time to do battles  darkness is irrelevant
@@ -55,10 +60,14 @@ class CharacterSheet(Entity):
 
         # register all the traits
         for trait in self.traits:
+            debug('installing trait', trait)
             trait(host=self)
 
         # todo: execute init event - the always event
         self.effects.init()
+        if self.experience > self.get_next_level_xp():
+            self.level_up()
+
 
     @property
     def experience(self):
@@ -102,8 +111,9 @@ class CharacterSheet(Entity):
               17: 225000,
               18: 265000,
               19: 305000,
-              20: 355000}
-        return xp.get(self.level, -1)
+              20: 355000,
+              21: 999999999999999999999999}
+        return xp.get(self.level+1, -1)
 
     def full_str(self):
         s = '\n'
@@ -194,7 +204,8 @@ def init_wulfgar():
     height = 7 * 12 + 1  # 7` 1"
     weight = 223
     uid = 1
-    experience = 0
+#    experience = 85001  # lvl 11
+    experience = 1  # lvl 11
     level = 0
     unspent_pts = 0
     player_race = RACE.Human()
@@ -249,3 +260,24 @@ if __name__ == '__main__':
                 print(results2)
     print('attacks and damage types:', results2)
 
+    import dnd5e_enums as enums
+
+    if wulfgar.roll_dc(enums.ABILITY.CON, 10):
+        print('success')
+    else:
+        print('fail')
+    if wulfgar.roll_dc(enums.SKILL.ATHLETICS, 10):
+        print('success')
+    else:
+        print('fail')
+
+    print('ability limit test')
+    print(wulfgar.abilities)
+    for n in range(20):
+        wulfgar.abilities.add(strength=1, constitution=1, dexterity=1, intelligence=1, wisdom=1, charisma=1)
+        print(wulfgar.abilities)
+    # should be all 20 now
+    wulfgar.abilities.set_max(STR=24, CON=24)
+    for n in range(4):
+        wulfgar.abilities.add(strength=1, constitution=1, dexterity=1, intelligence=1, wisdom=1, charisma=1)
+        print(wulfgar.abilities)

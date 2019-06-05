@@ -4,6 +4,16 @@ import json
 import dnd5e_enums as enums
 # miscellaneous errata used in many places, but not large enough to warrant their own file
 
+debug = lambda *args, **kwargs: False  #dummy out the debug prints when disabled
+if debug():
+    from trace import print as debug
+    debug = debug
+
+
+class NamedTuple:
+    def __init__(self, **kwargs):
+        for k in kwargs:
+            setattr(self, k, kwargs[k])
 
 class Die:  # ....dice, not death...
     # qty is number of dice to roll
@@ -63,8 +73,14 @@ class Defend:
 
 
 class Attack:
+    attack_die = Die(1, 20)
+
+    def get(self, attr, default):
+        if hasattr(self, attr):
+            return getattr(self, attr)
+        return default
+
     def __init__(self, advantage=False, disadvantage=False, num=1):
-        self.attack_die = Die(1, 20)
         self.advantage = advantage
         self.disadvantage = disadvantage
         self.num = num
@@ -73,25 +89,20 @@ class Attack:
         self.bonus_damage = 0
         self.bonus_attack = 0
         self.extra_attacks = 0
-        self.roll()
-        self.effects = set()
+        self.effects = set()  # used to track modifiers applied to the attack
         self.critical_multi = 2
+        self.roll1 = None
+        self.roll2 = None
 
-    def roll(self):
-        self.roll1 = self.attack_die.roll()
-        self.roll2 = self.attack_die.roll()
-
-
-    def rolled_one(self):
-        return 1 in (self.roll1, self.roll2)
+    def set_rolls(self, rolls):
+        debug('attack.set_rolls called')
+        self.roll1 = rolls.roll1
+        self.roll2 = rolls.roll2
 
     def result(self):
         if self.advantage or self.disadvantage and not self.advantage and self.disadvantage:
             # exclusive or, one or the other, but not both
-            if self.advantage:
-                roll = max(self.roll1, self.roll2)
-            else:
-                roll = min(self.roll1, self.roll2)
+            roll = max(self.roll1, self.roll2) if self.advantage else min(self.roll1, self.roll2)
         else:
             roll = self.roll1
         return roll, roll == 20

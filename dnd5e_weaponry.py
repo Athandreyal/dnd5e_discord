@@ -1,6 +1,7 @@
 import dnd5e_items as items
 import dnd5e_misc as misc
 from dnd5e_enums import WEAPONS, WEAPONFLAGS, DAMAGETYPE, ATTACK, EQUIP_SLOT
+from dnd5e_functions import *
 
 
 # weaponry base class, holds the details common to all weapons
@@ -54,7 +55,7 @@ class Weapon(items.Item):
         self.equip_function = equip_function
         self.attack_function = attack_function  # todo, implement attack functions
 
-    roll = lambda self: 0 if self.attack_die is None else self.attack_die.roll()
+    roll = lambda self: None if self.attack_die is None else self.attack_die.roll()
     damage = lambda self, hand: self.roll() + self.bonus_damage + (self.bonus_die.roll() if self.bonus_die else 0)
 
     def __repr__(self):
@@ -86,6 +87,25 @@ greataxe = Weapon(  # todo: config limiting
                     ranges=(0, 0),  # for thrown / ranged attacks, (standard, extended) - disadvantage on extended
                     flags={WEAPONFLAGS.VERSATILE},
                     equip_function=None,  # the function which executes a special effect on the  target
+                    attack_function=None,
+                    )
+
+GSTQ2H = Weapon(  # todo: config limiting
+                    name='God Save The Queen',
+                    cost=50000,
+                    damage={
+                            '2_die': 2,         # wielded in two hands
+                            '2_sides': 6,      # wielded in two hands
+                            'types': [DAMAGETYPE.SLASHING]
+                            },
+                    enum_type={WEAPONS.MARTIAL.GREATSWORD},
+                    atk_type={ATTACK.MELEE},
+                    wield_from=EQUIP_SLOT.HAND,
+                    weight=6,
+                    reach=0,
+                    ranges=(0, 0),  # for thrown / ranged attacks, (standard, extended) - disadvantage on extended
+                    flags={WEAPONFLAGS.HEAVY, WEAPONFLAGS.TWO_HANDED},
+                    equip_function=WeaponEffectGSTQ2H,  # the function which executes a special effect on the  target
                     attack_function=None,
                     )
 

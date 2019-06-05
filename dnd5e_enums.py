@@ -1,6 +1,10 @@
 import dnd5e_misc as misc
 import dnd5e_functions as functions
 
+debug = lambda *args, **kwargs: False  #dummy out the debug prints when disabled
+if debug():
+    from trace import print as debug
+    debug = debug
 
 # todo: find ALL default argument expressions in my code, and replace them with =None and default it inside the
 #  function, see :   https://www.toptal.com/python#hiring-guide
@@ -83,11 +87,29 @@ class Ability:
 
         These determine your saving throw bonus base values via (ability // 2 - 5)
         class, race, and magic can confer additional bonuses on top"""
+        self._max_STR = 20
+        self._max_CON = self._max_STR
+        self._max_DEX = self._max_STR
+        self._max_INT = self._max_STR
+        self._max_WIS = self._max_STR
+        self._max_CHA = self._max_STR
         self.STR, self.CON, self.DEX = strength, constitution, dexterity
         self.INT, self.WIS, self.CHA = intelligence, wisdom, charisma
         mods = self.get_mods()
         self.STR_MOD, self.CON_MOD, self.DEX_MOD = mods[:3]
         self.INT_MOD, self.WIS_MOD, self.CHA_MOD = mods[3:]
+
+    def __setattr__(self, name, value):
+        debug('abilities.__setattr__ called with', name, value)
+        if name in 'STR, CON, DEX, INT, WIS, CHA':
+            max_val = getattr(self, '_max_'+name)
+            super().__setattr__(name, min(max_val, value))
+        else:
+            super().__setattr__(name, value)
+
+    def set_max(self, **kwargs):
+        for name in kwargs:
+            setattr(self, '_max_' + name, kwargs[name])
 
     def set(self, strength=0, constitution=0, dexterity=0, intelligence=0, wisdom=0, charisma=0):
         self.STR = strength
@@ -324,9 +346,11 @@ class ATTACK(Set):
     class MELEE:
         def __init__(self):
             self.affectors = []
+
     class RANGED:
         def __init__(self):
             self.affectors = []
+
     class ARCANE:
         def __init__(self):
             self.affectors = []
@@ -336,9 +360,11 @@ class DEFENCE(Set):
     class MELEE:
         def __init__(self):
             self.affectors = []
+
     class RANGED:
         def __init__(self):
             self.affectors = []
+
     class ARCANE:
         def __init__(self):
             self.affectors = []
@@ -416,7 +442,7 @@ class TRAIT(Set):
 
     class KEEN_SENSES: pass  # PROFICIENCY IN THE PERCEPTION SKILL
 
-    class LUCKY: pass
+    LUCKY = functions.RaceTraitLucky
     # WHEN YOU ROLL A 1 ON AN ATTACK ROLL, ABILITY CHECK, OR SAVING THROW, ROLL AGAIN AND USE THE SECOND ROLL
 
     class MASK_OF_THE_WILD: pass
@@ -462,6 +488,7 @@ class TRAIT(Set):
     # unarmored default defence of 10 + dex_mod
     NATURAL_DEFENCE = functions.TraitNaturalDefence
 
+
 # noinspection PyPep8Naming
 # ^^be silent damn you
 class CLASS_TRAITS(Set):
@@ -474,7 +501,7 @@ class CLASS_TRAITS(Set):
     # FIRST ATTACK OF TURN HAS ADVANTAGE, BUT ATTACKS AGAINST YOU HAVE ADVANTAGE
     RECKLESS_ATTACK = functions.ClassTraitRecklessAttack
 
-    # ADVANTAGE DC(DEX) ON PERCEption, INEFFECTIVE IF BLINDED, DEAFENED, INCAPACITATED
+    # ADVANTAGE DC(DEX) ON PERCEPTION, INEFFECTIVE IF BLINDED, DEAFENED, INCAPACITATED
     DANGER_SENSE = functions.ClassTraitDangerSense
 
     # MAY ATTACK ADDITIONAL TIMES PER TURN, SEE CLASS STATS FOR NUMBER OF ATTACKS
@@ -554,27 +581,110 @@ class CLASS_TRAITS(Set):
 
 
 class STATUS(Set):
-    # todo: replace the ints with functions references expecting source and target objects
-    class BLINDED: pass
-    class CHARMED: pass
-    class DEAFENED: pass
-    class EXHAUSTED1: pass
-    class EXHAUSTED2: pass
-    class EXHAUSTED3: pass
-    class EXHAUSTED4: pass
-    class EXHAUSTED5: pass
-    class EXHAUSTED6: pass
-    class FRIGHTENED: pass
-    class GRAPPLED: pass
-    class INCAPACITATED: pass
-    class INVISIBLE: pass
-    class PARALYZED: pass
-    class PETRIFIED: pass
-    class POISONED: pass
-    class PRONE: pass
-    class RESTRAINED: pass
-    class STUNNED: pass
-    class UNCONSCIOUS: pass
+    # todo: provide __call__ methods, which will call the appropriate function in dnd5e_functions
+    class Call:
+        def __init__(self):
+            self.func = getattr(functions, 'Status' + self.__class__.__name__.capitalize())
+            self.affectors = []
+
+        def __call__(self, *args, **kwargs):
+            self.func(*args, **kwargs)
+
+    class BLINDED(Call):
+        def __init__(self):
+            super().__init__()
+
+    class CHARMED(Call):
+        def __init__(self):
+            super().__init__()
+
+    class DEAD(Call):
+        def __init__(self):
+            super().__init__()
+
+    class DEAFENED(Call):
+        def __init__(self):
+            super().__init__()
+
+    class EXHAUSTED(Call):  #use this and remove the tiered statuses?
+        def __init__(self):
+            super().__init__()
+
+    class EXHAUSTED1(Call):
+        def __init__(self):
+            super().__init__()
+
+    class EXHAUSTED2(Call):
+        def __init__(self):
+            super().__init__()
+
+    class EXHAUSTED3(Call):
+        def __init__(self):
+            super().__init__()
+
+    class EXHAUSTED4(Call):
+        def __init__(self):
+            super().__init__()
+
+    class EXHAUSTED5(Call):
+        def __init__(self):
+            super().__init__()
+
+    class EXHAUSTED6(Call):
+        def __init__(self):
+            super().__init__()
+
+    class FRIGHTENED(Call):
+        def __init__(self):
+            super().__init__()
+
+    class GRAPPLED(Call):
+        def __init__(self):
+            super().__init__()
+
+    class INCAPACITATED(Call):
+        def __init__(self):
+            super().__init__()
+
+    class INVISIBLE(Call):
+        def __init__(self):
+            super().__init__()
+
+    class PARALYZED(Call):
+        def __init__(self):
+            super().__init__()
+
+    class PETRIFIED(Call):
+        def __init__(self):
+            super().__init__()
+
+    class POISONED(Call):
+        def __init__(self):
+            super().__init__()
+
+    class PRONE(Call):
+        def __init__(self):
+            super().__init__()
+
+    class RESTRAINED(Call):
+        def __init__(self):
+            super().__init__()
+
+    class STUNNED(Call):
+        def __init__(self):
+            super().__init__()
+
+    class UNCONSCIOUS(Call):
+        def __init__(self):
+            super().__init__()
+
+    class ENRAGED(Call):
+        def __init__(self):
+            super().__init__()
+
+    class FRENZIED(Call):
+        def __init__(self):
+            super().__init__()
 
 
 class ADVANTAGE(ABILITY, Set):
@@ -760,7 +870,7 @@ class DAMAGETYPE(Set):
             self.damage -= other
             return self
 
-        def __idiv__(self, other):
+        def __itruediv__(self, other):
             self.damage //= other
             return self
 
@@ -768,10 +878,9 @@ class DAMAGETYPE(Set):
             self.damage //= other
             return self
 
-        def __rdiv__(self, other):
+        def __ifloordiv__(self, other):
             self.damage //= other
             return self
-
 
     class ACID(__Damage):
         def __init__(self, damage=None): super().__init__(damage)

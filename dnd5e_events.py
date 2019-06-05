@@ -1,8 +1,18 @@
 import re
 import json
-from trace import print, called_with
+from trace import called_with
 
-debug = False
+debug = lambda *args, **kwargs: False  #dummy out the debug prints when disabled
+if debug():
+    from trace import print as debug
+    debug = debug
+#
+#
+# def get(set, item):
+#     __name__ = item.__name__ if hasattr(item, '__name__') else item.__class__.__name__
+#     for obj in set:
+#         if isinstance(obj, item) and obj.__class__.__name__ == __name__:
+#             return obj
 
 
 class Event:
@@ -51,16 +61,14 @@ class Event:
             #         __builtins__['print']('\n\t', stack[i][j], end='')
             #     __builtins__['print']('')
             # print(stack[1][4])
-            if debug:
-                caller = called_with()
-                print(caller)
+            debug('called with', called_with())
             for f in self:
                 try:
                     # for key in dir(f):
                     #     print(key)
                     #     print('\t', dir(getattr(f, key)))
-                    if debug:
-                        print(f.__name__, 'event function triggered for', f.__self__.host.name, 'from',
+                    if debug() is not False and not __name__ == '__main__':
+                        debug(f.__name__, 'event function triggered for', f.__self__.host.name, 'from',
                               f.__self__.__class__.__name__)
                     f(*args, **kwargs)
                 except Exception as e:
@@ -78,11 +86,8 @@ class Event:
                 if isinstance(obj, item) and obj.__class__.__name__ == __name__:
                     return obj
 
-    def none(self):
-        return self._none
-
 #    all = Effect(set())  # one big list - use temporarily while testing, migrate to separate lists for performance
-    def __init__(self):
+    def __init__(self, none=None):
         self.init = self.Effect(set())  # applies on character creation - including loading
         self.equip = self.Effect(set())
         self.unequip = self.Effect(set())
@@ -107,19 +112,20 @@ class Event:
         self.heal = self.Effect(set())
         self.move = self.Effect(set())
         self.proficiency_check = self.Effect(set())
-        self._none = self.Effect(set())  # use this for related but non event locations
+        self.none = self.Effect(set())  # use this for related but non event locations
 
-    # class When:
-    #     def __init__(self):
-    #         self.status = []
-    #         self.temporary = []
-    #         self.permanent = []
+    # @property
+    # def none(self):
+    #     print('event getter for none')
+    #     print(dir(self._none))
+    #     print('dir attack', dir(self.attack))
+    #     return self._none
     #
-    # def __init__(self):
-    #     self.always = self.When()
-    #     self.before_turn = self.When()
-    #     self.on_action = self.When()
-    #     self.after_turn = self.When()
+    # @none.setter
+    # def none(self, value):
+    #     print('event setter for none')
+    #     print(self._none)
+    #     self._none = value
 
 
 if __name__ == '__main__':

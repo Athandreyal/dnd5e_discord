@@ -3,7 +3,11 @@ import dnd5e_character_sheet as character
 import dnd5e_creatures as creatures
 import random
 import dnd5e_misc as misc
-debug = False
+
+debug = lambda *args, **kwargs: False  #dummy out the debug prints when disabled
+if debug():
+    from trace import print as debug
+    debug = debug
 
 
 class Party:
@@ -56,13 +60,18 @@ class Encounter:
 
     def do_battle(self):
         #from dnd5e_enums import EVENT
+
+        def print_parties():
+            if not self.silent:
+                print('player_party: ')
+                print(str(self.player_party))
+                print('enemy_party: ')
+                print(str(self.hostile_party))
+
         if not self.silent:
             print('\n\n******************************************************')
             print(self.difficulty + ' Difficulty Encounter start!\n')
-            print('player_party: ')
-            print(str(self.player_party))
-            print('enemy_party: ')
-            print(str(self.hostile_party))
+        print_parties()
         # rank by initiative
         initiative_list = sorted(self.player_party.members+self.hostile_party.members,
                                  key=lambda x: x.initiative, reverse=True)
@@ -73,11 +82,17 @@ class Encounter:
             for entity in initiative_list:  # take turns in order of initiative
                 player = isinstance(entity, character.CharacterSheet)
                 event = entity.effects
+                debug(entity.name,'has', entity.hp, 'hp')
                 if debug:
-                    print('beginning %s\'s turn' % entity.name)
-                if entity.hp < 0:  # test for incapacitated and roll for recovery
+                    debug('beginning %s\'s turn' % entity.name)
+                if entity.hp <= 0:  # test for incapacitated and roll for recovery
                     event.incapacitated()  # might recover
                     # todo: do 3 step death recovery here.
+                    if entity.hp > 0:
+                        if player:
+                            self.player_party.members.append(entity)
+                        else:
+                            self.hostile_party.members.append(entity)
                 if entity.hp > 0:
                     attack = entity.melee_attack()
                     event.before_turn(attack=attack)
@@ -101,7 +116,11 @@ class Encounter:
                     #      calculation is a list of lists, containing a damage function, and weapon function
                     #      weapons is a list of the weapons themselves, with their related criteria.
                     calculation = attack.calculation
+
+                    attack_num = 0
                     while attack.num:
+                        attack_num += 1
+                        debug(entity.name, 'making attack', attack_num)
                         event.before_action()
                         # todo: move ^this^ when a choice is possible - its for all potential actions, not just attacks
                         event.attack(attack=attack)
@@ -112,11 +131,13 @@ class Encounter:
                                     target = random.choice(self.hostile_party.able_bodied())
                                 else:
                                     target = random.choice(self.player_party.able_bodied())
+
                                 # status effects that require a hit should be applied to target's list, with a state var
                                 # to indicate awaiting a hit, and prep to clear on turn end if not triggered.
                                 attack.advantage, attack.disadvantage = misc.getAdvantage(entity, target)
-                                attack_roll, critical = attack.result()  # todo: have lucky check the rolls here.
+                                entity.roll_attack(attack)
                                 event.roll_attack(attack=attack)
+                                attack_roll, critical = attack.result()  # todo: have lucky check the rolls here.
                                 attack_roll += weapon.hit_bonus + attack.bonus_attack  # todo: get and include any
                                 # status/trait bonuses
                                 if player:
@@ -140,8 +161,12 @@ class Encounter:
 
                                 if target_ac > attack_roll:  # miss
                                     if not self.silent and self.verbose:
-                                        print(entity.name + ' attacks ' + target.name + ' with ' + str(weapon) +
-                                              ' and misses')
+                                        if debug():
+                                            debug(entity.name + ' attacks ' + target.name + ' with ' + str(weapon) +
+                                                  ' and misses because',target_ac,'>', attack_roll)
+                                        else:
+                                            print(entity.name + ' attacks ' + target.name + ' with ' + str(weapon) +
+                                                  ' and misses')
                                 else:
                                     # todo: currently assuming all attacks are melee attacks
                                     #  - allow selection and grabbing the appropriate functions.
@@ -151,7 +176,7 @@ class Encounter:
                                               ' and does ' + str(damage_done) + (' critical' if critical else '') +
                                               ' damage')
                                     if target.hp < 1:
-                                        target.effects.incapacitated()  # todo: use incapacitated instead
+#                                        target.effects.incapacitated()  # todo: use incapacitated instead
                                         if not self.silent and self.verbose:
                                             print(target.name + ' has been incapacitated')
                                         if player:
@@ -162,8 +187,11 @@ class Encounter:
                         attack.num -= 1
                         event.after_action()
                 event.after_turn()
-            if debug:
-                print('ending %s\'s turn' % entity.name)
+                debug('\n\n')
+                if debug() is not False:
+                    print_parties()
+                    input()
+            debug('ending %s\'s turn' % entity.name)
         for entity in self.player_party.members:
             entity.effects.after_battle()  # todo properly trigger the before battle
 
@@ -287,8 +315,7 @@ def difficulty_change(diff, offset):
 
 
 if __name__ == '__main__':
-    from trace import print, line
-
+    from trace import line
 
     player = character.init_wulfgar()
     player.name = 'Wulfgar 1'
@@ -296,6 +323,10 @@ if __name__ == '__main__':
     player2 = character.init_wulfgar()
     player2.name = 'Wulfgar 2'
     players = player, player2
+
+    while player.level < 1:
+        player.experience += 100
+        player2.experience += 100
     ttl_wins = 0
     ttl_losses = 0
     win_rate = []
@@ -303,7 +334,7 @@ if __name__ == '__main__':
     print('Note: battle output currently silenced for testing purposes - accelerates the climb though lvl 20 when '
           'I/O is not involved.  To see what is occurring, edit the Encounter call on line', str(line()+2))
     while sum(p.hp for p in players) > 0 and player.level < 20:
-        encounter = Encounter(player_party=Party(player, player2), difficulty=difficulty, verbose=True, silent=False,
+        encounter = Encounter(player_party=Party(player, player2), difficulty=difficulty, verbose=False, silent=False,
                               auto_run=True, debug_rewards=True)
         rewards = encounter.do_battle()
         result = 1 if rewards['xp'] > 0 else -1
@@ -330,3 +361,8 @@ if __name__ == '__main__':
     for p in players:
         print(p.dict_short())
     print('level 20 achieved in', ttl_losses + ttl_wins, 'encounters')
+    from dnd5e_enums import ABILITY
+
+    while debug() is not False:
+        player.roll_dc(ABILITY.STR, player.abilities.STR)
+        input('this is an infinitely looped test case, press enter to continue, or terminate the program yourself')

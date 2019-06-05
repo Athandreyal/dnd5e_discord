@@ -3,7 +3,12 @@ from dnd5e_enums import TRAIT, ABILITY, Ability, SKILL
 import dnd5e_weaponry as weaponry
 from dnd5e_events import Event
 from dnd5e_inventory import Equipped
-from dnd5e_misc import Attack, Die
+from dnd5e_misc import Attack, Die, NamedTuple
+
+debug = lambda *args, **kwargs: False  #dummy out the debug prints when disabled
+if debug():
+    from trace import print as debug
+    debug = debug
 
 
 class Entity:
@@ -35,29 +40,114 @@ class Entity:
         elif isinstance(equipment, list):
             self.equipment = Equipped()
             self.equipment.equip(equipment)  # todo: implement weapons/shields/armor
-        self.advantage = Event().none()
-        self.disadvantage = Event().none()
         self.atk_bonus = 0
-        self.damage_vulnerable = Event().none()  # todo: implement damage vulnerabilities
-        self.damage_resist = Event().none()  # todo: implement damage resistances
         self.abilities = abilities
         if self.abilities is None:
             self.abilities = Ability()
-        self.proficiency_skills = skills
-        if self.proficiency_skills is None:
-            self.proficiency_skills = Event().none()
         self.proficiency_bonus = proficiency_bonus
         if self.proficiency_bonus is None:
             self.proficiency_bonus = 0
         self.saving_throws = self.set_saving_throws(saving_throws)
         if self.saving_throws is None:
             self.saving_throws = Ability()
-        self.temporary_hitpoints = 0
-        self.actions = Event().none()
-        self.status = Event().none()
         self.unspent_ability = unspent_ability
         if self.unspent_ability is None:
             self.unspent_ability = 0
+
+        self.temporary_hitpoints = 0
+        self._advantage = Event()
+        self._disadvantage = Event()
+        self._damage_vulnerable = Event()  # todo: implement damage vulnerabilities
+        self._damage_resist = Event()  # todo: implement damage resistances
+        self._proficiency_skills = Event()
+        self._status = Event()
+        self._immunity = Event()
+        self.proficiency_skills = skills
+        self.d20 = Die(1, 20)
+
+    @property
+    def advantage(self):
+        return self._advantage.none
+
+    @property
+    def disadvantage(self):
+        return self._disadvantage.none
+
+    @property
+    def immunity(self):
+        return self._immunity.none
+
+    @property
+    def damage_vulnerable(self):
+        return self._damage_vulnerable.none
+
+    @property
+    def damage_resist(self):
+        return self._damage_resist.none
+
+    @property
+    def proficiency_skills(self):
+        return self._proficiency_skills.none
+
+    @property
+    def status(self):
+        return self._status.none
+
+    @advantage.setter
+    def advantage(self, value):
+        if not isinstance(value, Event):
+            self._advantage = Event()
+        else:
+            self._advantage.none.clear()
+        self._advantage.none.update(value)
+
+    @immunity.setter
+    def immunity(self, value):
+        if not isinstance(value, Event):
+            self._immunity = Event()
+        else:
+            self._immunity.none.clear()
+        self._immunity.none.update(value)
+
+    @disadvantage.setter
+    def disadvantage(self, value):
+        if not isinstance(value, Event):
+            self._disadvantage = Event()
+        else:
+            self._disadvantage.none.clear()
+        self._disadvantage.none.update(value)
+
+    @damage_vulnerable.setter
+    def damage_vulnerable(self, value):
+        if not isinstance(value, Event):
+            self._damage_vulnerable = Event()
+        else:
+            self._damage_vulnerable.none.clear()
+        self._damage_vulnerable.none.update(value)
+
+    @damage_resist.setter
+    def damage_resist(self, value):
+        if not isinstance(value, Event):
+            self._damage_resist = Event()
+        else:
+            self._damage_resist.none.clear()
+        self._damage_resist.none.update(value)
+
+    @proficiency_skills.setter
+    def proficiency_skills(self, value):
+        if not isinstance(value, Event):
+            self._proficiency_skills = Event()
+        else:
+            self._proficiency_skills.none.clear()
+        self._proficiency_skills.none.update(value)
+
+    @status.setter
+    def status(self, value):
+        if not isinstance(value, Event):
+            self._status = Event()
+        else:
+            self._status.none.clear()
+        self._status.none.update(value)
 
     def equip(self, gear):
         if self.equipment is None:
@@ -77,9 +167,6 @@ class Entity:
         # todo: check for cursed - unable to remove item
         self.equipment.unequip(slot, gear)
         self.effects.unequip()
-
-    def is_lucky(self):
-        return TRAIT.LUCKY in self.traits
 
     def receive_damage(self, damage):
         # todo: handle death, incapacitation, etc.
@@ -112,10 +199,16 @@ class Entity:
         while True:
             if hand is None:
                 yield 0
-            damage = hand.roll()
-            if damage == 1 and self.is_lucky():
-                damage = hand.attack_die.roll()
-            damage += hand.bonus_die.roll() if hand.bonus_die is not None else 0
+            rolls = NamedTuple(roll1=hand.attack_die.roll(), roll2=None, die=hand.attack_die)
+            self.effects.roll_damage(rolls=rolls)
+#            if damage == 1 and self.is_lucky():
+#                damage = hand.attack_die.roll()
+            damage = rolls.roll1
+            if hand.bonus_die is not None:
+                debug('weapon rolling for bonus die')
+                rolls = NamedTuple(roll1=hand.bonus_die.roll(), roll2=None, die=hand.bonus_die)
+                self.effects.roll_damage(rolls)
+                damage += rolls.roll1
             damage += hand.bonus_damage
             yield [d(damage) for d in hand.damage_type], hand.attack_function
 
@@ -145,9 +238,45 @@ class Entity:
             CHA += self.proficiency_bonus if ABILITY.CHA in throws else 0
         return Ability(STR, CON, DEX, INT, WIS, CHA)
 
-    def save_roll(self, roll_type, roll_difficulty):
-        die = Die(1, 20)
+    def roll_hp(self):
+        self.effects.roll_hp()
+
+    def roll_attack(self, attack):
+        rolls = NamedTuple(roll1=self.d20.roll(), roll2=self.d20.roll(), die=self.d20)
+        self.effects.roll_attack(rolls=rolls)
+        attack.set_rolls(rolls)
+        return attack
+
+    def roll_dc(self, roll_type, roll_difficulty):
         proficiency = 0
+        debug(roll_type)
+        debug(self.proficiency_skills)
+        if roll_type in ABILITY.Set():
+            debug('isinstance ability')
+            debug(roll_type, getattr(self.saving_throws, roll_type.__name__))
+            proficiency = self.proficiency_bonus
         if roll_type in self.proficiency_skills:
             proficiency = self.proficiency_bonus
-        return die.roll() + proficiency > roll_difficulty
+        debug(type(self.proficiency_skills))
+        debug(self.proficiency_skills.get(roll_type))
+
+        debug(self.saving_throws)
+        roll1 = self.d20.roll()
+        roll2 = None
+        advantage = roll_type in self.advantage
+        disadvantage = roll_type in self.disadvantage
+
+        if advantage or disadvantage:
+            roll2 = self.d20.roll()
+#        rolls = {'roll1': roll1, 'roll2': roll2, 'die': die}
+        rolls = NamedTuple(roll1=roll1, roll2=roll2, die=self.d20, type=roll_type)
+        self.effects.roll_dc(rolls=rolls)
+        if advantage and not disadvantage:
+            roll = max(rolls.roll1, rolls.roll1)
+        elif disadvantage and not advantage:
+            roll = min(rolls.roll1, rolls.roll1)
+        else:
+            roll = rolls.roll1
+
+        debug('roll', roll, 'prof', proficiency, 'diff', roll_difficulty)
+        return roll + proficiency > roll_difficulty
