@@ -28,6 +28,9 @@ class Dwarf(Race):
     size = SIZE.MEDIUM
     speed = 25
     name = 'Dwarf'
+    age = (50, 350)
+    height = (4*12, 5*12)
+    weight = (int(150*5/6+0.5), int(150*4/3+0.5))  #5/6 to 4/3 average
 
 
 class HillDwarf(Dwarf):
@@ -54,6 +57,9 @@ class Elf(Race):
     traits = {TRAIT.DARKVISION, TRAIT.KEEN_SENSES, TRAIT.FEY_ANCESTRY, TRAIT.TRANCE}
     size = SIZE.MEDIUM
     speed = 30
+    age = (80, 750)
+    height = (4*12+6, 6*12+6)
+    weight = (int(140*5/6+0.5), int(140*4/3+0.5))  #5/6 to 4/3 average
 
 
 class HighElf(Elf):
@@ -90,6 +96,9 @@ class Halfling(Race):
     size = SIZE.SMALL
     racial_ability = Ability(dexterity=2)
     speed = 25
+    age = (20, 250)
+    height = (2*12+8, 3*12+4)
+    weight = (int(42.5*5/6+0.5), int(42.5*4/3+0.5))  #40-45 in book
 
 
 class LightfootHalfling(Halfling):
@@ -116,6 +125,9 @@ class Human(Race):
     traits = set()
     size = SIZE.MEDIUM
     racial_ability = Ability(strength=1, constitution=1, dexterity=1, intelligence=1, wisdom=1, charisma=1)
+    age = (20, 100)
+    height = (4*12+6, 7*12)
+    weight = (int(140*5/6+0.5), int(180*4/3+0.5))  #book doesn't say, taking 5/6 of 140, and 4/3 of 180
 
 
 class DragonBorn(Race):
@@ -123,6 +135,9 @@ class DragonBorn(Race):
     size = SIZE.MEDIUM
     racial_ability = Ability(strength=2, charisma=1)
     speed = 30
+    age = (15, 80)
+    height = (5*12+6, 7*12+6)
+    weight = (int(250*5/6+0.5), int(250*4/3+0.5))  #5/6 to 4/3 average
 
 
 class BlackDragonBorn(DragonBorn):
@@ -212,6 +227,9 @@ class Gnome(Race):
     size = SIZE.SMALL
     racial_ability = Ability(intelligence=2)
     speed = 25
+    age = (30, 500)
+    height = (2*12+8, 4*12+4)
+    weight = (int(40*5/6+0.5), int(40*4/3+0.5))  #5/6 to 4/3 average
 
 
 class ForestGnome(Gnome):  # akaly the smart, 55,38,38
@@ -238,6 +256,11 @@ class HalfElf(Race):  # Inneo Breeks, 77,66,146
     traits = {TRAIT.DARKVISION, TRAIT.FEY_ANCESTRY, TRAIT.SKILL_VERSATILITY, TRAIT.ABILITY_VERSATILITY}
     speed = 30
     size = SIZE.MEDIUM
+    age = (20, 200)
+    height = (4*12+6, 7*12)
+    weight = (int(140*5/6+0.5), int(180*4/3+0.5))  #book doesn't say, taking 5/6 of 140, and 4/3 of 180
+
+
 #    def __init__(self, name='Inneo Breeks', age=77, height=66, weight=146):
 
 
@@ -247,6 +270,9 @@ class HalfOrc(Race):  # onraquo, 27,66,147
     traits = {TRAIT.DARKVISION, TRAIT.MENACING, TRAIT.RELENTLESS_ENDURANCE, TRAIT.SAVAGE_ATTACKS}
     speed = 30
     size = SIZE.MEDIUM
+    age = (11, 75)
+    height = (5*12, 7*12)
+    weight = (int(180*5/6+0.5), int(220*4/3+0.5))  #book doesn't say, taking 5/6 of 140, and 4/3 of 180
 
 #   def __init__(self, name='Onraquo', age=27, height=66, weight=147):
 
@@ -257,5 +283,8 @@ class Tiefling(Race):  # Jiollyn, 33,68,143
     traits = {TRAIT.DARKVISION, TRAIT.HELLISH_RESISTANCE, TRAIT.INFERNAL_LEGACY}
     size = SIZE.MEDIUM
     speed = 30
+    age = (20, 120)
+    height = (4*12+6, 7*12)
+    weight = (int(140*5/6+0.5), int(180*4/3+0.5))  #book doesn't say, taking 5/6 of 140, and 4/3 of 180
 
 #    def __init__(self, name='Jiollyn', age=33, height=68, weight=143):

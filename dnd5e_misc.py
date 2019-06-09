@@ -1,4 +1,5 @@
 import random
+import math
 import re
 import json
 import dnd5e_enums as enums
@@ -14,6 +15,36 @@ class NamedTuple:
     def __init__(self, **kwargs):
         for k in kwargs:
             setattr(self, k, kwargs[k])
+
+
+class Location:
+    # used for entity positions on both the world map, and their position on battle maps
+    # use a node like travel system for world map movement
+    # give it control over movement?
+
+    def __init__(self, x=0, y=0, z=0):
+        self.x = x
+        self.y = y
+        self.z = z  # caves, castles, etc, multiple floors.
+        self.speed = enums.MOVE
+
+    def range_to(self, other_pos):
+        dx = abs(self.x - other_pos.x)
+        dy = abs(self.y - other_pos.y)
+        dz = abs(self.z - other_pos.z)
+        dx2 = dx * dx
+        dy2 = dy * dy
+        dz2 = dz * dz
+        distance = math.sqrt(dx2+dy2+dz2)
+        return distance
+
+    def set_pos(self, x=0, y=0, z=0):
+        self.x = x
+        self.y = y
+        self.z = z
+
+
+
 
 class Die:  # ....dice, not death...
     # qty is number of dice to roll
@@ -150,6 +181,42 @@ def getAdvantage(a, b):
         return adv, dadv
 
 
+def getint(text, minimum, maximum, list=None):
+    incomplete = True
+    choice2 = -1
+    while incomplete:
+        choice = input(text)
+        choice2 = ''.join(x for x in choice if 48 <= ord(x) <= 57)
+        if choice != choice2:
+            print ("        Rejecting characters which are not numbers...")
+        try:
+            choice2 = int(choice2)
+            if list and choice2 in list:
+                incomplete = False
+            elif minimum <= choice2 <= maximum:
+                incomplete = False
+            else:
+                print ("        Please choose one of the options given, %s wasn't an option." % choice2)
+        except ValueError:
+            choice2 = None
+            print ("        Please choose one of the options given, %s wasn't an option..." % choice2)
+    return choice2
+
+
+def getstr(text):
+    incomplete = True
+    choice2 = ''
+    while incomplete:
+        choice = input(text)
+        choice2 = ''.join(x for x in choice if ord(x) < 128)
+        if choice != choice2:
+            print ('        Rejecting invalid characters...')
+        if choice2 != '':
+            incomplete = False
+    return choice2
+
 if __name__ == '__main__':
     die = Die(1, 20)
     print(die, '\navg =', die.roll(average=True),'\nroll 1, 2, 3 =', die.roll(), die.roll(), die.roll())
+
+

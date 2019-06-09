@@ -45,6 +45,24 @@ class Barbarian(CommonFunctions):
     saving_throws = {ABILITY.STR, ABILITY.CON}
     skills = {SKILL.ANIMAL_HANDLING, SKILL.ATHLETICS, SKILL.INTIMIDATION, SKILL.NATURE, SKILL.PERCEPTION,
               SKILL.SURVIVAL}  # TODO : CHOOSE 2
+    skills_qty = 2
+
+    traits = {CLASS_TRAITS.RAGE, CLASS_TRAITS.UNARMORED_DEFENCE, CLASS_TRAITS.RECKLESS_ATTACK,
+              CLASS_TRAITS.DANGER_SENSE, CLASS_TRAITS.EXTRA_ATTACK, CLASS_TRAITS.FAST_MOVEMENT,
+              CLASS_TRAITS.FERAL_INSTINCT, CLASS_TRAITS.RELENTLESS_RAGE, CLASS_TRAITS.PERSISTENT_RAGE,
+              CLASS_TRAITS.INDOMITABLE_MIGHT, CLASS_TRAITS.PRIMAL_CHAMPION, CLASS_TRAITS.FRENZY,
+              CLASS_TRAITS.MINDLESS_RAGE, CLASS_TRAITS.INTIMIDATING_PRESENCE, CLASS_TRAITS.RETALIATION,
+              CLASS_TRAITS.SPIRIT_SEEKER, CLASS_TRAITS.BEAR_TOTEM, CLASS_TRAITS.ASPECT_OF_THE_BEAR,
+              CLASS_TRAITS.SPIRIT_WALKER, CLASS_TRAITS.BEAR_ATTUNEMENT, CLASS_TRAITS.EAGLE_TOTEM,
+              CLASS_TRAITS.ASPECT_OF_THE_EAGLE, CLASS_TRAITS.EAGLE_ATTUNEMENT, CLASS_TRAITS.WOLF_TOTEM,
+              CLASS_TRAITS.ASPECT_OF_THE_WOLF, CLASS_TRAITS.WOLF_ATTUNEMENT}
+    ability_suggest = {'Strength': 15,
+                       'Constitution': 14,
+                       'Dexterity': 0,
+                       'Intelligence': 0,
+                       'Wisdom': 0,
+                       'Charisma': 0
+                       }
 
     def __init__(self, lvl, ability=None, skills=None, background=None, path=None):
         self.class_ability = ability
@@ -141,10 +159,15 @@ class Bard(CommonFunctions):
     proficiencies = {PROFICIENCY.ARMOR.LIGHT, PROFICIENCY.WEAPONS.SIMPLE, PROFICIENCY.WEAPONS.MARTIAL.CROSSBOW_HAND,
                      PROFICIENCY.WEAPONS.MARTIAL.LONGSWORD, PROFICIENCY.WEAPONS.MARTIAL.RAPIER, PROFICIENCY.WEAPONS.MARTIAL.SHORTSWORD}
     saving_throws = {ABILITY.STR, ABILITY.CON}
-    skills = {SKILL.ATHLETICS, SKILL.ACROBATICS, SKILL.SLEIGHT, SKILL.STEALTH, SKILL.ARCANA, SKILL.HISTORY,
-              SKILL.INVESTIGATION, SKILL.NATURE, SKILL.RELIGION, SKILL.ANIMAL_HANDLING, SKILL.INSIGHT, SKILL.MEDICINE,
-              SKILL.PERCEPTION, SKILL.SURVIVAL, SKILL.DECEPTION, SKILL.INTIMIDATION, SKILL.PERFORMANCE,
-              SKILL.PERSUASION}  # TODO : choose ANY 3
+    skills = SKILL.Set()  # TODO: choose any 3
+    skills_qty = 3
+    ability_suggest = {'Strength': 0,
+                       'Constitution': 0,
+                       'Dexterity': 14,
+                       'Intelligence': 0,
+                       'Wisdom': 0,
+                       'Charisma': 15
+                       }
     background = BACKGROUNDS.PERFORMER  # TODO : make this player chosen
     # TODO: FINISH THE BARD....
     
@@ -161,7 +184,16 @@ class Bard(CommonFunctions):
         
 class Cleric(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Cleric'
-    hitDie = 12
+    hitDie = 8
+    skills = {SKILL.HISTORY, SKILL.INSIGHT, SKILL.MEDICINE, SKILL.PERSUASION, SKILL.RELIGION}
+    skills_qty = 2
+    ability_suggest = {'Strength': 0,
+                       'Constitution': 14,
+                       'Dexterity': 0,
+                       'Intelligence': 0,
+                       'Wisdom': 15,
+                       'Charisma': 0
+                       }
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -172,7 +204,17 @@ class Cleric(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 
 class Druid(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Druid'
-    hitDie = 12
+    hitDie = 8
+    skills = {SKILL.ARCANA, SKILL.ANIMAL_HANDLING, SKILL.INSIGHT, SKILL.MEDICINE, SKILL.NATURE, SKILL.PERCEPTION,
+              SKILL.RELIGION, SKILL.SURVIVAL}
+    skills_qty = 2
+    ability_suggest = {'Strength': 0,
+                       'Constitution': 14,
+                       'Dexterity': 0,
+                       'Intelligence': 0,
+                       'Wisdom': 15,
+                       'Charisma': 0
+                       }
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -183,7 +225,17 @@ class Druid(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 
 class Fighter(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Fighter'
-    hitDie = 12
+    hitDie = 10
+    skills = {SKILL.ACROBATICS, SKILL.ANIMAL_HANDLING, SKILL.ATHLETICS, SKILL.HISTORY, SKILL.INSIGHT,
+              SKILL.INTIMIDATION, SKILL.PERCEPTION, SKILL.SURVIVAL}
+    skills_qty = 2
+    ability_suggest = {'Strength': 0,
+                       'Constitution': 14,
+                       'Dexterity': 15,
+                       'Intelligence': 0,
+                       'Wisdom': 0,
+                       'Charisma': 0
+                       }
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -194,7 +246,16 @@ class Fighter(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 
 class Monk(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Monk'
-    hitDie = 12
+    hitDie = 8
+    skills = {SKILL.ACROBATICS, SKILL.ATHLETICS, SKILL.HISTORY, SKILL.INSIGHT, SKILL.RELIGION, SKILL.STEALTH}
+    skills_qty = 2
+    ability_suggest = {'Strength': 0,
+                       'Constitution': 15,
+                       'Dexterity': 0,
+                       'Intelligence': 0,
+                       'Wisdom': 14,
+                       'Charisma': 0
+                       }
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -205,7 +266,16 @@ class Monk(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 
 class Paladin(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Paladin'
-    hitDie = 12
+    hitDie = 10
+    SKILLS = {SKILL.ATHLETICS, SKILL.INSIGHT, SKILL.INTIMIDATION, SKILL.MEDICINE, SKILL.PERSUASION, SKILL.RELIGION}
+    skills_qty = 2
+    ability_suggest = {'Strength': 15,
+                       'Constitution': 0,
+                       'Dexterity': 0,
+                       'Intelligence': 0,
+                       'Wisdom': 0,
+                       'Charisma': 14
+                       }
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -216,7 +286,17 @@ class Paladin(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 
 class Ranger(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Ranger'
-    hitDie = 12
+    hitDie = 10
+    skills = {SKILL.ANIMAL_HANDLING, SKILL.ATHLETICS, SKILL.INSIGHT, SKILL.INVESTIGATION, SKILL.NATURE,
+              SKILL.PERCEPTION, SKILL.STEALTH, SKILL.SURVIVAL}
+    skills_qty = 3
+    ability_suggest = {'Strength': 0,
+                       'Constitution': 0,
+                       'Dexterity': 15,
+                       'Intelligence': 0,
+                       'Wisdom': 14,
+                       'Charisma': 0
+                       }
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -227,7 +307,17 @@ class Ranger(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 
 class Rogue(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Rogue'
-    hitDie = 12
+    hitDie = 8
+    skills = {SKILL.ACROBATICS, SKILL.ATHLETICS, SKILL.DECEPTION, SKILL.INSIGHT, SKILL.INTIMIDATION,
+              SKILL.INVESTIGATION, SKILL.PERCEPTION, SKILL.PERFORMANCE, SKILL.PERSUASION, SKILL.SLEIGHT, SKILL.STEALTH}
+    skills_qty = 4
+    ability_suggest = {'Strength': 0,
+                       'Constitution': 0,
+                       'Dexterity': 15,
+                       'Intelligence': 14,
+                       'Wisdom': 0,
+                       'Charisma': 0
+                       }
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -238,7 +328,16 @@ class Rogue(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 
 class Sorcerer(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Sorcerer'
-    hitDie = 12
+    hitDie = 6
+    skills = {SKILL.ARCANA, SKILL.DECEPTION, SKILL.INSIGHT, SKILL.INTIMIDATION, SKILL.PERSUASION, SKILL.RELIGION}
+    skills_qty = 2
+    ability_suggest = {'Strength': 0,
+                       'Constitution': 14,
+                       'Dexterity': 0,
+                       'Intelligence': 0,
+                       'Wisdom': 0,
+                       'Charisma': 15
+                       }
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -249,7 +348,17 @@ class Sorcerer(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 
 class Warlock(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Warlock'
-    hitDie = 12
+    hitDie = 8
+    skills = {SKILL.ARCANA, SKILL.DECEPTION, SKILL.HISTORY, SKILL.INTIMIDATION, SKILL.INVESTIGATION, SKILL.NATURE,
+              SKILL.RELIGION}
+    skills_qty = 2
+    ability_suggest = {'Strength': 0,
+                       'Constitution': 14,
+                       'Dexterity': 0,
+                       'Intelligence': 0,
+                       'Wisdom': 0,
+                       'Charisma': 15
+                       }
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -260,7 +369,16 @@ class Warlock(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
 
 class Wizard(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
     name = 'Wizard'
-    hitDie = 12
+    hitDie = 6
+    skills = {SKILL.ARCANA, SKILL.HISTORY, SKILL.INSIGHT, SKILL.INVESTIGATION, SKILL.MEDICINE, SKILL.RELIGION}
+    skills_qty = 2
+    ability_suggest = {'Strength': 0,
+                       'Constitution': 0,
+                       'Dexterity': 0,
+                       'Intelligence': 15,
+                       'Wisdom': 0,
+                       'Charisma': 14
+                       }
 
     def __init__(self, lvl):
         if lvl == 0:

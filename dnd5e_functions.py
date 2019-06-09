@@ -773,6 +773,7 @@ class ClassTraitMindlessRage(TraitsBase):
 class ClassTraitIntimidatingPresence(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # todo: requires other players exist before we can do much of anything with this
 
 
 class ClassTraitRetaliation(TraitsBase):
@@ -852,6 +853,9 @@ class RaceTraitLucky(TraitsBase):
     roll_dc = roll
     roll_attack = roll
     roll_damage = roll
+
+
+class RaceTraitBrave(TraitsBase):pass
 
 
 class WeaponEffectGSTQ2H(TraitsBase):

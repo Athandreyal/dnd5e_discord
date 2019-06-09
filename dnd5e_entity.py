@@ -1,11 +1,11 @@
 # parent class to both Character Sheet and creature, has things relevant to encounters.
-from dnd5e_enums import TRAIT, ABILITY, Ability, SKILL
+from dnd5e_enums import ABILITY, Ability  # , SKILL, TRAIT
 import dnd5e_weaponry as weaponry
 from dnd5e_events import Event
 from dnd5e_inventory import Equipped
-from dnd5e_misc import Attack, Die, NamedTuple
+from dnd5e_misc import Attack, Die, NamedTuple, Location
 
-debug = lambda *args, **kwargs: False  #dummy out the debug prints when disabled
+debug = lambda *args, **kwargs: False  # dummy out the debug prints when disabled
 if debug():
     from trace import print as debug
     debug = debug
@@ -64,6 +64,7 @@ class Entity:
         self._immunity = Event()
         self.proficiency_skills = skills
         self.d20 = Die(1, 20)
+        self.location = Location()
 
     @property
     def advantage(self):
@@ -183,7 +184,7 @@ class Entity:
         #        lucky = enums.TRAIT.LUCKY in self.traits
         #        attack_roll, critical = misc.attack_roll(advantage, disadvantage, lucky=lucky)
         # todo: implement usage of reach value
-        attacks = Attack(num=1)
+        attacks = Attack()
 
 #        if CLASS_TRAITS.EXTRA_ATTACK in self.traits:
 #            attacks['num'] += 1
@@ -191,8 +192,8 @@ class Entity:
         # is storing two of the same reference
 #        attacks['effects'] = effects
         attacks.calculation = self._wpn
-        attacks.weapons = self.equipment.right_hand, self.equipment.left_hand, \
-                          self.equipment.jaw, self.equipment.fingers
+        attacks.weapons = \
+            self.equipment.right_hand, self.equipment.left_hand, self.equipment.jaw, self.equipment.fingers
         return attacks
 
     def _wpn(self, hand: weaponry.Weapon = None):
@@ -201,13 +202,13 @@ class Entity:
                 yield 0
             rolls = NamedTuple(roll1=hand.attack_die.roll(), roll2=None, die=hand.attack_die)
             self.effects.roll_damage(rolls=rolls)
-#            if damage == 1 and self.is_lucky():
-#                damage = hand.attack_die.roll()
+            # noinspection PyUnresolvedReferences
             damage = rolls.roll1
             if hand.bonus_die is not None:
                 debug('weapon rolling for bonus die')
                 rolls = NamedTuple(roll1=hand.bonus_die.roll(), roll2=None, die=hand.bonus_die)
                 self.effects.roll_damage(rolls)
+                # noinspection PyUnresolvedReferences
                 damage += rolls.roll1
             damage += hand.bonus_damage
             yield [d(damage) for d in hand.damage_type], hand.attack_function
@@ -268,14 +269,16 @@ class Entity:
 
         if advantage or disadvantage:
             roll2 = self.d20.roll()
-#        rolls = {'roll1': roll1, 'roll2': roll2, 'die': die}
         rolls = NamedTuple(roll1=roll1, roll2=roll2, die=self.d20, type=roll_type)
         self.effects.roll_dc(rolls=rolls)
         if advantage and not disadvantage:
+            # noinspection PyUnresolvedReferences
             roll = max(rolls.roll1, rolls.roll1)
         elif disadvantage and not advantage:
+            # noinspection PyUnresolvedReferences
             roll = min(rolls.roll1, rolls.roll1)
         else:
+            # noinspection PyUnresolvedReferences
             roll = rolls.roll1
 
         debug('roll', roll, 'prof', proficiency, 'diff', roll_difficulty)

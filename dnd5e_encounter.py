@@ -3,6 +3,7 @@ import dnd5e_character_sheet as character
 import dnd5e_creatures as creatures
 import random
 import dnd5e_misc as misc
+import dnd5e_interactions as interactions
 
 debug = lambda *args, **kwargs: False  #dummy out the debug prints when disabled
 if debug():
@@ -59,7 +60,7 @@ class Encounter:
         self.auto_run = auto_run
 
     def do_battle(self):
-        #from dnd5e_enums import EVENT
+        # from dnd5e_enums import EVENT
 
         def print_parties():
             if not self.silent:
@@ -78,6 +79,7 @@ class Encounter:
 
         for entity in initiative_list:  # take turns in order of initiative
             entity.effects.before_battle()
+            entity.target = None  # give them a target attribute, so they can remember who they are attacking.
         while self.hostile_party.is_able() and self.player_party.is_able():
             for entity in initiative_list:  # take turns in order of initiative
                 player = isinstance(entity, character.CharacterSheet)
@@ -126,11 +128,13 @@ class Encounter:
                         event.attack(attack=attack)
                         for weapon in attack.weapons:
                             if weapon is not None and self.hostile_party.is_able() and self.player_party.is_able():
-
-                                if player:
-                                    target = random.choice(self.hostile_party.able_bodied())
+                                if entity.target is None:
+                                    if player:
+                                        target = random.choice(self.hostile_party.able_bodied())
+                                    else:
+                                        target = random.choice(self.player_party.able_bodied())
                                 else:
-                                    target = random.choice(self.player_party.able_bodied())
+                                    target = entity.target
 
                                 # status effects that require a hit should be applied to target's list, with a state var
                                 # to indicate awaiting a hit, and prep to clear on turn end if not triggered.
@@ -187,11 +191,11 @@ class Encounter:
                         attack.num -= 1
                         event.after_action()
                 event.after_turn()
-                debug('\n\n')
-                if debug() is not False:
+                if debug(end='') is not False:
+                    debug('ending %s\'s turn' % entity.name)
+                    debug('\n\n')
                     print_parties()
                     input()
-            debug('ending %s\'s turn' % entity.name)
         for entity in self.player_party.members:
             entity.effects.after_battle()  # todo properly trigger the before battle
 
@@ -334,7 +338,7 @@ if __name__ == '__main__':
     print('Note: battle output currently silenced for testing purposes - accelerates the climb though lvl 20 when '
           'I/O is not involved.  To see what is occurring, edit the Encounter call on line', str(line()+2))
     while sum(p.hp for p in players) > 0 and player.level < 20:
-        encounter = Encounter(player_party=Party(player, player2), difficulty=difficulty, verbose=False, silent=False,
+        encounter = Encounter(player_party=Party(player, player2), difficulty=difficulty, verbose=True, silent=False,
                               auto_run=True, debug_rewards=True)
         rewards = encounter.do_battle()
         result = 1 if rewards['xp'] > 0 else -1
@@ -361,8 +365,13 @@ if __name__ == '__main__':
     for p in players:
         print(p.dict_short())
     print('level 20 achieved in', ttl_losses + ttl_wins, 'encounters')
-    from dnd5e_enums import ABILITY
 
-    while debug() is not False:
-        player.roll_dc(ABILITY.STR, player.abilities.STR)
-        input('this is an infinitely looped test case, press enter to continue, or terminate the program yourself')
+    while True:
+        print('this is an infinitely looping test')
+        chosen_function = interactions.ChooseCombatAction()
+        print('function is', chosen_function)
+#    from dnd5e_enums import ABILITY
+#
+#    while debug() is not False:
+#        player.roll_dc(ABILITY.STR, player.abilities.STR)
+#        input('this is an infinitely looped test case, press enter to continue, or terminate the program yourself')

@@ -377,7 +377,7 @@ class TRAIT(Set):
     class ARTIFICERS_LORE: pass  # DOUBLE PROFICIENCY BONUS ON INTELLIGENCE CHECKS RELATING TO ARCANE,
     # ALCHEMICAL, OR MECHANICAL DEVICES.
 
-    class BRAVE: pass  # ADVANTAGE RESISTING FRIGHTENED
+    BRAVE = functions.RaceTraitBrave  # ADVANTAGE RESISTING FRIGHTENED
 
     class CANTRIP: pass  # KNOW ONE SPELL FROM THE WIZARD SPELL SET, USES INTELLIGENCE TO CAST
 
@@ -729,8 +729,11 @@ class MOVE(Set):    # todo: replace enum values with basic movement modifiers
         def __init__(self, speed=None):
             self.speed = 0 if speed is None else speed
 
-        def __call__(self):
-            return self.speed
+        def __call__(self, speed=False):
+            # conditionally assigns to self, or returns from self.
+            if not speed:
+                return self.speed
+            self.speed = speed
 
     class SWIM(_):
         def __init__(self, speed=None):
@@ -1061,47 +1064,6 @@ class PROFICIENCY(Set):
     WEAPONS = WEAPONS
 
 
-class BACKGROUNDS(Set):  # todo: ADD EQUIPMENT FOR BACKGROUNDS, ADD SUPPORT FOR TOOLS
-    class ACOLYTE:
-        SKILLS = {SKILL.INSIGHT, SKILL.RELIGION}
-
-    class CHARLATAN:
-        SKILLS = {SKILL.DECEPTION, SKILL.SLEIGHT}
-
-    class CRIMINAL:
-        SKILLS = {SKILL.DECEPTION, SKILL.STEALTH}
-
-    class FOLK_HERO:
-        SKILLS = {SKILL.ANIMAL_HANDLING, SKILL.SURVIVAL}
-
-    class GUILD_ARTISAN:
-        SKILLS = {SKILL.INSIGHT, SKILL.PERSUASION}
-
-    class HERMIT:
-        SKILLS = {SKILL.MEDICINE, SKILL.RELIGION}
-
-    class NOBLE:
-        SKILLS = {SKILL.HISTORY, SKILL.PERSUASION}
-
-    class OUTLANDER:
-        SKILLS = {SKILL.ATHLETICS, SKILL.SURVIVAL}
-
-    class PERFORMER:
-        SKILLS = {SKILL.ACROBATICS, SKILL.PERFORMANCE}
-
-    class SAGE:
-        SKILLS = {SKILL.ARCANA, SKILL.HISTORY}
-
-    class SAILOR:
-        SKILLS = {SKILL.ATHLETICS, SKILL.PERCEPTION}
-
-    class SOLDIER:
-        SKILLS = {SKILL.ATHLETICS, SKILL.INTIMIDATION}
-
-    class URCHIN:
-        SKILLS = {SKILL.SLEIGHT, SKILL.STEALTH}
-
-
 # noinspection PyPep8Naming
 # ^^be silent damn you, I know its not camel case
 class _TOOLS_ARTISAN(Set):
@@ -1201,6 +1163,58 @@ class TOOLS(Set):
 
     VEHICLES = _TOOLS_VEHICLES
 
+
+class BACKGROUNDS(Set):  # todo: ADD EQUIPMENT FOR BACKGROUNDS, ADD SUPPORT FOR TOOLS
+    class ACOLYTE:
+        SKILLS = {SKILL.INSIGHT, SKILL.RELIGION}
+        TOOLS = set()
+
+    class CHARLATAN:
+        SKILLS = {SKILL.DECEPTION, SKILL.SLEIGHT}
+        TOOLS = {TOOLS.DISGUISE, TOOLS.FORGERY}
+
+    class CRIMINAL:
+        SKILLS = {SKILL.DECEPTION, SKILL.STEALTH}
+        TOOLS = {TOOLS.THIEVES}.union(TOOLS.GAMING.Set())
+
+    class FOLK_HERO:
+        SKILLS = {SKILL.ANIMAL_HANDLING, SKILL.SURVIVAL}
+
+    class GUILD_ARTISAN:
+        SKILLS = {SKILL.INSIGHT, SKILL.PERSUASION}
+        TOOLS = TOOLS.ARTISAN.Set()
+
+    class HERMIT:
+        SKILLS = {SKILL.MEDICINE, SKILL.RELIGION}
+        TOOLS = {TOOLS.HERBALIST}
+
+    class NOBLE:
+        SKILLS = {SKILL.HISTORY, SKILL.PERSUASION}
+        TOOLS = TOOLS.GAMING.Set()
+
+    class OUTLANDER:
+        SKILLS = {SKILL.ATHLETICS, SKILL.SURVIVAL}
+        TOOLS = TOOLS.INSTRUMENT.Set()
+
+    class PERFORMER:
+        SKILLS = {SKILL.ACROBATICS, SKILL.PERFORMANCE}
+        TOOLS = {TOOLS.DISGUISE}.union(TOOLS.INSTRUMENT.Set())
+
+    class SAGE:
+        SKILLS = {SKILL.ARCANA, SKILL.HISTORY}
+        TOOLS = set()
+
+    class SAILOR:
+        SKILLS = {SKILL.ATHLETICS, SKILL.PERCEPTION}
+        TOOLS = {TOOLS.NAVIGATOR}.union(TOOLS.VEHICLES.WATER.Set())
+
+    class SOLDIER:
+        SKILLS = {SKILL.ATHLETICS, SKILL.INTIMIDATION}
+        TOOLS = TOOLS.GAMING.Set().union(TOOLS.VEHICLES.LAND.Set())
+
+    class URCHIN:
+        SKILLS = {SKILL.SLEIGHT, SKILL.STEALTH}
+        TOOLS = {TOOLS.DISGUISE, TOOLS.THIEVES}
 #
 # # noinspection PyPep8Naming
 # # ^^be silent damn you, I know its not camel case
