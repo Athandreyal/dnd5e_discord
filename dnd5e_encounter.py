@@ -45,44 +45,55 @@ class Party:
 
 
 class Encounter:
-    def __init__(self, encounter_map=None, player_party=None, hostile_party=None, difficulty='Normal', reward=None,
+    # choices = {'Search': Action.CombatSearch, 'Ready': Action.CombatReady, 'Use': Action.CombatUse,
+    #            'Assist': Action.CombatAssist, 'Dodge': Action.CombatDodge, 'Dash': Action.CombatDash,
+    #            'Disengage': Action.CombatDisengage, 'Hide': Action.CombatHide, 'Attack': Action.CombatAttack}
+
+    def __init__(self, encounter_map=None, party1=None, party2=None, difficulty='Normal', reward=None,
                  verbose=False, silent=False, auto_run=False, debug_rewards=False):
         self.map = encounter_map
-        self.player_party = Party(*player_party.members.copy())
+        self.party1 = Party(*party1.members.copy())
         self.difficulty = difficulty
-        self.hostile_party = hostile_party
         self.reward = reward  # todo: implement gem/item/coin rewards
         self.debug_rewards = debug_rewards
-        if hostile_party is None:  # generate one
-            self.generate_hostile(self.difficulty)
+        if party2 is None:  # generate one
+            self.generate_party2()
+        else:
+            self.party2 = party2
+
         self.verbose = verbose
         self.silent = silent
         self.auto_run = auto_run
+
+#    actions:
+#       ActionAssist = None
+#       ActionAttack = None
+#       ActionDash = None
+#       ActionDisengage = None
+#       ActionDodge = None
+#       ActionHide = None
+#       ActionReady = None
+#       ActionSearch = None
+#       ActionUse = None
 
     def do_battle(self):
         # from dnd5e_enums import EVENT
 
         def print_parties():
             if not self.silent:
-                print('player_party: ')
-                print(str(self.player_party))
-                print('enemy_party: ')
-                print(str(self.hostile_party))
+                print('party1: ')
+                print(str(self.party1))
+                print('party2: ')
+                print(str(self.party2))
 
         if not self.silent:
             print('\n\n******************************************************')
             print(self.difficulty + ' Difficulty Encounter start!\n')
         print_parties()
         # rank by initiative
-        initiative_list = sorted(self.player_party.members+self.hostile_party.members,
-                                 key=lambda x: x.initiative, reverse=True)
-
-        for entity in initiative_list:  # take turns in order of initiative
-            entity.effects.before_battle()
-            entity.target = None  # give them a target attribute, so they can remember who they are attacking.
-        while self.hostile_party.is_able() and self.player_party.is_able():
+        initiative_list = self.before_battle()
+        while self.party1.is_able() and self.party2.is_able():
             for entity in initiative_list:  # take turns in order of initiative
-                player = isinstance(entity, character.CharacterSheet)
                 event = entity.effects
                 debug(entity.name,'has', entity.hp, 'hp')
                 if debug:
@@ -91,103 +102,43 @@ class Encounter:
                     event.incapacitated()  # might recover
                     # todo: do 3 step death recovery here.
                     if entity.hp > 0:
-                        if player:
-                            self.player_party.members.append(entity)
+                        if entity.party is 1:
+                            self.party1.members.append(entity)
                         else:
-                            self.hostile_party.members.append(entity)
+                            self.party2.members.append(entity)
                 if entity.hp > 0:
                     attack = entity.melee_attack()
                     event.before_turn(attack=attack)
                     # todo: present choice of action to script/both parties players
                     # todo: a more intelligent target selection process than random choice
                     # todo: complete this attack process from outside both CharacterSheet and Creature
-                    # when entity attacks a target:
-                    #     get entity attack criteria
-                    #         throw entity attack event(s)
-                    #         respond with damage, dtypes, effects function(s) for application to target on success
-                    #             target executes on self if success
-                    #     get target defence criteria
-                    #         throw target defence events(s)
-                    #         respond with armor_class, effects function(s) for application to entity
-                    #             entity executes on self on attack success/fail
-                    #     if attack succeeds
-                    #         call target.receive_damage to give damage to target
-                    #         call target.receive_effects give effects to the target
-                    #  dict with keys num, weapons, calculation
-                    #      num is number of attacks to be made in this attack
-                    #      calculation is a list of lists, containing a damage function, and weapon function
-                    #      weapons is a list of the weapons themselves, with their related criteria.
-                    calculation = attack.calculation
 
-                    attack_num = 0
+                    # interject here with action decision, allow one full move, and one full attack
+                    #   pass it attack to decide if attack is a viable choice
+#                    action = interactions.ChooseCombatAction(self.choices, entity, attack)
+#                    if action:
+#                        action(event=event, entity=entity, attack=attack)
                     while attack.num:
-                        attack_num += 1
-                        debug(entity.name, 'making attack', attack_num)
                         event.before_action()
                         # todo: move ^this^ when a choice is possible - its for all potential actions, not just attacks
+                        # from here to end of block is a single attack action
                         event.attack(attack=attack)
+#                        calculation = attack.calculation
+                        # permit players to choose their attack type: arcane, ranged, melee.
+                        # permit players to choose their weapon equip type: hands, fingers(claws), jaw(bite)
                         for weapon in attack.weapons:
-                            if weapon is not None and self.hostile_party.is_able() and self.player_party.is_able():
-                                if entity.target is None:
-                                    if player:
-                                        target = random.choice(self.hostile_party.able_bodied())
-                                    else:
-                                        target = random.choice(self.player_party.able_bodied())
-                                else:
-                                    target = entity.target
-
-                                # status effects that require a hit should be applied to target's list, with a state var
-                                # to indicate awaiting a hit, and prep to clear on turn end if not triggered.
-                                attack.advantage, attack.disadvantage = misc.getAdvantage(entity, target)
-                                entity.roll_attack(attack)
-                                event.roll_attack(attack=attack)
-                                attack_roll, critical = attack.result()  # todo: have lucky check the rolls here.
-                                attack_roll += weapon.hit_bonus + attack.bonus_attack  # todo: get and include any
-                                # status/trait bonuses
-                                if player:
-                                    attack_roll += entity.abilities.STR_MOD
-
-                                # pass entity for return effects.  pass
-                                multi = 1
-                                if critical:
-                                    event.critical(attacker=entity, attack=attack)
-                                    multi = attack.critical_multi
-                                damage = calculation(weapon).__next__()[0]
-                                for d in damage:
-                                    d += attack.bonus_damage
-                                    d *= multi
-
-                                attack.damage = damage
-                                defence = misc.Defend()  # passes defence object to catch trait/skill AC calculations.
-                                target.effects.defend(attacker=entity, attack=attack, defender=target, defence=defence)
-                                defence.armor_classes.append(target.get_armor_class())
+                            if weapon is not None and self.party2.is_able() and self.party1.is_able():
+                                if not entity.target or entity.target.hp < 1:
+                                    self.get_target(entity, self.party1, self.party2)
+                                attack_roll, critical = self.attack_roll(event, attack, entity, weapon)
+                                defence = self.target_defence(entity, attack)
                                 target_ac = defence.get_armor_class()
-
                                 if target_ac > attack_roll:  # miss
-                                    if not self.silent and self.verbose:
-                                        if debug():
-                                            debug(entity.name + ' attacks ' + target.name + ' with ' + str(weapon) +
-                                                  ' and misses because',target_ac,'>', attack_roll)
-                                        else:
-                                            print(entity.name + ' attacks ' + target.name + ' with ' + str(weapon) +
-                                                  ' and misses')
-                                else:
+                                    self.miss(entity, weapon, attack_roll, target_ac)
+                                else:  # hit
                                     # todo: currently assuming all attacks are melee attacks
                                     #  - allow selection and grabbing the appropriate functions.
-                                    damage_done, counter_effects = target.receive_damage(attack.damage)
-                                    if not self.silent and self.verbose:
-                                        print(entity.name + ' attacks ' + target.name + ' with ' + str(weapon) +
-                                              ' and does ' + str(damage_done) + (' critical' if critical else '') +
-                                              ' damage')
-                                    if target.hp < 1:
-#                                        target.effects.incapacitated()  # todo: use incapacitated instead
-                                        if not self.silent and self.verbose:
-                                            print(target.name + ' has been incapacitated')
-                                        if player:
-                                            self.hostile_party.members.remove(target)
-                                        else:
-                                            self.player_party.members.remove(target)
-#                                        initiative_list.remove(target)  # save this for death, not incapacitation
+                                    self.target_hit(entity, weapon, attack, critical)
                         attack.num -= 1
                         event.after_action()
                 event.after_turn()
@@ -196,36 +147,122 @@ class Encounter:
                     debug('\n\n')
                     print_parties()
                     input()
-        for entity in self.player_party.members:
-            entity.effects.after_battle()  # todo properly trigger the before battle
+        self.after_battle()
 
         if not self.silent:
-            print('\n\n' + str(self.player_party), end='')
-            print('You have ' + ('won!' if self.player_party.is_able() else 'lost!'))
+            print('\n\n' + str(self.party1), end='')
+            print('You have ' + ('won!' if self.party1.is_able() else 'lost!'))
         if not self.silent and not self.auto_run:
             input('press enter to continue')
-        return self.reward if self.player_party.is_able() else {'xp': 0, 'gold': 0}
+        return self.reward if self.party1.is_able() else {'xp': 0, 'gold': 0}
 
-    def generate_hostile(self, difficulty):
+    def before_battle(self):
+        for entity in self.party1.members:
+            entity.party = 1
+            entity.effects.before_battle()
+            entity.target = None  # give them a target attribute, so they can remember who they are attacking.
+        for entity in self.party2.members:
+            entity.party = 2
+            entity.effects.before_battle()
+            entity.target = None  # give them a target attribute, so they can remember who they are attacking.
+        return sorted(self.party1.members+self.party2.members, key=lambda x: x.initiative, reverse=True)
+
+    def after_battle(self):
+        for entity in self.party1.members:
+            del entity.party
+            del entity.target
+            entity.effects.after_battle()
+        for entity in self.party2.members:
+            del entity.party
+            del entity.target
+            entity.effects.after_battle()
+
+    @staticmethod
+    def target_defence(entity, attack):
+        defence = misc.Defend()  # creates defence object to get trait/skill AC calculations
+        entity.target.effects.defend(attacker=entity, attack=attack,
+                                     defender=entity.target, defence=defence)
+        defence.armor_classes.append(entity.target.get_armor_class())
+        return defence
+
+    @staticmethod
+    def attack_roll(event, attack, entity, weapon):
+        attack.advantage, attack.disadvantage = misc.getAdvantage(entity, entity.target)
+        entity.roll_attack(attack)
+        event.roll_attack(attack=attack)
+        attack_roll, critical = attack.result()  # todo: have lucky check the rolls here.
+        attack_roll += weapon.hit_bonus + attack.bonus_attack  # todo: get and include any
+        # status/trait bonuses
+        if player:
+            attack_roll += entity.abilities.STR_MOD
+
+        # pass entity for return effects.  pass
+        multi = 1
+        if critical:
+            event.critical(attacker=entity, attack=attack)
+            multi = attack.critical_multi
+        damage = attack.calculation(weapon).__next__()[0]
+        for d in damage:
+            d += attack.bonus_damage
+            d *= multi
+        attack.damage = damage
+        return attack_roll, critical
+
+    @staticmethod
+    def get_target(entity, party1, party2):
+        # permit players to choose their target
+        if entity.party is 1:
+            entity.target = random.choice(party2.able_bodied())
+        else:
+            entity.target = random.choice(party1.able_bodied())
+
+    def target_hit(self, entity, weapon, attack, critical):
+        damage_done, counter_effects = entity.target.receive_damage(attack.damage)
+        if not self.silent and self.verbose:
+            print(entity.name + ' attacks ' + entity.target.name + ' with ' + str(weapon) +
+                  ' and does ' + str(damage_done) + (' critical' if critical else '') +
+                  ' damage')
+        if entity.target.hp < 1:
+            self.incapacitate_target(entity.target)
+            entity.target = None
+
+    def miss(self, entity, weapon, attack_roll, target_ac):
+        if not self.silent and self.verbose:
+            if debug():
+                debug(entity.name + ' attacks ' + entity.target.name + ' with ' +
+                      str(weapon) + ' and misses because', target_ac, '>', attack_roll)
+            else:
+                print(entity.name + ' attacks ' + entity.target.name + ' with ' +
+                      str(weapon) + ' and misses')
+
+    def incapacitate_target(self, target):
+        if not self.silent and self.verbose:
+            print(target.name + ' has been incapacitated')
+        if target.party is 1:
+            self.party1.members.remove(target)
+        else:
+            self.party2.members.remove(target)
+
+    def generate_party2(self):
         # todo: make this obey region themes - no dryads among the undead....
         # get party  thresholds
         threshold = {}
-        for m in self.player_party.members:
+        for m in self.party1.members:
             member_threshold = XP_thresholds[m.level]
             for k in member_threshold:
                 try:
                     threshold[k] += member_threshold[k]
                 except KeyError:
                     threshold[k] = member_threshold[k]
-        XP = threshold[difficulty]
+        XP = threshold[self.difficulty]
 
-        creature_list = sorted(creatures.creatures,key=lambda x: x.challenge[1], reverse=True)
+        creature_list = sorted(creatures.creatures, key=lambda x: x.challenge[1], reverse=True)
         hostile_xp = 0  # need this for calculating resultant xp?
-        player_average_level = sum((x.level for x in self.player_party.members)) // len(self.player_party.members)
+        player_average_level = sum((x.level for x in self.party1.members)) // len(self.party1.members)
 
         hostiles = []
 
-        party_mod = {1: 2,  2: 1,   3: 0,   4: -1, 5: -1,  6: -2}.get(self.player_party.size(), -2) + 2
+        party_mod = {1: 2,  2: 1,   3: 0,   4: -1, 5: -1,  6: -2}.get(self.party1.size(), -2) + 2
         # the +2 offset is so that when combined with mobs_mod, we consider 0 as pos2, which allows the -2 to have value
         #  in the array as well
 
@@ -256,7 +293,7 @@ class Encounter:
             reward_xp = int(hostile_xp)
         reward_gold = 0
         # todo, restore sqrt exp reward once done testing faster growth rates
-        self.hostile_party = Party(*hostiles)
+        self.party2 = Party(*hostiles)
         self.reward = {'xp': reward_xp, 'gold': reward_gold}
 
 
@@ -338,7 +375,7 @@ if __name__ == '__main__':
     print('Note: battle output currently silenced for testing purposes - accelerates the climb though lvl 20 when '
           'I/O is not involved.  To see what is occurring, edit the Encounter call on line', str(line()+2))
     while sum(p.hp for p in players) > 0 and player.level < 20:
-        encounter = Encounter(player_party=Party(player, player2), difficulty=difficulty, verbose=True, silent=False,
+        encounter = Encounter(party1=Party(player, player2), difficulty=difficulty, verbose=True, silent=False,
                               auto_run=True, debug_rewards=True)
         rewards = encounter.do_battle()
         result = 1 if rewards['xp'] > 0 else -1

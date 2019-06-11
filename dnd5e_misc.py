@@ -44,8 +44,6 @@ class Location:
         self.z = z
 
 
-
-
 class Die:  # ....dice, not death...
     # qty is number of dice to roll
     # sides is ...erm... the number of sides the die has...

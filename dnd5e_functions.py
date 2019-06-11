@@ -1,8 +1,8 @@
 # all the functions referenced by abilities, traits, effects, statuses, etc, they go here, as callable classes
 # prepended with owner of function, such as Giant_Spider being owner of a bite called GiantSpiderBite
-#import dnd5e_misc as misc
+# import dnd5e_misc as misc
 import dnd5e_enums as enums
-#from dnd5e_entity import Entity
+# from dnd5e_entity import Entity
 
 debug = lambda *args, **kwargs: False  #dummy out the debug prints when disabled
 if debug():
@@ -60,6 +60,46 @@ if debug():
 #         parent.effects.equip.update(self.equip)
 #         parent.effects.unequip.update(self.unequip)
 
+def add_affector(host, token, what, where):
+    if debug() is not False:
+        printout = {}
+        debug('attempting to add', what, 'in ', 'self.host.' + where)
+    where_set = getattr(host, where)
+    for effect in what:
+        where_set = getattr(host, where)
+        if effect in where_set:
+            debug('found', effect, ', with affectors:', effect.affectors)
+            affected = where_set.get(effect)
+            affected.affectors.append(token)
+        else:
+            debug('didn\'t find', effect, ', instantiating it with affector', token)
+            affected = effect()
+            affected.affectors.append(token)
+            where_set.add(affected)
+        debug(affected, 'affectors is now', affected.affectors)
+    debug('final self.host.' + where, 'is', where_set)
+
+
+def remove_affector(host, token, what, where):
+    remove = []
+    if debug() is not False:
+        printout = {}
+        debug('attempting to remove', what, 'in ', 'self.host.' + where)
+    where_set = getattr(host, where)
+    for w in what:
+        effect = where_set.get(w)
+        if debug() is not False:
+            debug('found', what, ', with affectors:', effect.affectors)
+            printout[effect] = effect.affectors.copy()
+        effect.affectors.remove(token)
+        if not effect.affectors:
+            debug('removing', token, 'from', effect.affectors)
+            remove.append(effect)
+    for r in remove:
+        debug('trying to remove', r, ', from', where, 'due to no affectors')
+        where_set.remove(r)
+        debug(where_set)
+
 
 class TraitsBase:
     def __init__(self, *args, **kwargs):
@@ -96,43 +136,48 @@ class TraitsBase:
             pass
 
     def add_affector(self, what, where):
-        if debug() is not False:
-            printout = {}
-            debug('attempting to add', what, 'in ', 'self.host.' + where)
-        where_set = getattr(self.host, where)
-        for effect in what:
-            where_set = getattr(self.host, where)
-            if effect in where_set:
-                debug('found', effect, ', with affectors:', effect.affectors)
-                affected = where_set.get(effect)
-                affected.affectors.append(self)
-            else:
-                debug('didn\'t find', effect, ', instantiating it with affector', self)
-                affected = effect()
-                affected.affectors.append(self)
-                where_set.add(affected)
-            debug(affected, 'affectors is now', affected.affectors)
-        debug('final self.host.' + where, 'is', where_set)
+        add_affector(self.host, self, what, where)
 
     def remove_affector(self, what, where):
-        remove = []
-        if debug() is not False:
-            printout = {}
-            debug('attempting to remove', what, 'in ', 'self.host.' + where)
-        where_set = getattr(self.host, where)
-        for w in what:
-            effect = where_set.get(w)
-            if debug() is not False:
-                debug('found', what, ', with affectors:', effect.affectors)
-                printout[effect] = effect.affectors.copy()
-            effect.affectors.remove(self)
-            if not effect.affectors:
-                debug('removing', self, 'from', effect.affectors)
-                remove.append(effect)
-        for r in remove:
-            debug('trying to remove', r, ', from', where, 'due to no affectors')
-            where_set.remove(r)
-            debug(where_set)
+        remove_affector(self.host, self, what, where)
+    # def add_affector(self, what, where):
+    #     if debug() is not False:
+    #         printout = {}
+    #         debug('attempting to add', what, 'in ', 'self.host.' + where)
+    #     where_set = getattr(self.host, where)
+    #     for effect in what:
+    #         where_set = getattr(self.host, where)
+    #         if effect in where_set:
+    #             debug('found', effect, ', with affectors:', effect.affectors)
+    #             affected = where_set.get(effect)
+    #             affected.affectors.append(self)
+    #         else:
+    #             debug('didn\'t find', effect, ', instantiating it with affector', self)
+    #             affected = effect()
+    #             affected.affectors.append(self)
+    #             where_set.add(affected)
+    #         debug(affected, 'affectors is now', affected.affectors)
+    #     debug('final self.host.' + where, 'is', where_set)
+    #
+    # def remove_affector(self, what, where):
+    #     remove = []
+    #     if debug() is not False:
+    #         printout = {}
+    #         debug('attempting to remove', what, 'in ', 'self.host.' + where)
+    #     where_set = getattr(self.host, where)
+    #     for w in what:
+    #         effect = where_set.get(w)
+    #         if debug() is not False:
+    #             debug('found', what, ', with affectors:', effect.affectors)
+    #             printout[effect] = effect.affectors.copy()
+    #         effect.affectors.remove(self)
+    #         if not effect.affectors:
+    #             debug('removing', self, 'from', effect.affectors)
+    #             remove.append(effect)
+    #     for r in remove:
+    #         debug('trying to remove', r, ', from', where, 'due to no affectors')
+    #         where_set.remove(r)
+    #         debug(where_set)
 
      # def install(self):
      #     self.host.effects.init.add(self)

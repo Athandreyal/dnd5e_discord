@@ -301,23 +301,30 @@ def get_implemented_names(source, dest):
     return full, partial, none
 
 
-def ChooseCombatAction():
-    ActionAssist = None
-    ActionAttack = None
-    ActionDash = None
-    ActionDisengage = None
-    ActionDodge = None
-    ActionHide = None
-    ActionReady = None
-    ActionSearch = None
-    ActionUse = None
+def ChooseCombatAction(choices, entity, attack):
+    # ActionAssist = None
+    # ActionAttack = None
+    # ActionDash = None
+    # ActionDisengage = None
+    # ActionDodge = None
+    # ActionHide = None
+    # ActionReady = None
+    # ActionSearch = None
+    # ActionUse = None
+    if not entity.status.get(enums.STATUS.INCAPACITATED):
+        debug(entity.name, 'is incapacitated, actions are not possible at this time')
+        return
+
 
 #    Ready = None  # todo: this is used to state circumstances and trigger on reaction, not sure how too deal with
 #    Search = None
-
-    choices = {'Search': ActionSearch, 'Ready': ActionReady, 'Use': ActionUse, 'Assist': ActionAssist,
-               'Dodge': ActionDodge, 'Dash': ActionDash, 'Disengage': ActionDisengage, 'Hide': ActionHide,
-               'Attack': ActionAttack, 'Help': ActionHelp}
+    choices['Help'] = ActionHelp
+    # if lone party member, cannot assist
+    # if cannot stealth, cannot hide.
+    #
+    # choices = {'Search': ActionSearch, 'Ready': ActionReady, 'Use': ActionUse, 'Assist': ActionAssist,
+    #            'Dodge': ActionDodge, 'Dash': ActionDash, 'Disengage': ActionDisengage, 'Hide': ActionHide,
+    #            'Attack': ActionAttack, 'Help': ActionHelp}
     keys = sorted(choices.keys())
     s = 'Actions available this turn:\n'
     s2 = ''
