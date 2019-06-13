@@ -130,9 +130,9 @@ class Encounter:
                             if weapon is not None and self.party2.is_able() and self.party1.is_able():
                                 if not entity.target or entity.target.hp < 1:
                                     self.get_target(entity, self.party1, self.party2)
-                                attack_roll, critical = self.attack_roll(event, attack, entity, weapon)
-                                defence = self.target_defence(entity, attack)
-                                target_ac = defence.get_armor_class()
+                                attack_roll, critical, target_ac = self.attack_roll(event, attack, entity, weapon)
+#                                defence = self.target_defence(entity, attack)
+#                                target_ac = defence.get_armor_class()
                                 if target_ac > attack_roll:  # miss
                                     self.miss(entity, weapon, attack_roll, target_ac)
                                 else:  # hit
@@ -185,28 +185,33 @@ class Encounter:
         defence.armor_classes.append(entity.target.get_armor_class())
         return defence
 
-    @staticmethod
-    def attack_roll(event, attack, entity, weapon):
+    @classmethod
+    def attack_roll(cls, event, attack, entity, weapon):
         attack.advantage, attack.disadvantage = misc.getAdvantage(entity, entity.target)
+        debug('attacker has disadvantage?', attack.disadvantage)
         entity.roll_attack(attack)
         event.roll_attack(attack=attack)
-        attack_roll, critical = attack.result()  # todo: have lucky check the rolls here.
-        attack_roll += weapon.hit_bonus + attack.bonus_attack  # todo: get and include any
+        attack_roll_bonus = weapon.hit_bonus + attack.bonus_attack  # todo: get and include any
         # status/trait bonuses
-        if player:
-            attack_roll += entity.abilities.STR_MOD
-
-        # pass entity for return effects.  pass
-        multi = 1
-        if critical:
-            event.critical(attacker=entity, attack=attack)
-            multi = attack.critical_multi
+        if isinstance(entity, character.CharacterSheet):
+            attack_roll_bonus += entity.abilities.STR_MOD
+        attack.attack_roll_bonus = attack_roll_bonus
         damage = attack.calculation(weapon).__next__()[0]
         for d in damage:
             d += attack.bonus_damage
-            d *= multi
         attack.damage = damage
-        return attack_roll, critical
+
+        defence = cls.target_defence(entity, attack)
+        target_ac = defence.get_armor_class()
+        attack_roll, critical = attack.result()  # todo: have lucky check the rolls here.
+
+        # pass entity for return effects.  pass
+        if critical:
+            event.critical(attacker=entity, attack=attack)
+            multi = attack.critical_multi
+            for d in attack.damage:
+                d *= multi
+        return attack_roll, critical, target_ac
 
     @staticmethod
     def get_target(entity, party1, party2):
@@ -375,7 +380,7 @@ if __name__ == '__main__':
     print('Note: battle output currently silenced for testing purposes - accelerates the climb though lvl 20 when '
           'I/O is not involved.  To see what is occurring, edit the Encounter call on line', str(line()+2))
     while sum(p.hp for p in players) > 0 and player.level < 20:
-        encounter = Encounter(party1=Party(player, player2), difficulty=difficulty, verbose=True, silent=False,
+        encounter = Encounter(party1=Party(player, player2), difficulty=difficulty, verbose=False, silent=False,
                               auto_run=True, debug_rewards=True)
         rewards = encounter.do_battle()
         result = 1 if rewards['xp'] > 0 else -1
@@ -403,10 +408,6 @@ if __name__ == '__main__':
         print(p.dict_short())
     print('level 20 achieved in', ttl_losses + ttl_wins, 'encounters')
 
-    while True:
-        print('this is an infinitely looping test')
-        chosen_function = interactions.ChooseCombatAction()
-        print('function is', chosen_function)
 #    from dnd5e_enums import ABILITY
 #
 #    while debug() is not False:

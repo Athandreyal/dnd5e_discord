@@ -72,9 +72,10 @@ class Event:
                               f.__self__.__class__.__name__)
                     f(*args, **kwargs)
                 except Exception as e:
-                    print(e)
-                    print(f.__name__)
-                    raise e
+                    if debug() is not False and not __name__ == '__main__':
+                        debug(e)
+                        debug(f.__name__)
+                        raise e
 
         def __repr__(self):
             return '{%s}' % re.sub('["[\]]', '', json.dumps([x.__class__.__name__ for x in self]))
@@ -113,6 +114,11 @@ class Event:
         self.move = self.Effect(set())
         self.proficiency_check = self.Effect(set())
         self.none = self.Effect(set())  # use this for related but non event locations
+        self.battle_cleanup = self.Effect(set())  # use for safely stripping entities of lingering effects that do not
+        #                                           belong outside of battle, like dodge actions, or their penalties
+        #                                           on attackers.
+        #                                           intended to be volatile, it will be reset after usage
+        #                                           todo: ensure functions have a cleanup method, bitch if not
 
     # @property
     # def none(self):
@@ -160,7 +166,7 @@ if __name__ == '__main__':
     print(">>> e('a', 'b')")
     e('a', 'b')
     print('>>> e.remove(baz)')
-    e.remove(baz)
+    e.discard(baz)
     print(">>> e('a', 'b')")
     e('a', 'b')
 

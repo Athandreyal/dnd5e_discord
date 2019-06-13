@@ -1,7 +1,5 @@
 import random
 import math
-import re
-import json
 import dnd5e_enums as enums
 # miscellaneous errata used in many places, but not large enough to warrant their own file
 
@@ -131,6 +129,7 @@ class Attack:
     def result(self):
         if self.advantage or self.disadvantage and not self.advantage and self.disadvantage:
             # exclusive or, one or the other, but not both
+            debug('attacker has disadvantage?', self.disadvantage)
             roll = max(self.roll1, self.roll2) if self.advantage else min(self.roll1, self.roll2)
         else:
             roll = self.roll1
@@ -212,6 +211,51 @@ def getstr(text):
         if choice2 != '':
             incomplete = False
     return choice2
+
+
+def add_affector(token, host, what, where):
+    if debug() is not False:
+        printout = {}
+        debug('attempting to add', what, 'in ', 'self.host.' + where)
+    where_set = getattr(host, where)
+    for effect in what:
+        where_set = getattr(host, where)
+        if effect in where_set:
+            debug('found', effect, ', with affectors:', effect.affectors)
+            affected = where_set.get(effect)
+            affected.affectors.append(token)
+        else:
+            debug('didn\'t find', effect, ', instantiating it with affector', token)
+            affected = effect()
+            affected.affectors.append(token)
+            where_set.add(affected)
+        debug(affected, 'affectors is now', affected.affectors)
+    debug('final self.host.' + where, 'is', where_set)
+
+
+def remove_affector(token, host, what, where):
+    remove = []
+    if debug() is not False:
+        debug('attempting to remove', what, 'in ', 'self.host.' + where)
+    where_set = getattr(host, where)
+    for w in what:
+        effect = where_set.get(w)
+        if debug() is not False:
+            debug('found', what, ', with affectors:', effect.affectors)
+            try:
+                printout[effect] = effect.affectors.copy()
+            except TypeError:
+                printout = {effect: effect.affectors.copy()}
+        effect.affectors.remove(token)
+        if not effect.affectors:
+            debug('removing', token, 'from', effect.affectors)
+            remove.append(effect)
+    for r in remove:
+        debug('trying to remove', r, ', from', where, 'due to no affectors')
+        where_set.discard(r)
+        debug(where_set)
+
+
 
 if __name__ == '__main__':
     die = Die(1, 20)

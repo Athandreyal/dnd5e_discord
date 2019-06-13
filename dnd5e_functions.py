@@ -1,10 +1,9 @@
 # all the functions referenced by abilities, traits, effects, statuses, etc, they go here, as callable classes
 # prepended with owner of function, such as Giant_Spider being owner of a bite called GiantSpiderBite
-# import dnd5e_misc as misc
 import dnd5e_enums as enums
-# from dnd5e_entity import Entity
+import dnd5e_misc as misc
 
-debug = lambda *args, **kwargs: False  #dummy out the debug prints when disabled
+debug = lambda *args, **kwargs: False  # dummy out the debug prints when disabled
 if debug():
     from trace import print as debug
     debug = debug
@@ -12,6 +11,27 @@ if debug():
 # todo: use status effects type class to pass/apply damage?
 
 # because the events are sets, you can abruptly terminate a function's existence via raise StopIteration
+
+# in a given combat the events sequence is as follows:
+#   before_combat - prep for battle
+#       if hp < 1:
+#           dead - deal with being < 1hp
+#       elif incapacitated:
+#           incapacitated - deal with being incapacitated
+#       else:
+#           before_turn
+#               before_action
+#                   chose to attack
+#                       choose target
+#                       if valid target:  - might not be in range, or immune to you
+#                           attack
+#                           roll_attack
+#                           critical
+#                           roll_damage
+#                           defend
+#               after_action
+#           after_turn
+#   after_combat - terminate battle prep
 
 
 # class GenericAttack:
@@ -60,47 +80,6 @@ if debug():
 #         parent.effects.equip.update(self.equip)
 #         parent.effects.unequip.update(self.unequip)
 
-def add_affector(host, token, what, where):
-    if debug() is not False:
-        printout = {}
-        debug('attempting to add', what, 'in ', 'self.host.' + where)
-    where_set = getattr(host, where)
-    for effect in what:
-        where_set = getattr(host, where)
-        if effect in where_set:
-            debug('found', effect, ', with affectors:', effect.affectors)
-            affected = where_set.get(effect)
-            affected.affectors.append(token)
-        else:
-            debug('didn\'t find', effect, ', instantiating it with affector', token)
-            affected = effect()
-            affected.affectors.append(token)
-            where_set.add(affected)
-        debug(affected, 'affectors is now', affected.affectors)
-    debug('final self.host.' + where, 'is', where_set)
-
-
-def remove_affector(host, token, what, where):
-    remove = []
-    if debug() is not False:
-        printout = {}
-        debug('attempting to remove', what, 'in ', 'self.host.' + where)
-    where_set = getattr(host, where)
-    for w in what:
-        effect = where_set.get(w)
-        if debug() is not False:
-            debug('found', what, ', with affectors:', effect.affectors)
-            printout[effect] = effect.affectors.copy()
-        effect.affectors.remove(token)
-        if not effect.affectors:
-            debug('removing', token, 'from', effect.affectors)
-            remove.append(effect)
-    for r in remove:
-        debug('trying to remove', r, ', from', where, 'due to no affectors')
-        where_set.remove(r)
-        debug(where_set)
-
-
 class TraitsBase:
     def __init__(self, *args, **kwargs):
         host = kwargs.get('host', None)
@@ -129,17 +108,17 @@ class TraitsBase:
         for method in method_list:
             set = getattr(self.host.effects, method)
             m = getattr(self, method)
-            set.remove(m)
+            set.discard(m)
         try:
             self.uninstall()  # silenced the not found warning.
         except AttributeError:
             pass
 
     def add_affector(self, what, where):
-        add_affector(self.host, self, what, where)
+        misc.add_affector(self, self.host, what, where)
 
     def remove_affector(self, what, where):
-        remove_affector(self.host, self, what, where)
+        misc.remove_affector(self, self.host, what, where)
     # def add_affector(self, what, where):
     #     if debug() is not False:
     #         printout = {}
@@ -309,8 +288,8 @@ class StatusExhausted(TraitsBase):
         self.level += kwargs['exhaustion']
         new = self.level
 
-        change = self.add_affector if old_level < self.level else self.remove_affector
-        increase = old_level < self.level
+        change = self.add_affector if old < self.level else self.remove_affector
+        increase = old < self.level
 
         if old < new:
             if old < 1 <= new:
@@ -880,6 +859,7 @@ class ClassTraitAttuneWolf(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+
 class RaceTraitLucky(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -900,7 +880,7 @@ class RaceTraitLucky(TraitsBase):
     roll_damage = roll
 
 
-class RaceTraitBrave(TraitsBase):pass
+class RaceTraitBrave(TraitsBase): pass
 
 
 class WeaponEffectGSTQ2H(TraitsBase):
@@ -912,6 +892,7 @@ class WeaponEffectGSTQ2H(TraitsBase):
         attack = kwargs['attack']
         for damage in attack.damage:
             damage //= 2
+
 
 if __name__ == '__main__':
     from trace import print
