@@ -256,7 +256,6 @@ def remove_affector(token, host, what, where):
         debug(where_set)
 
 
-
 if __name__ == '__main__':
     die = Die(1, 20)
     print(die, '\navg =', die.roll(average=True),'\nroll 1, 2, 3 =', die.roll(), die.roll(), die.roll())

@@ -24,6 +24,11 @@ class Entity:
         self.traits = traits
         if self.traits is None:
             self.traits = set()
+        # combat actions
+        import dnd5e_functions as functions
+        self.traits.update({functions.ActionCombatAssist, functions.ActionCombatAttack, functions.ActionCombatDash,
+                            functions.ActionCombatDisengage, functions.ActionCombatDodge, functions.ActionCombatHide,
+                            functions.ActionCombatReady, functions.ActionCombatSearch, functions.ActionCombatUse})
         self.hp_max = hp_max
         self.hp = hp
         if self.hp is None:
@@ -65,6 +70,8 @@ class Entity:
         self.proficiency_skills = skills
         self.d20 = Die(1, 20)
         self.location = Location()
+        self.party = None   # reference to our party, so anywhere we have the entity object, we have the party too
+
 
     @property
     def advantage(self):
@@ -192,8 +199,8 @@ class Entity:
         # is storing two of the same reference
 #        attacks['effects'] = effects
         attacks.calculation = self._wpn
-        attacks.weapons = \
-            self.equipment.right_hand, self.equipment.left_hand, self.equipment.jaw, self.equipment.fingers
+        attacks.weapons = [self.equipment.right_hand, self.equipment.left_hand,
+                           self.equipment.jaw, self.equipment.fingers]
         return attacks
 
     def _wpn(self, hand: weaponry.Weapon = None):

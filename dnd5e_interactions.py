@@ -3,7 +3,6 @@ from dnd5e_misc import getstr as getstr
 from dnd5e_misc import Die as Die
 import dnd5e_enums as enums
 import inspect
-from dnd5e_character_sheet import CharacterSheet
 import dnd5e_races
 import dnd5e_classes
 import dnd5e_enums
@@ -183,25 +182,35 @@ def new():
     # re-roll the player class
     player_class = player_class(0, ability=abilities, skills=skills, background=background)
 
+    from dnd5e_character_sheet import CharacterSheet
     return CharacterSheet(name, age, height, weight, uid, experience, level, unspent_pts, player_race, player_class,
                           skills, background, abilities, hp_dice, hp_current, [weapon, _armor, shield])
 
 
-def ActionHelp():
-    help_str = '''
-    Assist:     Choose an ally, their next skill check has advantage, if within 5ft their next attack has advantage 
-    Attack:     Attack a hostile target with arcane spell/weapon, ranged weapon, or melee weapon
-    Dash:       Cover ground equal to your speed
-    Disengage:  Attempt to withdraw from foe without provoking an opportunity attack
-    Dodge:      Attacks against you have disadvantage, Dexterity saving throws have advantage
-    Hide:       Roll a stealth check, if successful, you gain stealth
-    Use:        Use an object or item, such as potions
-    '''
-    print(help_str)
+def ActionHelp(*args, **kwargs):
+#    help_str = '''
+#    Assist:     Choose an ally, their next skill check has advantage, if within 5ft their next attack has advantage
+#    Attack:     Attack a hostile target with arcane spell/weapon, ranged weapon, or melee weapon
+#    Dash:       Cover ground equal to your speed
+#    Disengage:  Attempt to withdraw from foe without provoking an opportunity attack
+#    Dodge:      Attacks against you have disadvantage, Dexterity saving throws have advantage
+#    Hide:       Roll a stealth check, if successful, you gain stealth
+#    Use:        Use an object or item, such as potions
+#    '''
+#    print(help_str)
+    choices = kwargs['choices']
+    for choice in choices:
+        debug(choice, choices[choice])
+        try:
+            h = choices[choice][2]
+        except IndexError:
+            h = 'No help available'
+        print('\n\t', choice, '\n', h)
     return False
 
 
-def print_choices(full, partial, none, no_sort=False):
+# noinspection PyDefaultArgument
+def print_choices(full, partial=[], none=[], no_sort=False):
     s = ''
     s2 = ''
     if no_sort:
@@ -301,7 +310,30 @@ def get_implemented_names(source, dest):
     return full, partial, none
 
 
-def ChooseCombatAction(choices, entity, attack):
+def get_assist_target(self, party):
+    touching = True  # todo: confirm they are within 5ft or not
+    names = [x.name for x in party if x.name is not self.name]
+    print_choices(names)
+    choice = getint('Which party member would you like to assist: ', 0, len(party)-1)
+    return [touching, party[choice]]
+
+
+def choose_weapon(weapons):
+    print('What weapon will you attack with? ')
+    weapons = [x for x in weapons if x is not None]
+    print_choices(weapons)
+    choice = getint('Your chosen weapon is? ', 0, len(weapons)-1)
+    return weapons[choice]
+
+
+def get_target(targets):
+    print('choose a target: ')
+    target_list = [x.name + ' %dhp' % x.hp for x in targets]
+    print_choices(target_list)
+    return targets[getint('Choose a target: ', 0, len(targets)-1)]
+
+
+def ChooseCombatAction(*args, **kwargs):
     # ActionAssist = None
     # ActionAttack = None
     # ActionDash = None
@@ -311,50 +343,74 @@ def ChooseCombatAction(choices, entity, attack):
     # ActionReady = None
     # ActionSearch = None
     # ActionUse = None
-    if not entity.status.get(enums.STATUS.INCAPACITATED):
+    choices = kwargs['choices']
+    entity = kwargs['entity']
+    attack = kwargs['attack']
+    party1 = kwargs['party1']
+    party2 = kwargs['party2']
+
+    if entity.status.get(enums.STATUS.INCAPACITATED):
+        debug(entity.status)
         debug(entity.name, 'is incapacitated, actions are not possible at this time')
         return
 
+    entity.effects.before_action()
 
-#    Ready = None  # todo: this is used to state circumstances and trigger on reaction, not sure how too deal with
+    #    Ready = None  # todo: this is used to state circumstances and trigger on reaction, not sure how too deal with
 #    Search = None
-    choices['Help'] = ActionHelp
-    # if lone party member, cannot assist
-    # if cannot stealth, cannot hide.
-    #
-    # choices = {'Search': ActionSearch, 'Ready': ActionReady, 'Use': ActionUse, 'Assist': ActionAssist,
-    #            'Dodge': ActionDodge, 'Dash': ActionDash, 'Disengage': ActionDisengage, 'Hide': ActionHide,
-    #            'Attack': ActionAttack, 'Help': ActionHelp}
+    debug(choices)
+    choices['Help'] = [False, ActionHelp, 'Your lookin at it...']
+    debug(attack.num < 1, not(party1.is_able() and party2.is_able()))
+    if attack.num < 1 or not (party1.is_able() and party2.is_able()):
+        del choices['Attack']
+    entity.effects.is_action(choices)  # get trait enabled choices
     keys = sorted(choices.keys())
-    s = 'Actions available this turn:\n'
-    s2 = ''
-    not_implemented = False
-    for n in range(len(keys)):
-        action = '%d)  %s' % (n, keys[n])
-        if choices[keys[n]] is None:
-            action += '*'
-            not_implemented = True
-        if len(s2)+len(action) > 80:
-            s += s2
-            s2 = '\n'
-        s2 += '\t\t'+action
-    s += s2
-    function = None
-    while function is None:
-        print(s)
-        if not_implemented:
-            print('\t\t\t* indicated action not yet implemented')
-        choice = getint('what is your choice?(number): ', 0, len(keys)-1)
-        function = choices.get(keys[choice], None)
-        if function is None:
-            print('sorry,', keys[choice], 'is not implemented yet, choose again')
-        else:
-            consume_turn = function()
-            if not consume_turn:
-                function = None
-            return function
+
+    print_choices(keys)
+    choice = getint('%s, what is your choice?(number): '% entity.name, 0, len(keys)-1)
+    function = choices.get(keys[choice], None)
+
+    consume_turn, function, h = function
+    debug(consume_turn, function)
+    function(*args, **kwargs)
+    debug(choices)
+    debug('attack num:', attack.num)
+    if consume_turn:  # eliminate all the choices that consume the turn once the first action does so.
+        remove = []
+        for action in choices.keys():
+            if choices[action][0]:
+                remove.append(action)
+        for action in remove:
+            if action == 'Attack':
+                if attack.num < 1:
+                    debug(action)
+                    del choices[action]
+            else:
+                debug(action)
+                del choices[action]
+    del choices['Help']
+
+    return function
 
 
 if __name__ == '__main__':
-    character = new()
-    print(character.full_str())
+    from dnd5e_character_sheet import init_wulfgar
+    from dnd5e_encounter import Party
+    w = init_wulfgar()
+    w2 = init_wulfgar()
+    w2.name += ' 2'
+    e1 = w.effects
+    e2 = w2.effects
+    e1.before_battle()
+    e1.before_turn()
+    e1.before_action()
+    e2.before_battle()
+    e2.before_turn()
+    e2.before_action()
+    a1 = {}
+    e1.is_action(actions=a1)
+    debug(a1)
+    a2 = {}
+    e2.is_action(actions=a2)
+    debug(a2)
+    party = Party(w, w2)

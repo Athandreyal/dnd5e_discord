@@ -5,7 +5,6 @@ debug = lambda *args, **kwargs: False  #dummy out the debug prints when disabled
 if debug():
     from trace import print as debug
     debug = debug
-
 # todo: find ALL default argument expressions in my code, and replace them with =None and default it inside the
 #  function, see :   https://www.toptal.com/python#hiring-guide
 
@@ -16,7 +15,8 @@ class Set:
     @classmethod
     def Set(cls):  # recursively chase it out, if its a branch, find the leaves.
         attr = (getattr(cls, i) for i in dir(cls) if not callable(i) and i.upper() == i)
-        s = {cls}
+#        s = {cls}  # don't include self in the
+        s = set()
         for a in attr:
             if hasattr(a, 'Set'):
                 s.update(a.Set())
@@ -381,9 +381,11 @@ class TRAIT(Set):
 
     class CANTRIP: pass  # KNOW ONE SPELL FROM THE WIZARD SPELL SET, USES INTELLIGENCE TO CAST
 
-    class COMMON_PERCEPTION: pass  # PASSIVE PERCEPTION OF 10
+    class COMMON_PERCEPTION:
+        def __init__(self, *args, **kwargs): pass  # PASSIVE PERCEPTION OF 10
 
-    class DARKVISION: pass  # CAN SEE IN DIM AS IF BRIGHT LIGHT TO 60FT
+    class DARKVISION:
+        def __init__(self, *args, **kwargs): pass  # CAN SEE IN DIM AS IF BRIGHT LIGHT TO 60FT
 
     class DRACONIC_ANCESTRY_BLACK: pass  # ACID      DAMAGE TYPE, 5X30FT,  DC(DEX), 50% ACID      RESIST
 
@@ -692,7 +694,7 @@ class ADVANTAGE(ABILITY, Set):
     DEFENCE = DEFENCE
 
     class SOCIAL(Set): pass
-    class ABILITY(Set): pass  # all abilities.
+    ABILITY = ABILITY
     # todo: add additional entries as needed for more and more advantage checks to work.
 
 

@@ -2,13 +2,14 @@
 # prepended with owner of function, such as Giant_Spider being owner of a bite called GiantSpiderBite
 import dnd5e_enums as enums
 import dnd5e_misc as misc
+# todo: assign traits which are actions, to entity actions list for choice as an action when interactive
+# todo: use status effects type class to pass/apply damage?
 
 debug = lambda *args, **kwargs: False  # dummy out the debug prints when disabled
 if debug():
     from trace import print as debug
     debug = debug
-# todo: assign traits which are actions, to entity actions list for choice as an action when interactive
-# todo: use status effects type class to pass/apply damage?
+
 
 # because the events are sets, you can abruptly terminate a function's existence via raise StopIteration
 
@@ -79,6 +80,17 @@ if debug():
 #         parent.effects.level_up.update(self.level_up)
 #         parent.effects.equip.update(self.equip)
 #         parent.effects.unequip.update(self.unequip)
+
+
+# functions which need to be choose-able actions should implement a method named is_action, which should
+#    configure the trait object's state to indicate it was selected, or not.  before_action should be
+#    used to clear this selection to reset each trait/action into considering itself as not chosen yet.
+#
+# action functions should receive the actions dictionary, it should contain a tuple:
+#    a boolean  to indicate if the turn is consumed
+#    the function object itself, which should accept (*args, **kwargs) as parameters
+#    a help string
+
 
 class TraitsBase:
     def __init__(self, *args, **kwargs):
@@ -220,14 +232,11 @@ class TraitAbilityScoreImprovement(TraitsBase):
     def level_up(self, *args, **kwargs):
         if self.host.level in [4, 8, 12, 16, 19]:
             self.host.unspent_ability += 2
-
-#    def install(self, *args, **kwargs):
-#        self.host.effects.level_up.add(self.level_up)
+            # todo : trigger user interaction to spend these points.
 
 
 class DCThrow(TraitsBase):
     def __init__(self, *args, **kwargs):
-        import dnd5e_misc as misc
         super().__init__(*args, **kwargs)
         self.die = misc.Die(1, 20)
 
@@ -255,6 +264,177 @@ class TraitNaturalDefence(TraitsBase):
     def defend(self, *args, **kwargs):
         defence = kwargs['defence']
         defence.armor_classes.append(self.armor_class)
+
+
+class ActionCombatSearch(TraitsBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def is_action(self, *args, **kwargs):
+        actions = kwargs['actions']
+        h = 'Consumes the action phase of the turn to search for loot loot, low chance of success during combat'
+        actions['Search'] = [True, None, h]
+        # todo: implement combat search
+
+
+class ActionCombatReady(TraitsBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def is_action(self, *args, **kwargs):
+        actions = kwargs['actions']
+        h = 'Consumes the sction phase of the turn preparing an action, will be ready next turn'
+        actions['Ready'] = [True, None, h]
+        # todo: implement combat ready
+
+
+class ActionCombatUse(TraitsBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def is_action(self, *args, **kwargs):
+        actions = kwargs['actions']
+        h = 'Consumes the action phase of the turn to use an item'
+        actions['Use'] = [True, None, h]
+        # todo: implement combat Use
+
+
+class ActionCombatAssist(TraitsBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.is_assisting = False
+        self.target = None
+        self.touching = False
+
+    def assist(self, *args, **kwargs):
+        debug('assit called')
+        self.is_assisting = True
+        party = [x for x in self.host.Party.members if x is not self.host]
+        from dnd5e_interactions import get_assist_target
+        self.touching, target = get_assist_target(self.host, party)
+        misc.add_affector(self, target, enums.SKILL.Set(), 'advantage')
+        if self.touching:
+            misc.add_affector(self, target, enums.ADVANTAGE.ATTACK.Set(), 'advantage')
+
+    def is_action(self, *args, **kwargs):
+        if self.host.party is not None:
+            actions = kwargs['actions']
+            h = 'Consumes the action phase of the turn to assist a party member.\n' \
+                'the assisted party member receives advantage in skill checks,\n' \
+                'and advantage in attacks if within 5 ft.'
+            if not self.is_assisting:
+                actions['Assist'] = [True, self.assist, h]
+
+    def after_turn(self, *args, **kwargs):
+        if self.is_assisting:
+            self.is_assisting = False
+            misc.remove_affector(self, self.target, enums.SKILL.Set(), 'advantage')
+            if self.touching:
+                misc.remove_affector(self, self.target, enums.ADVANTAGE.ATTACK.Set(), 'advantage')
+
+
+class ActionCombatDodge(TraitsBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dodging = False
+
+    def is_action(self, *args, **kwargs):
+        actions = kwargs['actions']
+        h = 'Consumes the action phase of the turn to attempt to evade incoming attacks.\n' \
+            'grants advantage in dexterity saving throws.  Penalises attackers with disadvantage\n' \
+            'for attacks against you'
+        actions['Dodge'] = [True, self.dodge, h]
+
+    def dodge(self, *args, **kwargs):
+        self.dodging = True
+        self.add_affector({enums.ADVANTAGE.DEX}, 'advantage')
+
+    def defend(self, *args, **kwargs):
+        if self.dodging:
+            attack = kwargs['attack']
+            attack.advantage = False
+            attack.disadvantage = True
+
+    def before_turn(self, *args, **kwargs):
+        self.dodging = False
+        self.remove_affector({enums.ADVANTAGE.DEX}, 'advantage')
+
+    after_battle = before_turn
+
+
+class ActionCombatDash(TraitsBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def is_action(self, *args, **kwargs):
+        actions = kwargs['actions']
+        h = 'Increases your movement distance by 100% of base, does not consume your action phase.'
+        actions['Dash'] = [False, None, h]
+        # todo: implement combat Dash
+
+
+class ActionCombatDisengage(TraitsBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def is_action(self, *args, **kwargs):
+        actions = kwargs['actions']
+        h = 'Consumes the action phase of the turn allowing you to move away from hostiles ' \
+            'without triggering a retaliatory attack'
+        actions['Disengage'] = [True, None, h]
+        # todo: implement combat disengage
+
+
+class ActionCombatHide(TraitsBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def is_action(self, *args, **kwargs):
+        actions = kwargs['actions']
+        h = 'Consumes the action phase of the turn to to attempt a stealth check.  If successful, you gain stealth' \
+            'and opponents targeting you must pass a perception check or drop you as a target'
+        actions['Hide'] = [True, None, h]
+        # todo: implement combat Hide
+
+
+class ActionCombatAttack(TraitsBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def is_action(self, *args, **kwargs):
+        actions = kwargs['actions']
+        h = 'Consumes the action phase of the turn to use weapon to attack a target.  ' \
+            'Multiple attacks per turn are possible'
+        actions['Attack'] = [True, self.do_attack, h]
+        # todo: implement combat attack
+
+    def do_attack(self, *args, **kwargs):
+        entity = kwargs['entity']
+        event = entity.effects
+        attack = kwargs['attack']
+        party1 = kwargs['party1']
+        party2 = kwargs['party2']
+        encounter = kwargs['encounter']
+
+        event.attack(attack=attack)
+        # permit players to choose their attack type: arcane, ranged, melee.
+        # permit players to choose their weapon equip type: hands, fingers(claws), jaw(bite)
+        debug(attack.weapons)
+        from dnd5e_interactions import choose_weapon
+        weapon = choose_weapon(attack.weapons)
+#        for weapon in attack.weapons:
+        if not entity.target or entity.target.hp < 1:
+            encounter.get_target(entity, party1, party2)
+        attack_roll, critical, target_ac = encounter.attack_roll(event, attack, entity, weapon)
+#                                defence = self.target_defence(entity, attack)
+#                                target_ac = defence.get_armor_class()
+        if target_ac > attack_roll:  # miss
+            encounter.miss(entity, weapon, attack_roll, target_ac)
+        else:  # hit
+            # todo: currently assuming all attacks are melee attacks
+            #  - allow selection and grabbing the appropriate functions.
+            encounter.target_hit(entity, weapon, attack, critical)
+
 
 class StatusBlinded(TraitsBase):
     def __init__(self):
@@ -441,6 +621,17 @@ class ClassTraitRage(TraitsBase):
         self.added_rage_effects = False
         self.hvy_armor_types = enums.ARMOR.HEAVY.Set()
 
+    def is_action(self, *args, **kwargs):
+        actions = kwargs['actions']
+        h = 'Does not consume the action phase of the turn.  ' \
+            'Activates Rage which provides bonus damage, resistance ' \
+            'to damage, and advantage in str related saving throws'
+        if self.raging:
+            h = 'Deactivates rage'
+            actions['Un-enrage'] = [False, self.stop_raging, h]
+        else:
+            actions['Enrage'] = [False, self.begin_raging, h]
+
     def get_rage_count(self):
         level = self.host.level
         return 2 + (1 if level >= 3 else 0) + (1 if level >= 6 else 0) + (1 if level >= 12 else 0)  \
@@ -456,7 +647,6 @@ class ClassTraitRage(TraitsBase):
         pass
 
     def init(self, *args, **kwargs):
-        debug('rage init')
         self.rages = self.get_rage_count()
         self.bonus = self.get_rage_bonus()
         self.raging = False
@@ -464,13 +654,6 @@ class ClassTraitRage(TraitsBase):
         self.last_attack = 0
         self.added_effects = False
         self.hvy_armor = any(a in self.hvy_armor_types for a in self.host.equipment.armor.enum_type)
-        if self.hvy_armor:
-            debug('hvy armor, rage cancelling init')
-            return
-        elif not self.added_effects:
-            self.added_effects = True
-            debug('rage init, no hvy armor, adding STR and CON advantages')
-            self.add_affector({enums.ADVANTAGE.STR, enums.ADVANTAGE.CON}, 'advantage')
 
     rest_long = init
 
@@ -509,30 +692,36 @@ class ClassTraitRage(TraitsBase):
     equip = equip_change
     unequip = equip_change
 
+    def stop_raging(self, *args, **kwargs):
+        self.raging = False
+        self.rages -= 1
+        self.duration = 0
+        self.last_attack = 0
+        self.prevent_casting(False)
+        if self.added_rage_effects:
+            self.added_rage_effects = False
+            self.remove_affector({enums.ADVANTAGE.STR, enums.ADVANTAGE.CON}, 'advantage')
+            self.remove_affector({enums.DAMAGETYPE.BLUNT, enums.DAMAGETYPE.PIERCING,
+                                  enums.DAMAGETYPE.SLASHING}, 'damage_resist')
+
+    def begin_raging(self, *args, **kwargs):
+        choices = kwargs['choices']
+        del choices['Enrage']  # cannot rage if you are already raging this turn....
+        self.raging = True
+        self.last_attack = -1  # use end_turn to increment to zero
+        self.prevent_casting()
+        if not self.added_rage_effects:
+            self.added_rage_effects = True
+            self.add_affector({enums.ADVANTAGE.STR, enums.ADVANTAGE.CON}, 'advantage')
+            self.add_affector({enums.DAMAGETYPE.BLUNT, enums.DAMAGETYPE.PIERCING,
+                               enums.DAMAGETYPE.SLASHING}, 'damage_resist')
+
     def before_turn(self, *args, **kwargs):
         if self.hvy_armor: return
         debug('rage before_turn, no hvy armor')
         if self.raging:
             if self.last_attack == self.since_last_attack or self.duration > self.rage_length_max:
-                self.raging = False
-                self.rages -= 1
-                self.duration = 0
-                self.last_attack = 0
-                self.prevent_casting(False)
-                if self.added_rage_effects:
-                    self.added_rage_effects = False
-                    self.remove_affector({enums.DAMAGETYPE.BLUNT, enums.DAMAGETYPE.PIERCING, enums.DAMAGETYPE.SLASHING},
-                                         'damage_resist')
-        elif self.rages > 0:
-            # todo: enable choosing to rage as an action, rather than automatically defaulting to yes.
-            #  automatic
-            self.raging = True
-            self.last_attack = -1  # use end_turn to increment to zero
-            self.prevent_casting()
-            if not self.added_rage_effects:
-                self.added_rage_effects = True
-                self.add_affector({enums.DAMAGETYPE.BLUNT, enums.DAMAGETYPE.PIERCING, enums.DAMAGETYPE.SLASHING},
-                                  'damage_resist')
+                self.stop_raging()
 
     def after_battle(self, *args, **kwargs):
         if self.hvy_armor: return
@@ -546,6 +735,9 @@ class ClassTraitRage(TraitsBase):
             self.duration += 1
             self.last_attack += 1
 
+    def battle_cleanup(self, *args, **kwargs):
+        self.stop_raging()
+
 
 class ClassTraitUnarmoredDefence(TraitsBase):
     def __init__(self, *args, **kwargs):
@@ -554,9 +746,9 @@ class ClassTraitUnarmoredDefence(TraitsBase):
 
     def equip_change(self, *args, **kwargs):
         if self.host.equipment.armor is None:
-            self.install()
+            self._install()
         else:
-            self.uninstall()
+            self._uninstall()
 
     equip = equip_change
     unequip = equip_change
@@ -582,38 +774,35 @@ class ClassTraitRecklessAttack(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.activated = False
+        self.first_attack = False  # use indicate if this is the first attack or not - only available on first attack
 
-    def before_turn(self, *args, **kwargs):
-        debug(self.host.name, 'reckless before_turn, activated =', self.activated, end=', ')
-        if self.activated: return
-        if debug() is not False:
-            __builtins__['print']('proceeding...')
-        self.add_affector({enums.ATTACK.MELEE}, 'advantage')
+    def is_action(self, *args, **kwargs):
+        actions = kwargs['actions']
+
+        def enable(self, *args, **kwargs):
+            self.activated = True
+            choices = kwargs['choices']
+            del choices['Reckless Attack']
+            self.add_affector({enums.ATTACK.MELEE}, 'advantage')
+
+        if self.first_attack:
+            h = 'For the first attack of a turn, you may be reckless and have advantage in your attack\n' \
+                'All who attack you this turn will also have advantage against you'
+            actions['Reckless Attack'] = [False, enable, h]
 
     def attack(self, *args, **kwargs):
-        debug(self.host.name, 'reckless attack, activated =', self.activated, end=', ')
-        if self.activated: return
-        if debug() is not False:
-            __builtins__['print']('proceeding...')
-        self.remove_affector({enums.ATTACK.MELEE}, 'advantage')
-        self.add_affector({enums.DEFENCE.MELEE}, 'disadvantage')
-        self.activated = True
+        self.first_attack = False  # it is no longer the first attack for any successive attacks
 
-    def after_turn(self, *args, **kwargs):
-        debug(self.host.name, 'reckless after_turn, activated =', self.activated, end=', ')
-        if not self.activated: return
-        if debug() is not False:
-            __builtins__['print']('proceeding...')
-        self.activated = False
-        if debug() is not False:
-            debug(self.host.name, self.host.advantage, 'disadvantage')
-            for adv in self.host.advantage:
-                print(adv,  end='')
-                if hasattr(adv, 'affectors'):
-                    __builtins__['print'](adv.affectors)
-                else:
-                    __builtins__['print']('')
-        self.remove_affector({enums.DEFENCE.MELEE}, 'disadvantage')
+    def after_action(self, *args, **kwargs):
+        if self.activated:  # if they turned this on, time to drop the bonus and apply the disadvantages
+            self.remove_affector({enums.ATTACK.MELEE}, 'advantage')
+            self.add_affector({enums.DEFENCE.MELEE}, 'disadvantage')
+            self.activated = False
+
+    def before_turn(self, *args, **kwargs):  # disable it before out next turn
+        self.first_attack = True  # reset the first attack check on each turn
+        if self.activated:  # drop our disadvantage from last turn
+            self.remove_affector({enums.DEFENCE.MELEE}, 'disadvantage')
 
 
 class ClassTraitDangerSense(TraitsBase):
@@ -758,16 +947,25 @@ class ClassTraitFrenzy(TraitsBase):
     # mutate the rage trait
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.enraged = False # is the entity ragins
-        self.frenzied = False # has the character triggered its frenzy
-        self.exhausted = False # have we finished a frenzy and applied out exhaustion effect
+        self.enraged = False  # is the entity raging
+        self.frenzied = False  # has the character triggered its frenzy
+        self.exhausted = False  # have we finished a frenzy and applied out exhaustion effect
+
+    def is_action(self, *args, **kwargs):
+        if self.enraged and not self.frenzied:  # can frenzy only if enraged, and not currently frenzied
+            actions = kwargs['actions']
+
+            def activate(*args, **kwargs):
+                self.frenzied = True
+            h = 'Allows an additional attack per turn, at the cost of a level of fatigue after the rage ends'
+            actions['frenzy'] = [False, activate, h]
 
     def before_turn(self, *args, **kwargs):
         self.enraged = self.host.status.get(enums.STATUS.ENRAGED) is not None
 
-    def before_action(self, *args, **kwargs):
-        if self.enraged and not self.frenzied:
-            self.frenzied = True  # todo: make this a player choice
+    # def before_action(self, *args, **kwargs):
+    #     if self.enraged and not self.frenzied:
+    #         self.frenzied = True  # todo: make this a player choice
 
     def attack(self, *args, **kwargs):
         if not self.frenzied: return
@@ -776,88 +974,108 @@ class ClassTraitFrenzy(TraitsBase):
             attack.num += 1
             attack.effects.add(self)
 
-    def after_turn(self, *args, **kwargs):
+    def end_frenzy(self):
         if self.frenzied and not self.enraged and not self.exhausted:
+            # frenzy lasts for the duration of rage once triggered.
             self.events.exhaustion(exhaustion=1)  # additive call.
             self.exhausted = True
             self.frenzied = False  # end the frenzy if rage has ended
 
-    def after_battle(self, *args, **kwargs):
-        if self.frenzied and not self.enraged and not self.exhausted:
-            self.events.exhaustion(exhaustion=1)  # additive call.
-            self.exhausted = True
-            self.frenzied = False  # end the frenzy if rage has ended
+    def after_turn(self, *args, **kwargs):
+        self.end_frenzy()
 
 
 class ClassTraitMindlessRage(TraitsBase):
     # todo: change this to piggy back on rage events
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # todo: implement me, immune to effects of charm and frighten, suspends if currently active, prevents new
+
 
 class ClassTraitIntimidatingPresence(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     # todo: requires other players exist before we can do much of anything with this
+    # todo: can frighten other entities - choose entity within 30ft, must pass WIS DC(8+prof+cha_mod) or frighten
+    #  until end of turn.
 
 
 class ClassTraitRetaliation(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # todo: retaliation events, this trait is pointless until we can retaliate.
+    # when taking damage, if creature is within 5ft, can retaliate with a single melee attack
 
 
 class ClassTraitSpiritSeeker(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # can cast beast sense and speak with animals spells, only as rituals
 
 
 class ClassTraitSpiritWalker(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # can cast sommune with nature spell, as ritual, spirit animal conveys information to you
+    # todo: figure out how the hell to make use of this
 
 
 class ClassTraitTotemBear(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # when raging, gain resist to all damage except psychic
 
 
 class ClassTraitAspectBear(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # gain might of bear, carry capacity x2, str adv for push, pull, lift and break checks
 
 
 class ClassTraitAttuneBear(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # while raging, all within 5ft of you have attack disadvantage against other party members
+    # todo, pass the party into events, so traits can access party members for buffs
 
 
 class ClassTraitTotemEagle(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # while raging, not wearing hvy armor, creatures have attack disadvantage against you.  Can dash as bonus action.
+    # stacks with normal dash, so both dashes should be visible in listing.
 
 
 class ClassTraitAspectEagle(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # gain eyesight of eagle, can see 1mile with no difficulty, discern fine details to 100ft, can see in dim light
+    # as if bright
 
 
 class ClassTraitAttuneEagle(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # while raging, can 'fly' at a speed equal to regular movement, falling at end of turn if you didn't land.
+    # for sanity, assume they land, assume flight is essentially hovering to skip traps, pits, difficult terrain, etc.
 
 
 class ClassTraitTotemWolf(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # while raging, friends gain melee attack advantage against creatures within 5ft of you.
 
 
 class ClassTraitAspectWolf(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # gain hunting sensibilities of a wolf, can track at fast pace, can move stealthy at normal pace
 
 
 class ClassTraitAttuneWolf(TraitsBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    # while raging, can knock Large or smaller creatures STATUS.PRONE when hit with a melee attack.
 
 
 class RaceTraitLucky(TraitsBase):

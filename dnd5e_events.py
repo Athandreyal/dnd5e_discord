@@ -93,7 +93,7 @@ class Event:
         self.equip = self.Effect(set())
         self.unequip = self.Effect(set())
         self.before_battle = self.Effect(set())  # applies on battle start
-        self.after_battle = self.Effect(set())  # applies whenever a battle ends
+        self.after_battle = self.Effect(set())  # applies whenever a battle ends - use to clear battle only effects
         self.before_turn = self.Effect(set())  # applies on start of each turn
         self.after_turn = self.Effect(set())  # applies after each turn
         self.before_action = self.Effect(set())  # applies whenever a character acts
@@ -114,11 +114,8 @@ class Event:
         self.move = self.Effect(set())
         self.proficiency_check = self.Effect(set())
         self.none = self.Effect(set())  # use this for related but non event locations
-        self.battle_cleanup = self.Effect(set())  # use for safely stripping entities of lingering effects that do not
-        #                                           belong outside of battle, like dodge actions, or their penalties
-        #                                           on attackers.
-        #                                           intended to be volatile, it will be reset after usage
-        #                                           todo: ensure functions have a cleanup method, bitch if not
+        self.is_action = self.Effect(set())  # used by traits to indicate they may be chosen as an action
+        self.is_reaction = self.Effect(set())  # used by traits to indicate they trigger as a reaction effect.
 
     # @property
     # def none(self):

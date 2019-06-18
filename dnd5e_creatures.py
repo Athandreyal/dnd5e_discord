@@ -3,7 +3,12 @@ import dnd5e_weaponry as weaponry
 import dnd5e_misc as misc
 from dnd5e_enums import DAMAGETYPE, ATTACK, EQUIP_SLOT, WEAPONS
 from dnd5e_entity import Entity
-from trace import print
+
+
+debug = lambda *args, **kwargs: False  #dummy out the debug prints when disabled
+if debug():
+    from trace import print as debug
+    debug = debug
 
 
 class Creature(Entity):
@@ -30,6 +35,10 @@ class Creature(Entity):
         self.gold = None
         self.gems = None
         self.items = None  # could be potions, maps, equipment, mounts, etc
+        for trait in self.traits:
+            debug('installing trait', trait)
+            trait(host=self)
+
 
     def dict_short(self):
         return {
