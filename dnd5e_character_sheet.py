@@ -184,7 +184,7 @@ class CharacterSheet(Entity):
         else:  # have armor, calculate it.
             base_armor_class = self.equipment.armor.armor_class
             dex_bonus = min(self.abilities.DEX_MOD, self.equipment.armor.dex_limit)
-            proficiency = self.equipment.armor.enum_type.intersection(self.proficiency_armor)
+            proficiency = self.equipment.armor.type.intersection(self.proficiency_armor)
             if proficiency:
                 proficiency_bonus = self.proficiency_bonus
             else:
@@ -193,6 +193,40 @@ class CharacterSheet(Entity):
             armor_class = base_armor_class + dex_bonus + proficiency_bonus
 
             return armor_class
+
+    def to_dict(self):
+        d = super().to_dict()
+        skills = self.player_class.skills.difference(self.background.SKILLS)
+
+        def pop(x):
+            try:
+                return x.pop().__name__
+            except KeyError:
+                return None
+
+        s = []
+        for n in range(4):
+            s.append(pop(skills))
+        d['unspent_pts'] = self.unspent_ability
+        d['race'] = self.player_race.name
+        d['class'] = self.player_class.name
+        d['background'] = self.background.__name__
+        d['path'] = None
+        d['skill1'] = s[0]
+        d['skill2'] = s[1]
+        d['skill3'] = s[2]
+        d['skill4'] = s[3]
+        d['str'] = self.abilities.STR
+        d['con'] = self.abilities.CON
+        d['dex'] = self.abilities.DEX
+        d['int'] = self.abilities.INT
+        d['wis'] = self.abilities.WIS
+        d['cha'] = self.abilities.CHA
+        d['hp_dice'] = self.hp_dice
+        d['hp_current'] = self.hp
+        d['uid'] = self.uid
+        # todo: when having a  path becomes a thing, save the path here
+        return d
 
 
 def init_wulfgar():
@@ -281,3 +315,14 @@ if __name__ == '__main__':
     for n in range(4):
         wulfgar.abilities.add(strength=1, constitution=1, dexterity=1, intelligence=1, wisdom=1, charisma=1)
         print(wulfgar.abilities)
+    print('calling to_dict()')
+    while wulfgar.level < 17:
+        wulfgar.experience += 200
+    w = wulfgar.to_dict()
+    print(w)
+    ability = enums.Ability(strength=w['str'], constitution=w['con'], dexterity=w['dex'], intelligence=w['int'],
+                            wisdom=w['wis'], charisma=w['cha'])
+    wulfgar2 = CharacterSheet(w['name'], w['age'], w['height'], w['weight'], w['uid'], w['experience'], w['level'],
+                              w['unspent_pts'], w['race'], w['class'],
+                              [x for x in [w['skill1'], w['skill2'],w['skill3'], w['skill4']]if x is not None],
+                              w['background'], ability, w['hp_dice'], w['hp_current'], [weapon, _armor, shield])

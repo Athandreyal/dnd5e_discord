@@ -4,12 +4,16 @@ import dnd5e_weaponry as weaponry
 from dnd5e_events import Event
 from dnd5e_inventory import Equipped
 from dnd5e_misc import Attack, Die, NamedTuple, Location
+import dnd5e_functions as functions
 
 debug = lambda *args, **kwargs: False  # dummy out the debug prints when disabled
 if debug():
     from trace import print as debug
     debug = debug
 
+actions = {functions.ActionCombatAssist, functions.ActionCombatAttack, functions.ActionCombatDash,
+           functions.ActionCombatDisengage, functions.ActionCombatDodge, functions.ActionCombatHide,
+           functions.ActionCombatReady, functions.ActionCombatSearch, functions.ActionCombatUse}
 
 class Entity:
     def __init__(self, name=None, traits=None, hp=None, hp_max=None, effects=None, equipment=None, abilities=None,
@@ -25,10 +29,7 @@ class Entity:
         if self.traits is None:
             self.traits = set()
         # combat actions
-        import dnd5e_functions as functions
-        self.traits.update({functions.ActionCombatAssist, functions.ActionCombatAttack, functions.ActionCombatDash,
-                            functions.ActionCombatDisengage, functions.ActionCombatDodge, functions.ActionCombatHide,
-                            functions.ActionCombatReady, functions.ActionCombatSearch, functions.ActionCombatUse})
+        self.traits.update(actions)
         self.hp_max = hp_max
         self.hp = hp
         if self.hp is None:
@@ -290,3 +291,19 @@ class Entity:
 
         debug('roll', roll, 'prof', proficiency, 'diff', roll_difficulty)
         return roll + proficiency > roll_difficulty
+
+    # pycharm doesn't like that I'm making a call-out to a child class here
+    # noinspection PyUnresolvedReferences
+    def to_dict(self):
+        # todo: serialize and preserve the sets containing dynamic runtime info.
+        d = dict()
+        d['name'] = self.name
+        d['age'] = self.age
+        d['height'] = self.height
+        d['weight'] = self.weight
+        d['level'] = self.level
+        d['experience'] = self.experience
+        d['equipment'] = self.equipment.to_dict()
+        return d
+
+

@@ -13,25 +13,42 @@ class Armor(items.Item):
         self.armor_class = armor_class
         self.dex_limit = dex_limit
         self.str_req = str_req  # todo: implement str_req for armors.
-        self.enum_type = enum_type
         self.can_stealth = can_stealth
-        self.equipFunction = equip_function  # used to put this item's effect into the event system
         self.defend_function = defend_function  # used to put this items effect into the event system
         self.don = don_doff_t[0]
         self.doff = don_doff_t[1]
 
+    def to_dict(self):
+        d = super().to_dict()
+        d['armor_class'] = self.armor_class
+        d['dex_limit'] = self.dex_limit
+        d['str_req'] = self.str_req
+        d['stealth'] = self.can_stealth
+        d['defend_function'] = self.defend_function
+        d['don'] = self.don
+        d['doff'] = self.doff
+        return d
+
 
 class Shield(items.Item):
-    def __init__(self):
+    def __init__(self, name, cost, armor_class, str_req, enum_type, weight, don_doff_t, equip_function, defend_function):
         qty = 1
-        name = None
-        cost = None
-        weight = None
-        enum_type = None
-        equip_function = None
         super().__init__(name=name, cost=cost, weight=weight, qty=qty, enum_type=enum_type,
                          equip_to=enums.EQUIP_SLOT.SHIELD, function=equip_function)
-        pass  # todo: implement shields
+        self.armor_class = armor_class
+        self.str_req = str_req
+        self.don = don_doff_t[0]
+        self.doff = don_doff_t[1]
+        self.defend_function = defend_function
+
+    def to_dict(self):
+        d = super().to_dict()
+        d['armor_class'] = self.armor_class
+        d['str_req'] = self.str_req
+        d['don'] = self.don
+        d['doff'] = self.doff
+        d['defend_function'] = self.defend_function
+        return d
 
 
 # example definitions
@@ -63,3 +80,14 @@ breastplate_Armor = Armor(
                     defend_function=None,  # the name of a function which executes a special effect on the target
                     )
 
+kite_shield = Shield(
+                    name='Kite Shield',
+                    cost=8000,
+                    armor_class=3,
+                    str_req=15,
+                    enum_type={enums.SHIELDS.KITE},
+                    weight=14,
+                    don_doff_t=(1, 1),
+                    equip_function=None,
+                    defend_function=None
+                    )

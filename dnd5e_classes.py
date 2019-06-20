@@ -75,7 +75,7 @@ class Barbarian(CommonFunctions):
         self.skills = skills
         if self.skills is None:
             # TODO: MAKE THIS A PLAYER CHOICE, PICK TWO FROM ABOVE.
-            self.skills = {SKILL.SURVIVAL, SKILL.NATURE}
+            self.skills = {SKILL.NATURE, SKILL.INTIMIDATION}
         self.proficiency_bonus = 2 + self.get_proficiency_bonus(lvl)
 
         self.background = background
@@ -148,7 +148,6 @@ class Barbarian(CommonFunctions):
                 self.traits.update({CLASS_TRAITS.SPIRIT_WALKER})
             if lvl >= 14:
                 self.traits.update({CLASS_TRAITS.WOLF_ATTUNEMENT})
-        # todo: run all of the trait and status functions, so any bonuses are conferred immediately
 
         
 class Bard(CommonFunctions):

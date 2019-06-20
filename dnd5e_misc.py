@@ -178,6 +178,36 @@ def getAdvantage(a, b):
         return adv, dadv
 
 
+# base is the object where you expect to find it, like dnd5e_enums.
+# qualname is the full path to that item, like dnd5e_enums._WEAPONS_MARTIAL.GREATAXE, as a string
+# returns the actual dnd5e_enums._WEAPONS_MARTIAL.GREATAXE attribute.
+def get_attrib_from_qualname(base, qualname):
+    qualname = qualname.split('.')[1:]
+    for name in qualname:
+        base = getattr(base, name)
+    return base
+
+
+def get_sets_of_attribs_from_sets_of_qualnames(base, qualnames):
+    return_set = set()
+    if qualnames:
+        for qualname in qualnames:
+            return_set.add(get_attrib_from_qualname(base, qualname))
+    else:
+        return_set.add(get_attrib_from_qualname(base, qualnames))
+    return return_set
+
+
+def get_full_qualname(object):
+    try:
+        ans = []
+        for obj in object:
+            ans.append(obj.__module__ + '.' + obj.__qualname__)
+        return ans
+    except TypeError:
+        return object.__module__ + '.' + object.__qualname__
+
+
 def getint(text, minimum, maximum, list=None):
     incomplete = True
     choice2 = -1

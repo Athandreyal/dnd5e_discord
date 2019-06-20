@@ -1001,7 +1001,7 @@ class _ARMOR(Set):
     class PLATE: pass
 
 
-class _SHIELDS(Set):
+class SHIELDS(Set):
     class TARGE: pass
     class KITE: pass
     class TOWER: pass
@@ -1061,8 +1061,8 @@ class WEAPONS(Set):
 
 
 class PROFICIENCY(Set):
-    ARMOR = _ARMOR
-    SHIELDS = _SHIELDS
+    ARMOR = ARMOR
+    SHIELDS = SHIELDS
     WEAPONS = WEAPONS
 
 

@@ -20,9 +20,9 @@ if debug():
     debug = debug
 
 
-def new_user():
+def new_user(ver, release_title):
     s = '''
-    Welcome to the D&D 5.e Discord Bot ver 0.1 early release.
+    Welcome to the D&D 5.e Discord Bot ver ''' + ver + ''' ''' + release_title + '''
     
     You'll have to forgive the sparse content, the critical systems much of that depends on do not yet exist.
     
@@ -31,8 +31,8 @@ def new_user():
     its guess is as good as yours or mine.
     
     The code has been written to try and indicate what is flagged as not yet ready, and if I've done my job right, 
-    will indicate that before you choose, and prevent you from choosing it.  Failure to flag items as incomplete is a 
-    thing, so bugs and outright crashes will be a thing for some time to come.
+    will indicate that before you choose, though choosing them should not be an issue.  Failure to flag items as 
+    incomplete is a thing, so bugs and outright crashes will be a thing for some time to come.
     
     You will need a willingness to accept that you have to just ignore the in-progress state of things until they 
     start to clean up more and more and I can remove this message in favour of more isolated remarks where relevant.
@@ -40,9 +40,9 @@ def new_user():
     Traits were written to trigger automatically initially, so there may be some un-noticed flakyness in allowing 
     the player to intercede in the process. 
     
-    The command '$new' will get you started with creating a character.
+    The command '!new' will get you started with creating a character.
     '''
-    print(s)
+    return s
 
 
 def get_value_from_curve(segment, minimum, maximum):
@@ -211,6 +211,20 @@ def ActionHelp(*args, **kwargs):
 
 # noinspection PyDefaultArgument
 def print_choices(full, partial=[], none=[], no_sort=False):
+    choices, s, w1, w2 = get_choices(full, partial, none, no_sort)
+    if debug() is not False:
+        debug(s)
+        debug(w1)
+        debug(w2)
+    else:
+        print(s)
+        print(w1)
+        print(w2)
+    return choices
+
+
+# noinspection PyDefaultArgument
+def get_choices(full, partial=[], none=[], no_sort=False):
     s = ''
     s2 = ''
     if no_sort:
@@ -219,7 +233,7 @@ def print_choices(full, partial=[], none=[], no_sort=False):
         choices = sorted(full + partial + none)
     for i, name in enumerate(choices):
         n_str = '\t%d)  %s' % (i, name)
-        if len(s2+n_str) > 80:
+        if len(s2 + n_str) > 80:
             s += s2 + '\n'
             s2 = ''
         s2 += n_str
@@ -230,15 +244,7 @@ def print_choices(full, partial=[], none=[], no_sort=False):
         warn1 = 'options with the suffix -+ are partially implemented, and will not provide their full benefits'
     if none:
         warn2 = 'options with the suffix -- are not implemented at all, and will provide little to no benefits'
-    if debug() is not False:
-        debug(s)
-        debug(warn1)
-        debug(warn2)
-    else:
-        print(s)
-        print(warn1)
-        print(warn2)
-    return choices
+    return choices, s, warn1, warn2
 
 
 def get_implemented_names(source, dest):

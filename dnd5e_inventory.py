@@ -139,3 +139,20 @@ class Equipped:
                 self.right_hand = None
             check_if_one_hand_weapon_now_two_handed()
 
+    def to_dict(self):
+        return {
+                'left_hand': self.left_hand.to_dict() if self.left_hand else None,
+                'right_hand': self.right_hand.to_dict() if self.right_hand else None,
+                'armor': self.armor.to_dict() if self.armor else None,
+                'shield': self.shield.to_dict() if self.shield else None,
+                'back': self.back.to_dict() if self.back else None,
+                'jaw': self.jaw.to_dict() if self.jaw else None,
+                'collar': self.collar.to_dict() if self.collar else None,
+                'neck': self.neck.to_dict() if self.neck else None,
+                'gloves': self.gloves.to_dict() if self.gloves else None,
+                'fingers': self.fingers.to_dict() if self.fingers else None,
+                'belt': self.belt.to_dict() if self.belt else None,
+                'shoulders': self.shoulders.to_dict() if self.shoulders else None,
+                'inventory': self.inventory.to_dict() if self.inventory else None
+                }
+
