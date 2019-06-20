@@ -30,7 +30,11 @@ class CharacterSheet(Entity):
         player_race = player_race.__class__()
         player_class = player_class.__class__(self.level)
         proficiency_bonus = player_class.get_proficiency_bonus(self.level)
-        traits = player_race.traits.union(player_class.traits)
+        try:
+            traits = player_race.traits.union(player_class.traits)
+        except AttributeError:  # only a few classes have the trait attribute so far.
+            # todo: remove this try catch when all classes have the .trait attribute.
+            traits = player_race.traits
         traits.add(enums.TRAIT.NATURAL_DEFENCE)
         super().__init__(name=name, traits=traits, abilities=abilities, hp=hp_current, hp_max=hp_max, skills=skills,
                          saving_throws=player_class.saving_throws, equipment=equipment, speed=player_race.speed,
@@ -205,7 +209,7 @@ class CharacterSheet(Entity):
         d['class'] = misc.get_full_qualname(self.player_class.__class__)
         d['background'] = misc.get_full_qualname(self.background)
         d['path'] = None
-        d['skills'] = misc.get_full_qualname(self.proficiency_skills)
+        d['skills'] = json.dumps(misc.get_full_qualname(self.proficiency_skills))
         d['str'] = self.abilities.STR
         d['con'] = self.abilities.CON
         d['dex'] = self.abilities.DEX
@@ -230,7 +234,7 @@ class CharacterSheet(Entity):
                               unspent=d['unspent_pts'],
                               player_race=misc.get_attrib_from_qualname(RACE, d['race'])(),
                               player_class=misc.get_attrib_from_qualname(CLASS, d['class'])(d['level']),
-                              skills=misc.get_sets_of_attribs_from_sets_of_qualnames(enums, d['skills']),
+                              skills=misc.get_sets_of_attribs_from_sets_of_qualnames(enums, json.loads(d['skills'])),
                               background=misc.get_attrib_from_qualname(CLASS, d['background']),
                               abilities=enums.Ability(strength=d['str'],
                                                       constitution=d['con'],
@@ -258,7 +262,7 @@ def init_wulfgar():
     level = 0
     unspent_pts = 0
     player_race = RACE.Human()
-    player_class = CLASS.Barbarian(level)
+    player_class = CLASS.Rogue(level)
     class_skills = {enums.SKILL.ATHLETICS, enums.SKILL.PERCEPTION}
     background = enums.BACKGROUNDS.OUTLANDER
     # abilities = enums.Ability(24, 16, 22, 9, 14, 11)

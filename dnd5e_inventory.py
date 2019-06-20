@@ -2,6 +2,7 @@ import dnd5e_weaponry as weaponry
 import dnd5e_armor as armor
 import dnd5e_enums as enums
 import dnd5e_misc as misc
+import json
 
 class Equipped:
     # todo: equip events - curses, attunement bonuses, etc
@@ -140,7 +141,7 @@ class Equipped:
             check_if_one_hand_weapon_now_two_handed()
 
     def to_dict(self):
-        return {
+        return json.dumps({
                 'left_hand': self.left_hand.to_dict() if self.left_hand else None,
                 'right_hand': self.right_hand.to_dict() if self.right_hand else None,
                 'armor': self.armor.to_dict() if self.armor else None,
@@ -154,10 +155,12 @@ class Equipped:
                 'belt': self.belt.to_dict() if self.belt else None,
                 'shoulders': self.shoulders.to_dict() if self.shoulders else None,
                 'inventory': self.inventory.to_dict() if self.inventory else None
-                }
+                })
 
     @staticmethod
     def from_dict(d):
+        if not type(d) == type(dict()):
+            d = json.loads(d)
         e = Equipped()
         slots = ['left_hand', 'right_hand', 'armor', 'shield', 'back', 'jaw', 'collar', 'neck', 'gloves', 'fingers',
                  'belt', 'shoulders', 'inventory']

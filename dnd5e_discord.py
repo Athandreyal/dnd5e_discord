@@ -82,6 +82,29 @@ def log(s):
 
 bot = commands.Bot(command_prefix='!', description='Dungeon Master')
 
+# @bot.event
+# async def on_command_error(ctx, error):
+#     log(ctx.message.author.mention + ' ' + error.__class__.__name__ + ' ' + ctx.message.content)
+#     # noinspection PyTypeChecker
+#     if isinstance(error, commands.CommandInvokeError):
+#         log(error.args)
+#         log(error.original)
+#         log(error.with_traceback(error.__traceback__))
+#         return
+#     await ctx.send(ctx.message.author.mention)
+#     if isinstance(error, commands.CommandNotFound):
+#         await ctx.send_help()
+#     elif isinstance(error, commands.MissingRequiredArgument):
+#         await ctx.send_help(str(ctx.command))
+#     elif isinstance(error, commands.CommandOnCooldown):
+#         answer = 'The ' + str(ctx.command) + ' command is on cool-down, try again in ' + \
+#                  str(int(error.retry_after*10) * .1) + ' seconds'
+#         await ctx.send(answer)
+
+
+@bot.event
+async def on_command_completion(ctx):
+    await ctx.send(ctx.message.author.mention + ' ' + ctx.message.content + ' succeeded')
 
 @bot.event
 async def on_ready():
@@ -93,8 +116,6 @@ async def on_ready():
     if table.rowcount == -1:  # empty db
         sql_c.execute('create table if not exists players (' +
                       'id text primary key, ' +
-                      'user text, ' +
-                      'guild test, ' +
                       'name text, ' +
                       'age integer, ' +
                       'height integer, ' +
@@ -106,10 +127,7 @@ async def on_ready():
                       'class text, ' +
                       'background text, ' +
                       'path text, ' +
-                      'skill1 text, ' +
-                      'skill2 text, ' +
-                      'skill3 text, ' +
-                      'skill4 text, ' +
+                      'skills text, ' +
                       'str integer, ' +
                       'con integer, ' +
                       'dex integer, ' +
@@ -123,22 +141,19 @@ async def on_ready():
         sql_c.execute('create unique index if not exists idx_players_id on players(id);')
         sql_c.execute('pragma synchronous = 1')
         sql_c.execute('pragma journal_mode = wal')
-        sql_c.execute('create table if not exists equipment (' +
-                      'id text primary key, ' +
-                      'slot text, ' +
-                      'item text);')
-        sql_c.execute('create unique index if not exists idx_equipment on equipment(id);')
         database.commit()
-        bot.get_player = lambda u, g: sql_c.execute('select * from players where user = ? and guild = ?',
-                                                (int(u), int(g))).fetchall()
-        bot.set_player = lambda p: (sql_c.execute(' insert or replace into players' +
-                                                  '(id, user, guild, name, age, height, weight, level, experience, ' +
-                                                  'unspent_pts, race, class, background, path, skill1, skill2, ' +
-                                                  'skill3, skill4, str, con, dex, int, wis, cha, hp_dice, ' +
-                                                  'hp_current, equipment) values (:name, :age, :height, :weight, ' +
-                                                  ':level, :experience, :unspent_pts, :race, :class, :background, '
-                                                  ':path, :skill1, :skill2, :skill3, :skill4, :str, :con, :dex, ' +
-                                                  ':int, :wis, :cha, :hp_dice, :hp_current);', p), database.commit())
+        bot.get_players = lambda u: sql_c.execute('select * from players where id = ?', (int(u),)).fetchall()
+        bot.get_player = lambda u, n: sql_c.execute('select * from players where id = ? and name = ?',
+                                                    (int(u), n)).fetchall()
+        bot.set_player = lambda p: (sql_c.execute('insert or replace into players ' +
+                                                  '(id, name, age, height, weight, level, experience, ' +
+                                                  'unspent_pts, race, class, background, path, skills, str, con, dex,' +
+                                                  ' int, wis, cha, hp_dice, hp_current, equipment) values ' +
+                                                  '(:uid, :name, :age, :height, :weight, :level, :experience, ' +
+                                                  ':unspent_pts, :race, :class, :background, :path, :skills, :str, ' +
+                                                  ':con, :dex, :int, :wis, :cha, :hp_dice, :hp_current, :equipment);',
+                                                  p),
+                                    database.commit(), print('logged',p))
 
 
 @bot.command()
@@ -150,6 +165,14 @@ async def ping(ctx):
 async def new_user(ctx):
     await ctx.send(dnd5e_interactions.new_user(version, release_title))
 
+
+@bot.command()
+async def getchar(ctx):
+    print('id=', ctx.author.id)
+    int(ctx.author.id)
+    players = bot.get_players(ctx.author.id)
+    for c in players:
+        print(c)
 
 # for creating new characters
 @bot.command()
@@ -214,7 +237,7 @@ async def new(ctx, finish=None):
                                      age=char['age'],
                                      height=char['height'],
                                      weight=char['weight'],
-                                     uid=1,
+                                     uid=ctx.author.id,
                                      experience=0,
                                      level=0,
                                      unspent=0,
@@ -227,6 +250,9 @@ async def new(ctx, finish=None):
                                      hp_current=None,
                                      equipment=[dnd5e_weaponry.greataxe, dnd5e_armor.breastplate_Armor, None])
             print(wulfgar.full_str())
+            w = wulfgar.to_dict()
+            w['uid'] = ctx.message.author.id
+            bot.set_player(wulfgar.to_dict())
             return
         else:
             await ctx.send('Character creation is not yet complete')
@@ -241,16 +267,16 @@ async def new(ctx, finish=None):
 
 
 @bot.command()
-async def abort_new(ctx):
+async def abortnew(ctx):
     if ctx.author not in incomplete_characters:
         await ctx.send('You do not have an incomplete character to abort creating')
-        return
+        raise commands.CommandInvokeError
     del incomplete_characters[ctx.author]
     await ctx.send('incomplete character creation aborted')
 
 
 @bot.command()
-async def set_name(ctx, name=None):
+async def setname(ctx, name=None):
     if ctx.author not in incomplete_characters:
         await ctx.send('You cannot set a name yet, call !new first')
         return
@@ -261,37 +287,37 @@ async def set_name(ctx, name=None):
 
 
 @bot.command()
-async def set_str(ctx, strength=None):
+async def setstr(ctx, strength=None):
     await set_scdiwc(ctx, 'strength', strength)
 
 
 @bot.command()
-async def set_con(ctx, constitution=None):
+async def setcon(ctx, constitution=None):
     await set_scdiwc(ctx, 'constitution', constitution)
 
 
 @bot.command()
-async def set_dex(ctx, dexterity=None):
+async def setdex(ctx, dexterity=None):
     await set_scdiwc(ctx, 'dexterity', dexterity)
 
 
 @bot.command()
-async def set_int(ctx, intelligence=None):
+async def setint(ctx, intelligence=None):
     await set_scdiwc(ctx, 'intelligence', intelligence)
 
 
 @bot.command()
-async def set_wis(ctx, wisdom=None):
+async def setwis(ctx, wisdom=None):
     await set_scdiwc(ctx, 'wisdom', wisdom)
 
 
 @bot.command()
-async def set_cha(ctx, charisma=None):
+async def setcha(ctx, charisma=None):
     await set_scdiwc(ctx, 'charisma', charisma)
 
 
 @bot.command()
-async def set_ability(ctx, *args):
+async def setability(ctx, *args):
     #for key in ['str', 'con', 'dex', 'int', 'wis', 'cha']:
     if ctx.author not in incomplete_characters:
         await ctx.send('You cannot set an attribute yet, call !new first')
@@ -341,7 +367,8 @@ async def set_scdiwc(ctx, tag, parameter):
         suggest = char['player_class'].ability_suggest
         s = []
         for key in suggest:
-            s.append(key + ' = ' + suggest)
+            if int(suggest[key]) > 0:
+                s.append(key + ' = ' + str(suggest[key]))
         suggest = ' and '.join(s)
         content = 'You can set these attributes by calling !set_<tag> <value>, where tag is the three letter code for '\
                   'the attribute, such as dex for dexterity, or int for intelligence.  Value is an integer, ' \
@@ -364,7 +391,7 @@ async def set_scdiwc(ctx, tag, parameter):
 
 
 @bot.command()
-async def set_skills(ctx, skill=None, *args):
+async def setskills(ctx, skill=None, *args):
     if ctx.author not in incomplete_characters:
         await ctx.send('You cannot select a skill yet, call !new first')
         return
@@ -421,7 +448,7 @@ async def set_skills(ctx, skill=None, *args):
 
 
 @bot.command()
-async def set_age(ctx, age=None):
+async def setage(ctx, age=None):
     if ctx.author not in incomplete_characters:
         await ctx.send('You cannot select an age yet, call !new first')
         return
@@ -467,7 +494,7 @@ async def set_age(ctx, age=None):
 
 
 @bot.command()
-async def set_height(ctx, height=None):
+async def setheight(ctx, height=None):
     if ctx.author not in incomplete_characters:
         await ctx.send('You cannot select an height yet, call !new first')
         return
@@ -513,7 +540,7 @@ async def set_height(ctx, height=None):
                                'sensitive')
 
 @bot.command()
-async def set_weight(ctx, weight=None):
+async def setweight(ctx, weight=None):
     if ctx.author not in incomplete_characters:
         await ctx.send('You cannot select an height yet, call !new first')
         return
@@ -561,7 +588,7 @@ async def set_weight(ctx, weight=None):
 
 # used for one line character creation
 @bot.command()
-async def set_new(ctx, race=None, klass=None, background=None):
+async def setnew(ctx, race=None, klass=None, background=None):
     if ctx.author not in incomplete_characters:
         incomplete_characters[ctx.author] = {}
     if race:
@@ -571,7 +598,7 @@ async def set_new(ctx, race=None, klass=None, background=None):
             return
         race = match.group()
         incomplete_characters[ctx.author]['race'] = race
-        incomplete_characters[ctx.author]['player_race'] = getattr(dnd5e_races, race)
+        incomplete_characters[ctx.author]['player_race'] = getattr(dnd5e_races, race.replace(' ', ''))
     if background:
         match = re.search(background, ' '.join(backgrounds_all), re.IGNORECASE)
         if not match:
@@ -593,7 +620,7 @@ async def set_new(ctx, race=None, klass=None, background=None):
 
 
 @bot.command()
-async def set_background(ctx, background=None):
+async def setbackground(ctx, background=None):
     if ctx.author not in incomplete_characters:
         await ctx.send('You cannot select a background yet, call !new first')
         return
@@ -655,7 +682,7 @@ async def set_background(ctx, background=None):
 
 
 @bot.command()
-async def set_race(ctx, race=None):
+async def setrace(ctx, race=None):
     if ctx.author not in incomplete_characters:
         await ctx.send('You cannot select a race yet, call !new first')
         return
@@ -676,7 +703,23 @@ async def set_race(ctx, race=None):
                 return
             race = match.group()
         incomplete_characters[ctx.author]['race'] = race
-        incomplete_characters[ctx.author]['player_race'] = getattr(dnd5e_races, race.replace(' ', ''))
+        race = getattr(dnd5e_races, race.replace(' ', ''))
+        incomplete_characters[ctx.author]['player_race'] = race
+        if 'age' in incomplete_characters[ctx.author] and \
+            not race.age[0] <= incomplete_characters[ctx.author]['age'] <= race.age[1]:
+            await ctx.send(str(incomplete_characters[ctx.author]['age']) + ' is out of range for a ' + race.name +
+                           ' age, clearing the value')
+            del incomplete_characters[ctx.author]['age']
+        if 'height' in incomplete_characters[ctx.author] and \
+            not race.height[0] <= incomplete_characters[ctx.author]['height'] <= race.height[1]:
+            await ctx.send(str(incomplete_characters[ctx.author]['height']) + ' is out of range for a ' + race.name +
+                           ' height, clearing the value')
+            del incomplete_characters[ctx.author]['height']
+        if 'weight' in incomplete_characters[ctx.author] and \
+            not race.weight[0] <= incomplete_characters[ctx.author]['weight'] <= race.weight[1]:
+            await ctx.send(str(incomplete_characters[ctx.author]['weight']) + ' is out of range for a ' + race.name +
+                           ' weight, clearing the value')
+            del incomplete_characters[ctx.author]['weight']
 
         return
     else:
@@ -718,7 +761,7 @@ async def set_race(ctx, race=None):
 
 
 @bot.command()
-async def set_class(ctx, klass=None):
+async def setclass(ctx, klass=None):
     if ctx.author not in incomplete_characters:
         await ctx.send('You cannot select a class yet, call !new first')
         return

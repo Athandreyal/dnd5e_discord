@@ -153,11 +153,11 @@ class Barbarian(CommonFunctions):
 class Bard(CommonFunctions):
     name = 'Bard'
     hitDie = 8
-    class_ability = Ability(strength=0, constitution=0, dexterity=14, intelligence=0, wisdom=0, charisma=15)
-    #                       unassigned [13,12,10,8]
-    proficiencies = {PROFICIENCY.ARMOR.LIGHT, PROFICIENCY.WEAPONS.SIMPLE, PROFICIENCY.WEAPONS.MARTIAL.CROSSBOW_HAND,
-                     PROFICIENCY.WEAPONS.MARTIAL.LONGSWORD, PROFICIENCY.WEAPONS.MARTIAL.RAPIER, PROFICIENCY.WEAPONS.MARTIAL.SHORTSWORD}
-    saving_throws = {ABILITY.STR, ABILITY.CON}
+    proficiencies = PROFICIENCY.ARMOR.LIGHT.Set()\
+        .union(PROFICIENCY.WEAPONS.SIMPLE.Set())\
+        .union({PROFICIENCY.WEAPONS.MARTIAL.CROSSBOW_HAND, PROFICIENCY.WEAPONS.MARTIAL.LONGSWORD,
+                PROFICIENCY.WEAPONS.MARTIAL.RAPIER, PROFICIENCY.WEAPONS.MARTIAL.SHORTSWORD})
+    saving_throws = {ABILITY.DEX, ABILITY.CHA}
     skills = SKILL.Set()  # TODO: choose any 3
     skills_qty = 3
     ability_suggest = {'Strength': 0,
@@ -193,6 +193,11 @@ class Cleric(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
                        'Wisdom': 15,
                        'Charisma': 0
                        }
+    saving_throws = {ABILITY.WIS, ABILITY.CHA}
+    proficiencies = PROFICIENCY.ARMOR.LIGHT.Set() \
+        .union(PROFICIENCY.ARMOR.MEDIUM.Set()) \
+        .union(PROFICIENCY.SHIELDS.Set()) \
+        .union(PROFICIENCY.WEAPONS.SIMPLE.Set())
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -214,6 +219,18 @@ class Druid(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
                        'Wisdom': 15,
                        'Charisma': 0
                        }
+    saving_throws = {ABILITY.INT, ABILITY.WIS}
+    proficiencies = PROFICIENCY.ARMOR.LIGHT.Set() \
+        .union(PROFICIENCY.ARMOR.MEDIUM.Set()) \
+        .union(PROFICIENCY.ARMOR.LIGHT.Set()) \
+        .union(PROFICIENCY.SHIELDS.Set()) \
+        .union(PROFICIENCY.WEAPONS.SIMPLE.Set()).difference({PROFICIENCY.WEAPONS.SIMPLE.CROSSBOW,
+                                                             PROFICIENCY.WEAPONS.SIMPLE.CROSSBOW_LIGHT,
+                                                             PROFICIENCY.WEAPONS.SIMPLE.GREATCLUB,
+                                                             PROFICIENCY.WEAPONS.SIMPLE.HANDAXE,
+                                                             PROFICIENCY.WEAPONS.SIMPLE.LIGHT_HAMMER,
+                                                             PROFICIENCY.WEAPONS.SIMPLE.SHORTBOW})
+
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -235,6 +252,11 @@ class Fighter(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
                        'Wisdom': 0,
                        'Charisma': 0
                        }
+    saving_throws = {ABILITY.STR, ABILITY.CON}
+    proficiencies = PROFICIENCY.ARMOR.Set() \
+        .union(PROFICIENCY.SHIELDS.Set()) \
+        .union(PROFICIENCY.WEAPONS.Set().difference({PROFICIENCY.WEAPONS.GENERIC}))
+    # todo, exclude PROFICIENCY.WEAPONS.GENERIT.Set() when generis has a Set()
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -255,6 +277,10 @@ class Monk(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
                        'Wisdom': 14,
                        'Charisma': 0
                        }
+    saving_throws = {ABILITY.STR, ABILITY.DEX}
+    proficiencies = PROFICIENCY.WEAPONS.SIMPLE.Set().union({PROFICIENCY.WEAPONS.MARTIAL.SHORTSWORD})
+    # todo: enable picking a tool proficiency
+
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -275,6 +301,10 @@ class Paladin(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
                        'Wisdom': 0,
                        'Charisma': 14
                        }
+    saving_throws = {ABILITY.WIS, ABILITY.CHA}
+    proficiencies = PROFICIENCY.ARMOR.Set().union(PROFICIENCY.SHIELDS.Set()) \
+        .union(PROFICIENCY.WEAPONS.Set().difference({PROFICIENCY.WEAPONS.GENERIC}))
+    # todo, exclude PROFICIENCY.WEAPONS.GENERIT.Set() when generis has a Set()
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -296,6 +326,10 @@ class Ranger(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
                        'Wisdom': 14,
                        'Charisma': 0
                        }
+    saving_throws = {ABILITY.STR, ABILITY.DEX}
+    proficiencies = PROFICIENCY.ARMOR.Set().difference(PROFICIENCY.ARMOR.HEAVY.Set()) \
+        .union(PROFICIENCY.SHIELDS.Set()) \
+        .union(PROFICIENCY.WEAPONS.Set().difference({PROFICIENCY.WEAPONS.GENERIC}))
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -317,6 +351,10 @@ class Rogue(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
                        'Wisdom': 0,
                        'Charisma': 0
                        }
+    saving_throws = {ABILITY.DEX, ABILITY.INT}
+    proficiencies = PROFICIENCY.ARMOR.LIGHT.Set().union(PROFICIENCY.WEAPONS.SIMPLE.Set()) \
+        .union({PROFICIENCY.WEAPONS.MARTIAL.CROSSBOW_HAND, PROFICIENCY.WEAPONS.MARTIAL.LONGSWORD,
+                PROFICIENCY.WEAPONS.MARTIAL.RAPIER, PROFICIENCY.WEAPONS.MARTIAL.SHORTSWORD})
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -337,6 +375,10 @@ class Sorcerer(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
                        'Wisdom': 0,
                        'Charisma': 15
                        }
+    saving_throws = {ABILITY.CHA, ABILITY.CON}
+    proficiencies = {PROFICIENCY.WEAPONS.SIMPLE.DAGGER,PROFICIENCY.WEAPONS.SIMPLE.DART,
+                     PROFICIENCY.WEAPONS.SIMPLE.SLING, PROFICIENCY.WEAPONS.SIMPLE.QUARTERSTAFF,
+                     PROFICIENCY.WEAPONS.SIMPLE.CROSSBOW_LIGHT}
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -358,6 +400,9 @@ class Warlock(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
                        'Wisdom': 0,
                        'Charisma': 15
                        }
+    saving_throws = {ABILITY.WIS, ABILITY.CHA}
+    proficiencies = PROFICIENCY.ARMOR.LIGHT.Set().union(PROFICIENCY.WEAPONS.SIMPLE.Set())
+
 
     def __init__(self, lvl):
         if lvl == 0:
@@ -378,6 +423,10 @@ class Wizard(CommonFunctions):  # TODO: COMPLETE CLASS, LOL
                        'Wisdom': 0,
                        'Charisma': 14
                        }
+    saving_throws = {ABILITY.INT, ABILITY.WIS}
+    proficiencies = {PROFICIENCY.WEAPONS.SIMPLE.DAGGER,PROFICIENCY.WEAPONS.SIMPLE.DART,
+                     PROFICIENCY.WEAPONS.SIMPLE.SLING, PROFICIENCY.WEAPONS.SIMPLE.QUARTERSTAFF,
+                     PROFICIENCY.WEAPONS.SIMPLE.CROSSBOW_LIGHT}
 
     def __init__(self, lvl):
         if lvl == 0:
