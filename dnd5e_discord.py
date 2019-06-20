@@ -115,7 +115,7 @@ async def on_ready():
     table = sql_c.execute("select count(*) from sqlite_master where type='table' and name = 'players';")
     if table.rowcount == -1:  # empty db
         sql_c.execute('create table if not exists players (' +
-                      'id text primary key, ' +
+                      'id text, ' +
                       'name text, ' +
                       'age integer, ' +
                       'height integer, ' +
@@ -136,9 +136,10 @@ async def on_ready():
                       'cha integer, ' +
                       'hp_dice integer, ' +
                       'hp_current, ' +
-                      'equipment text' +
+                      'equipment text, ' +
+                      'primary key (id, name)' +
                       ');')
-        sql_c.execute('create unique index if not exists idx_players_id on players(id);')
+        sql_c.execute('create unique index if not exists idx_characters on players(id, name);')
         sql_c.execute('pragma synchronous = 1')
         sql_c.execute('pragma journal_mode = wal')
         database.commit()
@@ -166,6 +167,16 @@ async def new_user(ctx):
     await ctx.send(dnd5e_interactions.new_user(version, release_title))
 
 
+@bot.event
+async def on_message(message):
+    """per message event, mostly exists to stop the bot from interacting with bots and log all comms it sees"""
+    # allow bot on bot for the moment, need to have a test victim for stuff
+    if message.author.bot:
+        return  # avoid bot on bot action
+    log(f"{message.channel}: {message.author.name}: {message.content}")
+    await bot.process_commands(message)
+
+
 @bot.command()
 async def getchar(ctx):
     print('id=', ctx.author.id)
@@ -176,7 +187,7 @@ async def getchar(ctx):
 
 # for creating new characters
 @bot.command()
-async def new(ctx, finish=None):
+async def new(ctx, parameter=None):
     author = ctx.author  # whoever called this instance of new
     author_name = ctx.author.name
     embed = discord.Embed(title=author_name + ' : Character Creation')
@@ -219,7 +230,7 @@ async def new(ctx, finish=None):
                                                  char.get('str', None), char.get('con', None), char.get('dex', None),
                                                  char.get('int', None), char.get('wis', None), char.get('cha', None)] \
                and char.get('skills_remaining', None) == 0
-    if finish == 'finish':
+    if parameter == 'finish':
         if complete:
             await ctx.send('finalising character')
             # test instantiation of a character here
@@ -253,6 +264,7 @@ async def new(ctx, finish=None):
             w = wulfgar.to_dict()
             w['uid'] = ctx.message.author.id
             bot.set_player(wulfgar.to_dict())
+            del incomplete_characters[author]
             return
         else:
             await ctx.send('Character creation is not yet complete')
@@ -402,6 +414,8 @@ async def setskills(ctx, skill=None, *args):
         return
     if skill == 'reset':
         del incomplete_characters[ctx.author]['skills']
+        char = incomplete_characters[ctx.author]
+        char['skills_remaining'] = char['player_class'].skills_qty
         return
     if incomplete_characters[ctx.author]['skills_remaining'] == 0:
         await ctx.send('You have already chosen your full allotment of skills, call "!set_skill reset", without the '
@@ -419,13 +433,13 @@ async def setskills(ctx, skill=None, *args):
             try:
                 skill = int(skill)
                 if not 0 <= skill <= len(skills):
-                    await ctx.send('That is not a valid choice')
+                    await ctx.send(str(skill) + ' is not a valid choice')
                     return
                 skill = skills[skill]
             except ValueError:
                 match = re.search(skill, ' '.join(skills), re.IGNORECASE)
                 if not match:
-                    await ctx.send('That is not a valid choice')
+                    await ctx.send(skill + ' is not a valid choice')
                     return
                 skill = match.group()
             try:
@@ -594,7 +608,7 @@ async def setnew(ctx, race=None, klass=None, background=None):
     if race:
         match = re.search(race, ' '.join(races_all), re.IGNORECASE)
         if not match:
-            await ctx.send('That is not a valid choice')
+            await ctx.send(race + ' is not a valid choice')
             return
         race = match.group()
         incomplete_characters[ctx.author]['race'] = race
@@ -602,7 +616,7 @@ async def setnew(ctx, race=None, klass=None, background=None):
     if background:
         match = re.search(background, ' '.join(backgrounds_all), re.IGNORECASE)
         if not match:
-            await ctx.send('That is not a valid choice')
+            await ctx.send(background + ' is not a valid choice')
             return
         background = match.group()
         incomplete_characters[ctx.author]['background'] = background.capitalize()
@@ -610,7 +624,7 @@ async def setnew(ctx, race=None, klass=None, background=None):
     if klass:
         match = re.search(klass, ' '.join(classes_all), re.IGNORECASE)
         if not match:
-            await ctx.send('That is not a valid choice')
+            await ctx.send(klass + ' is not a valid choice')
             return
         klass = match.group()
         incomplete_characters[ctx.author]['class'] = klass
