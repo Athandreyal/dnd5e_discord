@@ -57,7 +57,7 @@ class Elf(Race):
     traits = {TRAIT.DARKVISION, TRAIT.KEEN_SENSES, TRAIT.FEY_ANCESTRY, TRAIT.TRANCE}
     size = SIZE.MEDIUM
     speed = 30
-    age = (80, 750)
+    age = (80, 1750)
     height = (4*12+6, 6*12+6)
     weight = (int(140*5/6+0.5), int(140*4/3+0.5))  #5/6 to 4/3 average
 
@@ -98,7 +98,7 @@ class Halfling(Race):
     speed = 25
     age = (20, 250)
     height = (2*12+8, 3*12+4)
-    weight = (int(42.5*5/6+0.5), int(42.5*4/3+0.5))  #40-45 in book
+    weight = 35, 60  #40-45 in book
 
 
 class LightfootHalfling(Halfling):
@@ -127,7 +127,8 @@ class Human(Race):
     racial_ability = Ability(strength=1, constitution=1, dexterity=1, intelligence=1, wisdom=1, charisma=1)
     age = (20, 100)
     height = (4*12+6, 7*12)
-    weight = (int(140*5/6+0.5), int(180*4/3+0.5))  #book doesn't say, taking 5/6 of 140, and 4/3 of 180
+#    weight = (int(140*5/6+0.5), int(180*4/3+0.5))  #book doesn't say, taking 5/6 of 140, and 4/3 of 180
+    weight = (110, 240)  #book doesn't say, taking 5/6 of 140, and 4/3 of 180
 
 
 class DragonBorn(Race):

@@ -96,9 +96,11 @@ class Weapon(items.Item):
                       equip_function=getattr(functions, d['function']) if d['function'] else None,
                       attack_function=getattr(functions, d['attack_function']) if d['attack_function'] else None,
                   )
+    # todo: confirm the values for damage are not harmed by not being explicitly integers
 
     def to_dict(self):
         d = super().to_dict()
+
         def wrap(obj):
             if type(obj) != type(""):
                 return json.dumps(obj)

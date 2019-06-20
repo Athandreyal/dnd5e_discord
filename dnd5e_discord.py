@@ -426,16 +426,17 @@ async def set_age(ctx, age=None):
         await ctx.send('You cannot select an age yet, call !new first')
         return
     if not incomplete_characters[ctx.author].get('race', None):
-        await ctx.send('You must have a Race before you can choose your age range')
+        await ctx.send('You must have a Race before you can set your age')
         return
     if age == 'reset':
         del incomplete_characters[ctx.author]['age']
         return
+    low, high = incomplete_characters[ctx.author]['player_race'].age
     if age is not None:
         try:
             age = int(age)
-            if not 0 <= age <= len(ages):
-                await ctx.send('That is not a valid choice')
+            if not 0 <= age <= len(ages) and not low <= age <= high:
+                await ctx.send('That is not a valid choice, the valid range is %d - %d' % (low, high))
                 return
         except ValueError:
             match = re.search(age, ' '.join(ages), re.IGNORECASE)
@@ -444,12 +445,17 @@ async def set_age(ctx, age=None):
                 return
             age = match.group()
             age = ages.index(age)
-        low, high = incomplete_characters[ctx.author]['player_race'].age
-        incomplete_characters[ctx.author]['age'] = dnd5e_interactions.get_value_from_curve(age, low, high)
+        if age < low:
+            low, high = incomplete_characters[ctx.author]['player_race'].age
+            incomplete_characters[ctx.author]['age'] = dnd5e_interactions.get_value_from_curve(age, low, high)
+        else:
+            incomplete_characters[ctx.author]['age'] = age
         return
     else:
         embed = discord.Embed(title='Age categories',
-                                   description='An age will be randomly chosen from the category range for the race')
+                              description='You can set your age directly within the range of %d - %d.  Or you '
+                                          'can select a category and an age will be randomly chosen from there' %
+                                          (low, high))
         number = -1
         for age in ages:
             number += 1
@@ -457,7 +463,7 @@ async def set_age(ctx, age=None):
 
         await ctx.send(embed=embed)
         await ctx.send(content='You may select an age range with the command !set_age <choice>, where choice is either '
-                               'the number, or name of the age range you want, it is not case sensitive')
+                               'the age you want, or the number or name of the age range you want - not case sensitive')
 
 
 @bot.command()
@@ -471,11 +477,12 @@ async def set_height(ctx, height=None):
     if height == 'reset':
         del incomplete_characters[ctx.author]['height']
         return
+    low, high = incomplete_characters[ctx.author]['player_race'].height
     if height is not None:
         try:
             height = int(height)
-            if not 0 <= height <= len(heights):
-                await ctx.send('That is not a valid choice')
+            if not 0 <= height <= len(heights) and not low <= height <= high:
+                await ctx.send('That is not a valid choice, the valid range is %d - %d' % (low, high))
                 return
         except ValueError:
             match = re.search(height, ' '.join(heights), re.IGNORECASE)
@@ -484,12 +491,17 @@ async def set_height(ctx, height=None):
                 return
             height = match.group()
             height = heights.index(height)
-        low, high = incomplete_characters[ctx.author]['player_race'].height
-        incomplete_characters[ctx.author]['height'] = dnd5e_interactions.get_value_from_curve(height, low, high)
+        if height < low:
+            low, high = incomplete_characters[ctx.author]['player_race'].height
+            incomplete_characters[ctx.author]['height'] = dnd5e_interactions.get_value_from_curve(height, low, high)
+        else:
+            incomplete_characters[ctx.author]['height'] = height
         return
     else:
         embed = discord.Embed(title='Height categories',
-                              description='A height will be randomly chosen from the category range for the race')
+                              description='You can set your height directly within the range of %d - %d.  Or you '
+                                          'can select a category and an height will be randomly chosen from there' %
+                                          (low, high))
         number = -1
         for height in heights:
             number += 1
@@ -497,8 +509,8 @@ async def set_height(ctx, height=None):
 
         await ctx.send(embed=embed)
         await ctx.send(content='You may select a height range with the command !set_height <choice>, where choice is '
-                               'either the number, or name of the height range you want, it is not case sensitive')
-
+                               'the height you want, or the number or name of the height range you want - not case '
+                               'sensitive')
 
 @bot.command()
 async def set_weight(ctx, weight=None):
@@ -511,11 +523,12 @@ async def set_weight(ctx, weight=None):
     if weight == 'reset':
         del incomplete_characters[ctx.author]['weight']
         return
+    low, high = incomplete_characters[ctx.author]['player_race'].weight
     if weight is not None:
         try:
             weight = int(weight)
-            if not 0 <= weight <= len(weights):
-                await ctx.send('That is not a valid choice')
+            if not 0 <= weight <= len(weights) and not low <= weight <= high:
+                await ctx.send('That is not a valid choice, the valid range is %d - %d' % (low, high))
                 return
         except ValueError:
             match = re.search(weight, ' '.join(weights), re.IGNORECASE)
@@ -524,12 +537,17 @@ async def set_weight(ctx, weight=None):
                 return
             weight = match.group()
             weight = weights.index(weight)
-        low, high = incomplete_characters[ctx.author]['player_race'].weight
-        incomplete_characters[ctx.author]['weight'] = dnd5e_interactions.get_value_from_curve(weight, low, high)
+        if weight < low:
+            low, high = incomplete_characters[ctx.author]['player_race'].weight
+            incomplete_characters[ctx.author]['weight'] = dnd5e_interactions.get_value_from_curve(weight, low, high)
+        else:
+            incomplete_characters[ctx.author]['weight'] = weight
         return
     else:
         embed = discord.Embed(title='Weight categories',
-                              description='A weight will be randomly chosen from the category range for the race')
+                              description='You can set your weight directly within the range of %d - %d.  Or you '
+                                          'can select a category and a weight will be randomly chosen from there' %
+                                          (low, high))
         number = -1
         for weight in weights:
             number += 1
@@ -537,7 +555,8 @@ async def set_weight(ctx, weight=None):
 
         await ctx.send(embed=embed)
         await ctx.send(content='You may select a weight range with the command !set_weight <choice>, where choice is '
-                               'either the number, or name of the weight range you want, it is not case sensitive')
+                               'the weight you want, or the number or name of the weight range you want - not case '
+                               'sensitive')
 
 
 # used for one line character creation
@@ -657,7 +676,7 @@ async def set_race(ctx, race=None):
                 return
             race = match.group()
         incomplete_characters[ctx.author]['race'] = race
-        incomplete_characters[ctx.author]['player_race'] = getattr(dnd5e_races, race)
+        incomplete_characters[ctx.author]['player_race'] = getattr(dnd5e_races, race.replace(' ', ''))
 
         return
     else:
