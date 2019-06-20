@@ -273,6 +273,9 @@ def remove_affector(token, host, what, where):
         if debug() is not False:
             debug('found', what, ', with affectors:', effect.affectors)
             try:
+                # I know its potentially unbound....thats why its in the try except,
+                # common pycharm, its better to ask forgiveness than permission, you should know this....
+                # noinspection PyUnboundLocalVariable
                 printout[effect] = effect.affectors.copy()
             except TypeError:
                 printout = {effect: effect.affectors.copy()}

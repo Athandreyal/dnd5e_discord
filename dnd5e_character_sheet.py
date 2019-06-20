@@ -67,6 +67,9 @@ class CharacterSheet(Entity):
         self.effects.init()
         if self.experience > self.get_next_level_xp():
             self.level_up()
+        if level > 0:  # fresh character init
+            self.hp_max = hp_dice + (level - 1) * abilities.CON_MOD
+            self.saving_throws = self.set_saving_throws(player_class.saving_throws)
 
 
     @property
@@ -196,26 +199,13 @@ class CharacterSheet(Entity):
 
     def to_dict(self):
         d = super().to_dict()
-        skills = self.player_class.skills.difference(self.background.SKILLS)
 
-        def pop(x):
-            try:
-                return x.pop().__name__
-            except KeyError:
-                return None
-
-        s = []
-        for n in range(4):
-            s.append(pop(skills))
         d['unspent_pts'] = self.unspent_ability
-        d['race'] = self.player_race.name
-        d['class'] = self.player_class.name
-        d['background'] = self.background.__name__
+        d['race'] = misc.get_full_qualname(self.player_race.__class__)
+        d['class'] = misc.get_full_qualname(self.player_class.__class__)
+        d['background'] = misc.get_full_qualname(self.background)
         d['path'] = None
-        d['skill1'] = s[0]
-        d['skill2'] = s[1]
-        d['skill3'] = s[2]
-        d['skill4'] = s[3]
+        d['skills'] = misc.get_full_qualname(self.proficiency_skills)
         d['str'] = self.abilities.STR
         d['con'] = self.abilities.CON
         d['dex'] = self.abilities.DEX
@@ -225,8 +215,33 @@ class CharacterSheet(Entity):
         d['hp_dice'] = self.hp_dice
         d['hp_current'] = self.hp
         d['uid'] = self.uid
-        # todo: when having a  path becomes a thing, save the path here
+        # todo: when having a path becomes a thing, save the path here
         return d
+
+    @staticmethod
+    def from_dict(d):
+        return CharacterSheet(name=d['name'],
+                              age=d['age'],
+                              height=d['height'],
+                              weight=d['weight'],
+                              uid=d['uid'],
+                              experience=d['experience'],
+                              level=d['level'],
+                              unspent=d['unspent_pts'],
+                              player_race=misc.get_attrib_from_qualname(RACE, d['race'])(),
+                              player_class=misc.get_attrib_from_qualname(CLASS, d['class'])(d['level']),
+                              skills=misc.get_sets_of_attribs_from_sets_of_qualnames(enums, d['skills']),
+                              background=misc.get_attrib_from_qualname(CLASS, d['background']),
+                              abilities=enums.Ability(strength=d['str'],
+                                                      constitution=d['con'],
+                                                      dexterity=d['dex'],
+                                                      intelligence=d['int'],
+                                                      wisdom=d['wis'],
+                                                      charisma=d['cha']),
+                              hp_dice=d['hp_dice'],
+                              hp_current=d['hp_current'],
+                              equipment=[weaponry.greataxe, armor.breastplate_Armor, None])
+
 
 
 def init_wulfgar():
@@ -316,13 +331,12 @@ if __name__ == '__main__':
         wulfgar.abilities.add(strength=1, constitution=1, dexterity=1, intelligence=1, wisdom=1, charisma=1)
         print(wulfgar.abilities)
     print('calling to_dict()')
-    while wulfgar.level < 17:
+    while wulfgar.level < 20:
         wulfgar.experience += 200
     w = wulfgar.to_dict()
     print(w)
-    ability = enums.Ability(strength=w['str'], constitution=w['con'], dexterity=w['dex'], intelligence=w['int'],
-                            wisdom=w['wis'], charisma=w['cha'])
-    wulfgar2 = CharacterSheet(w['name'], w['age'], w['height'], w['weight'], w['uid'], w['experience'], w['level'],
-                              w['unspent_pts'], w['race'], w['class'],
-                              [x for x in [w['skill1'], w['skill2'],w['skill3'], w['skill4']]if x is not None],
-                              w['background'], ability, w['hp_dice'], w['hp_current'], [weapon, _armor, shield])
+    w2 = CharacterSheet.from_dict(w)
+    w3 = w2.to_dict()
+    print(w3)
+    print(wulfgar.full_str())
+    print(w2.full_str())

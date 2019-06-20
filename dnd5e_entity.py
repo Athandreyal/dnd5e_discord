@@ -219,7 +219,7 @@ class Entity:
                 # noinspection PyUnresolvedReferences
                 damage += rolls.roll1
             damage += hand.bonus_damage
-            yield [d(damage) for d in hand.damage_type], hand.attack_function
+            yield [d(damage) for d in hand.damage_type], hand.function
 
     def set_saving_throws(self, throws):
         # todo: confirm if saving throws are modified by any races and include if so

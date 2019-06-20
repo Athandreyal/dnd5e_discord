@@ -166,7 +166,7 @@ GSTQ2H = Weapon(  # todo: config limiting
                     )
 
 if __name__ == '__main__':
-    print(greataxe)
+    print(greataxe.__class__)
     g = greataxe.to_dict()
     print(g)
     g2 = Weapon.from_dict(g)

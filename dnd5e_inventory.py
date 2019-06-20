@@ -1,7 +1,7 @@
 import dnd5e_weaponry as weaponry
 import dnd5e_armor as armor
 import dnd5e_enums as enums
-
+import dnd5e_misc as misc
 
 class Equipped:
     # todo: equip events - curses, attunement bonuses, etc
@@ -156,3 +156,25 @@ class Equipped:
                 'inventory': self.inventory.to_dict() if self.inventory else None
                 }
 
+    @staticmethod
+    def from_dict(d):
+        e = Equipped()
+        slots = ['left_hand', 'right_hand', 'armor', 'shield', 'back', 'jaw', 'collar', 'neck', 'gloves', 'fingers',
+                 'belt', 'shoulders', 'inventory']
+        for slot in slots:
+            if slot in d and d[slot]:
+                klass = misc.get_attrib_from_qualname(__import__(d[slot]['constructor'].split('.', 1)[0]),
+                                                          d[slot]['constructor'])
+                setattr(e, slot, klass.from_dict(d[slot]))
+        return e
+
+
+if __name__ == '__main__':
+    e = Equipped()
+    e.equip(weaponry.greataxe)
+    e.equip(armor.breastplate_Armor)
+    ed = e.to_dict()
+    print(ed)
+    e2 = Equipped.from_dict(ed)
+    ed2 = e2.to_dict()
+    print(ed2)

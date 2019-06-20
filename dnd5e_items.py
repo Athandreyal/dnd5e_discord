@@ -31,6 +31,7 @@ class Item:
             'type': wrap(misc.get_full_qualname(self.type)),
             'function': self.function.__name__ if self.function else None,
             'equip_to': wrap(misc.get_full_qualname(self.equip_to) if self.equip_to else None),
+            'constructor': misc.get_full_qualname(self.__class__)
         }
 
     # todo: item sales for economy purposes

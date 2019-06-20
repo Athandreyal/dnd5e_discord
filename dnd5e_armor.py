@@ -91,6 +91,7 @@ class Shield(items.Item):
                       defend_function=getattr(functions, d['defend_function']) if d['defend_function'] else None
                       )
 
+
 # example definitions
 plate_Armor = Armor(
                     name='Plate Armor',
