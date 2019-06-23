@@ -73,6 +73,7 @@ class CharacterSheet(Entity):
             self.level_up()
         if level > 0:  # fresh character init
             self.hp_max = hp_dice + (level - 1) * abilities.CON_MOD
+            self.hp = self.hp_max
             self.saving_throws = self.set_saving_throws(player_class.saving_throws)
 
 
