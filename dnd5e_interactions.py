@@ -8,6 +8,7 @@ import dnd5e_classes
 import dnd5e_enums
 import dnd5e_weaponry as weaponry
 import dnd5e_armor as armor
+import random
 
 # todo: database table: player UID and character names, and their specific UIDs
 # todo: database table: character UID and their specific init data, equipment UID, and inventory UID
@@ -324,56 +325,64 @@ def get_assist_target(self, party):
     return [touching, party[choice]]
 
 
-def choose_weapon(weapons):
-    print('What weapon will you attack with? ')
-    weapons = [x for x in weapons if x is not None]
-    print_choices(weapons)
-    choice = getint('Your chosen weapon is? ', 0, len(weapons)-1)
-    return weapons[choice]
+def choose_weapon(weapons, auto):
+    if not auto:
+        print('What weapon will you attack with? ')
+        weapons = [x for x in weapons if x is not None]
+        print_choices(weapons)
+        choice = getint('Your chosen weapon is? ', 0, len(weapons)-1)
+        return weapons[choice]
+    else:
+        # find the highest damage output, and run with it.
+        weapons = [x for x in weapons if x is not None]
+        # todo: improve the auto weapon selection to actually consider factors, not just what is most damaging
+        sorted(weapons, key=lambda x: (x.attack_die.sides//2 + 1) * x.attack_die.qty + x.bonus_damage +
+                                      (x.bonus_die.sides//2 + 1 if x.bonus_die else 1) *
+                                      (x.bonus_die.qty if x.bonus_die else 0), reverse=True)
+        return weapons[0]
 
 
 def get_target(targets):
     print('choose a target: ')
     target_list = [x.name + ' %dhp' % x.hp for x in targets]
-    print_choices(target_list)
+    print_choices(target_list, no_sort=True)
     return targets[getint('Choose a target: ', 0, len(targets)-1)]
 
 
-def ChooseCombatAction(*args, **kwargs):
-    # ActionAssist = None
-    # ActionAttack = None
-    # ActionDash = None
-    # ActionDisengage = None
-    # ActionDodge = None
-    # ActionHide = None
-    # ActionReady = None
-    # ActionSearch = None
-    # ActionUse = None
-    choices = kwargs['choices']
-    entity = kwargs['entity']
-    attack = kwargs['attack']
-    party1 = kwargs['party1']
-    party2 = kwargs['party2']
-
-    if entity.status.get(enums.STATUS.INCAPACITATED):
-        debug(entity.status)
-        debug(entity.name, 'is incapacitated, actions are not possible at this time')
-        return
-
-    entity.effects.before_action()
-
-    #    Ready = None  # todo: this is used to state circumstances and trigger on reaction, not sure how too deal with
-#    Search = None
-    debug(choices)
-    choices['Help'] = [False, ActionHelp, 'Your lookin at it...']
+def verify_can_attack(choices, attack, party1, party2):
     debug(attack.num < 1, not(party1.is_able() and party2.is_able()))
     if attack.num < 1 or not (party1.is_able() and party2.is_able()):
         del choices['Attack']
+
+
+def ChooseCombatAction(*args, **kwargs):
+    entity = kwargs['entity']
+    if entity.status.get(enums.STATUS.INCAPACITATED):
+        debug(entity.status, entity.name, 'is incapacitated, actions are not possible at this time')
+        return
+
+    choices = kwargs['choices']
+    attack = kwargs['attack']
+    party1 = kwargs['party1']
+    party2 = kwargs['party2']
+    choices['Help'] = [False, ActionHelp, 'Your lookin at it...']
+
+    entity.effects.before_action()
+
+    debug(choices)
+    verify_can_attack(choices, attack, party1, party2)
+
     entity.effects.is_action(choices)  # get trait enabled choices
     keys = sorted(choices.keys())
 
-    print_choices(keys)
-    choice = getint('%s, what is your choice?(number): '% entity.name, 0, len(keys)-1)
+    if not entity.auto:
+        print('\n\n', entity.name, ', what is your choice of action?')
+        print_choices(keys)
+        choice = getint('%s, what is your choice?(number): ' % entity.name, 0, len(keys)-1)
+    else:
+        debug(choices)
+        choice = 'Attack' if 'Attack' in choices else 'Dodge'
+        choice = keys.index(choice)
     function = choices.get(keys[choice], None)
 
     consume_turn, function, h = function

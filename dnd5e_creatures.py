@@ -24,6 +24,7 @@ class Creature(Entity):
         hp_current = hp_max
         super().__init__(name=name, traits=traits, abilities=abilities, hp=hp_current, hp_max=hp_max, skills=skills,
                          saving_throws=saving_throws, equipment=None, speed=speed, proficiency_bonus=None)
+        self.auto = True # except in special cases, creatures run automated
         self.creature_type = creature_type
         self.size = size
         self.armor_class = armor_class
@@ -39,14 +40,12 @@ class Creature(Entity):
             debug('installing trait', trait)
             trait(host=self)
 
-
     def dict_short(self):
         return {
                 'name': self.name,
                 'type': self.creature_type.__name__.capitalize(),
                 'hp': '{:,}'.format(self.hp) + '/' + '{:,}'.format(self.hp_max),
                 }
-
 
     def get_armor_class(self):
         # todo: throw defence event related to specific attack type, modify ac if necessary - may need to return

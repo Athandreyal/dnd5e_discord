@@ -35,7 +35,10 @@ class Presence:
 
 
 bot = commands.Bot(command_prefix='!', description='Dungeon Master')
-command_extensions = ['dnd5e_discord_misc', 'dnd5e_discord_party_actions', 'dnd5e_discord_character_creation']
+command_extensions = ['dnd5e_discord_misc',
+                      'dnd5e_discord_party_actions',
+                      'dnd5e_discord_character_creation',
+                      'dnd5e_discord_encounter']
 for extension in command_extensions:
     bot.load_extension(extension)
 

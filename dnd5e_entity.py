@@ -15,9 +15,10 @@ actions = {functions.ActionCombatAssist, functions.ActionCombatAttack, functions
            functions.ActionCombatDisengage, functions.ActionCombatDodge, functions.ActionCombatHide,
            functions.ActionCombatReady, functions.ActionCombatSearch, functions.ActionCombatUse}
 
+
 class Entity:
     def __init__(self, name=None, traits=None, hp=None, hp_max=None, effects=None, equipment=None, abilities=None,
-                 skills=None, saving_throws=None, speed=None, proficiency_bonus=None, unspent_ability=None):
+                 skills=None, saving_throws=None, speed=None, proficiency_bonus=None, unspent_ability=None, auto=False):
         self.name = name
         self.speed = speed
         if self.speed is None:
@@ -72,6 +73,7 @@ class Entity:
         self.d20 = Die(1, 20)
         self.location = Location()
         self.party = None   # reference to our party, so anywhere we have the entity object, we have the party too
+        self.auto = auto
 
 
     @property

@@ -29,7 +29,6 @@ class Weapon(items.Item):
         super().__init__(name=name, cost=cost, weight=weight, qty=qty, enum_type=enum_type, equip_to=wield_from,
                          function=attack_function)
         self.atk_type = atk_type
-#        self.wield_from = wield_from
         self.die1, self.die2 = None, None
         if '1_die' in damage:
             die_qty = damage['1_die']
@@ -41,7 +40,6 @@ class Weapon(items.Item):
             self.die2 = misc.Die(die_qty2, die_sides2)
 
         if 'bonus_die' in damage and damage['bonus_die'] is not None:
-            print(damage)
             self.bonus_die = misc.Die(damage['bonus_die'], damage['bonus_sides'])
         else:
             self.bonus_die = None

@@ -421,13 +421,11 @@ class ActionCombatAttack(TraitsBase):
         # permit players to choose their weapon equip type: hands, fingers(claws), jaw(bite)
         debug(attack.weapons)
         from dnd5e_interactions import choose_weapon
-        weapon = choose_weapon(attack.weapons)
+        weapon = choose_weapon(attack.weapons, entity.auto)
 #        for weapon in attack.weapons:
         if not entity.target or entity.target.hp < 1:
             encounter.get_target(entity, party1, party2)
         attack_roll, critical, target_ac = encounter.attack_roll(event, attack, entity, weapon)
-#                                defence = self.target_defence(entity, attack)
-#                                target_ac = defence.get_armor_class()
         if target_ac > attack_roll:  # miss
             encounter.miss(entity, weapon, attack_roll, target_ac)
         else:  # hit

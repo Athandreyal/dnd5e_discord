@@ -135,28 +135,6 @@ class Attack:
             roll = self.roll1
         return roll, roll == 20
 
-
-# def attack_roll(advantage=False, disadvantage=False, lucky=False):
-#     attack_die = Die(1, 20)
-#     roll1 = attack_die.roll()
-#     roll2 = attack_die.roll()
-#     if lucky:
-#         if roll1 == 1 or roll2 == 1:
-#             if roll1 == 1:
-#                 roll1 = attack_die.roll()
-#             else:
-#                 roll2 = attack_die.roll()
-#     if advantage or disadvantage and not advantage and disadvantage:
-#         # exclusive or, one or the other, but not both
-#         if advantage:
-#             roll = max(roll1, roll2)
-#         else:
-#             roll = min(roll1, roll2)
-#     else:
-#         roll = roll1
-#     critical = roll == 20
-#     return roll, critical
-
 # noinspection SpellCheckingInspection
 def getAdvantage(a, b):
     # todo: make this account for melee, ranges, and arcane

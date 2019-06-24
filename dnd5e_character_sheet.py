@@ -18,7 +18,7 @@ class CharacterSheet(Entity):
     #  if no one can see anyway and everyone knows where everyone is by default as a consequence.
 
     def __init__(self, name, age, height, weight, uid, experience, level, unspent, player_race, player_class, skills,
-                 background, abilities, hp_dice, hp_current, equipment):
+                 background, abilities, hp_dice, hp_current, equipment, auto):
         if level == 0:  # fresh character init
             self.level = 1
             hp_max = abilities.CON_MOD + player_class.hitDie
@@ -38,7 +38,7 @@ class CharacterSheet(Entity):
         traits.add(enums.TRAIT.NATURAL_DEFENCE)
         super().__init__(name=name, traits=traits, abilities=abilities, hp=hp_current, hp_max=hp_max, skills=skills,
                          saving_throws=player_class.saving_throws, equipment=equipment, speed=player_race.speed,
-                         proficiency_bonus=proficiency_bonus, unspent_ability=unspent)
+                         proficiency_bonus=proficiency_bonus, unspent_ability=unspent, auto=auto)
         self.age = age
         self.height = height
         self.weight = weight
@@ -97,7 +97,7 @@ class CharacterSheet(Entity):
                           experience=self.experience, level=self.level, player_race=self.player_race,
                           player_class=self.player_class, skills=self.proficiency_skills, background=self.background,
                           abilities=self.abilities, hp_dice=self.hp_dice, hp_current=None, equipment=self.equipment,
-                          unspent=self.unspent_ability)
+                          unspent=self.unspent_ability, auto=self.auto)
             self.effects.level_up()
 
     def get_next_level_xp(self):
@@ -245,7 +245,8 @@ class CharacterSheet(Entity):
                                                       charisma=d['cha']),
                               hp_dice=d['hp_dice'],
                               hp_current=d['hp_current'],
-                              equipment=[weaponry.greataxe, armor.breastplate_Armor, None])
+                              equipment=[weaponry.greataxe, armor.breastplate_Armor, None],
+                              auto=False)
 
 
 
@@ -276,7 +277,7 @@ def init_wulfgar():
     _armor = armor.breastplate_Armor  # todo: implement weapons/shields/armor
     shield = None  # todo: implement weapons/shields/armor
     return CharacterSheet(name, age, height, weight, uid, experience, level, unspent_pts, player_race, player_class,
-                          class_skills, background, abilities, hp_dice, hp_current, [weapon, _armor, shield])
+                          class_skills, background, abilities, hp_dice, hp_current, [weapon, _armor, shield], False)
 
 
 if __name__ == '__main__':

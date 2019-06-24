@@ -80,7 +80,7 @@ class Encounter:
 
     def do_battle(self):
         # from dnd5e_enums import EVENT
-
+        # score the choices, and use the penalty/bonus ratio to determine if the automation should spend actions on it?
         def print_parties():
             if not self.silent:
                 print('party1: ')
@@ -111,54 +111,36 @@ class Encounter:
                 if entity.hp > 0:
                     actions = {}
                     event.is_action(actions=actions)   # get the trait/spell/item enabled actions
-                    # choose an action
+
+                    # strip any unavailable or not implemented actions
                     for action in actions:
                         debug(action, actions[action][1] is not None)
                     remove = [action for action in actions if actions[action][1] is None]
                     for action in remove:
                         del actions[action]
                     debug(actions)
+
+                    #get attack data and throw the before_turn event
                     attack = entity.melee_attack()
+
+                    # ====================================
+                    # turn begins here
                     event.before_turn(attack=attack)
                     debug('attack num:', attack.num)
-
-                    #====================================
                     while actions:
+                        # ------------------------------------
+                        # action begins here
                         event.before_action()
                         action = interactions.ChooseCombatAction(choices=actions, entity=entity, attack=attack,
                                                                  party1=self.party1, party2=self.party2, encounter=self)
                         debug(action)
-                    # todo: present choice of action to script/both parties players
-                    # todo: a more intelligent target selection process than random choice
-                    # todo: complete this attack process from outside both CharacterSheet and Creature
-
-                    # interject here with action decision, allow one full move, and one full attack
-                    #   pass it attack to decide if attack is a viable choice
-#                    if action:
-#                        action(event=event, entity=entity, attack=attack)
-#                     while attack.num:
-#                         event.before_action()
-#                         # todo: move ^this^ when a choice is possible - its for all potential actions, not just attacks
-#                         # from here to end of block is a single attack action
-#                         event.attack(attack=attack)
-# #                        calculation = attack.calculation
-#                         # permit players to choose their attack type: arcane, ranged, melee.
-#                         # permit players to choose their weapon equip type: hands, fingers(claws), jaw(bite)
-#                         for weapon in attack.weapons:  # make this a choice
-#                             if weapon is not None and self.party2.is_able() and self.party1.is_able():  # move this
-#                                 # above the choice of action
-#                                 if not entity.target or entity.target.hp < 1:
-#                                     self.get_target(entity, self.party1, self.party2)
-#                                 attack_roll, critical, target_ac = self.attack_roll(event, attack, entity, weapon)
-# #                                defence = self.target_defence(entity, attack)
-# #                                target_ac = defence.get_armor_class()
-#                                 if target_ac > attack_roll:  # miss
-#                                     self.miss(entity, weapon, attack_roll, target_ac)
-#                                 else:  # hit
-#                                     # todo: currently assuming all attacks are melee attacks
-#                                     #  - allow selection and grabbing the appropriate functions.
-#                                     self.target_hit(entity, weapon, attack, critical)
                         event.after_action()
+                        # action ends here
+                        # ------------------------------------
+                    # turn ends here
+                    # ====================================
+                # todo: present choice of action to script/both parties players
+                # todo: a more intelligent target selection process than random choice
                 event.after_turn()
                 if debug(end='') is not False:
                     debug('ending %s\'s turn' % entity.name)
@@ -237,11 +219,15 @@ class Encounter:
         # permit players to choose their target
         from dnd5e_interactions import get_target
         if entity.party is 1:
-            entity.target = get_target(party2.able_bodied())
-#            entity.target = random.choice(party2.able_bodied())
+            if entity.auto:
+                entity.target = random.choice(party2.able_bodied())
+            else:
+                entity.target = get_target(party2.able_bodied())
         else:
-            entity.target = get_target(party1.able_bodied())
-#            entity.target = random.choice(party1.able_bodied())
+            if entity.auto:
+                entity.target = random.choice(party1.able_bodied())
+            else:
+                entity.target = get_target(party1.able_bodied())
 
     def target_hit(self, entity, weapon, attack, critical):
         damage_done, counter_effects = entity.target.receive_damage(attack.damage)
@@ -387,9 +373,12 @@ if __name__ == '__main__':
 
     player = character.init_wulfgar()
     player.name = 'Wulfgar 1'
+    player.auto = False
 
     player2 = character.init_wulfgar()
     player2.name = 'Wulfgar 2'
+    player2.auto = True
+
     players = player, player2
 
     while player.level < 1:
