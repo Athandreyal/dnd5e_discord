@@ -58,8 +58,18 @@ class character_creation(commands.Cog):
     # for creating new characters
     @commands.command(pass_context=True)
     async def new(self, ctx, parameter=None):
-        """prints the temporary player data, must be called first to start the process
-    parameter is optional, if given it is expected to be the string 'finish', used to finalise a character"""
+        """Starts the character creation process
+        prints the temporary player data,
+            empty for freshly initialised characters
+            populated with data as the user configures their new character
+        !new <parameter>
+        with no parameter, it inits a new character, or prints out the current progress
+        with parameter,
+          if parameter is finish
+              it finalises the character if it is complete, prints state if not complete
+          if parameter is reset
+              not implemented, going ato absorb the abortnew function here in time
+        """
         author = ctx.author.mention  # whoever called this instance of new
         author_name = ctx.author.name
         embed = discord.Embed(title=author_name + ' : Character Creation')
@@ -149,7 +159,10 @@ class character_creation(commands.Cog):
 
     @commands.command(pass_context=True)
     async def abortnew(self, ctx):
-        """used to cancel creating a new character"""
+        """used to cancel creating a new character
+        !abortnew
+        wipes out the temporary data for an in progress character
+        planned to be absorbed by '!new reset' in the relatively near future """
         if ctx.author.mention not in incomplete_characters:
             await ctx.send('You do not have an incomplete character to abort creating')
         del incomplete_characters[ctx.author.mention]
@@ -157,7 +170,11 @@ class character_creation(commands.Cog):
 
     @commands.command(pass_context=True)
     async def setname(self, ctx, name=None):
-        """sets the new character's name"""
+        """sets the new character's name
+        !setname <name>
+        if the name has spaces, wrap it in double quotes, ie
+            !setname "two names"
+        """
         if ctx.author.mention not in incomplete_characters:
             await ctx.send('You cannot set a name yet, call !new first')
             return
@@ -168,39 +185,74 @@ class character_creation(commands.Cog):
 
     @commands.command(pass_context=True)
     async def setstr(self, ctx, strength=None):
-        """sets the new character's strength"""
+        """sets the new character's strength
+        requires that you have set a class before it accepts input
+        !setstr <val>
+        assigns a character initialisation value from the default character array (15 14 13 12 10 8) which is
+        currently unassigned to another stat to Strength
+        """
         await self.set_scdiwc(ctx, 'strength', strength)
 
     @commands.command(pass_context=True)
     async def setcon(self, ctx, constitution=None):
-        """sets the new character's constitution"""
+        """sets the new character's constitution
+        requires that you have set a class before it accepts input
+        !setcon <val>
+        assigns a character initialisation value from the default character array (15 14 13 12 10 8) which is
+        currently unassigned to another stat to Constitution
+        """
         await self.set_scdiwc(ctx, 'constitution', constitution)
 
     @commands.command(pass_context=True)
     async def setdex(self, ctx, dexterity=None):
-        """sets the new character's dexterity"""
+        """sets the new character's dexterity
+        requires that you have set a class before it accepts input
+        !setdex <val>
+        assigns a character initialisation value from the default character array (15 14 13 12 10 8) which is
+        currently unassigned to another stat to Dexterity
+        """
         await self.set_scdiwc(ctx, 'dexterity', dexterity)
 
     @commands.command(pass_context=True)
     async def setint(self, ctx, intelligence=None):
-        """sets the new character's intelligence"""
+        """sets the new character's intelligence
+        requires that you have set a class before it accepts input
+        !setint <val>
+        assigns a character initialisation value from the default character array (15 14 13 12 10 8) which is
+        currently unassigned to another stat to intelligence
+        """
         await self.set_scdiwc(ctx, 'intelligence', intelligence)
 
     @commands.command(pass_context=True)
     async def setwis(self, ctx, wisdom=None):
-        """sets the new character's wisdom"""
+        """sets the new character's wisdom
+        requires that you have set a class before it accepts input
+        !setwis <val>
+        assigns a character initialisation value from the default character array (15 14 13 12 10 8) which is
+        currently unassigned to another stat to wisdom
+        """
         await self.set_scdiwc(ctx, 'wisdom', wisdom)
 
     @commands.command(pass_context=True)
     async def setcha(self, ctx, charisma=None):
-        """sets the new character's charisma"""
+        """sets the new character's charisma
+        requires that you have set a class before it accepts input
+        !setcha <val>
+        assigns a character initialisation value from the default character array (15 14 13 12 10 8) which is
+        currently unassigned to another stat to charisma
+        """
         await self.set_scdiwc(ctx, 'charisma', charisma)
 
     @commands.command(pass_context=True)
     async def setability(self, ctx, *args):
         """sets the new character's ability scores en-masse
-    expects up to 6 values, will assign to strength, constitution, dexterity, intelligence, wisdom, and charisma,
-    in that order until it is done, or runs out of values to assign."""
+        requires that you have set a class before it accepts input
+        !setability <str> <con> <dex> <int> <wis> <cha>
+        assigns up to 6 character initialisation values from the default character array
+        (15 14 13 12 10 8) which is currently unassigned to another stat to charisma
+
+        If a value is used for a second time, the first is dropped, and the second is applied.
+        """
         # for key in ['str', 'con', 'dex', 'int', 'wis', 'cha']:
         fields = ['str', 'con', 'dex', 'int', 'wis', 'cha']
         char = incomplete_characters[ctx.author.mention]
@@ -241,6 +293,7 @@ class character_creation(commands.Cog):
 
     @staticmethod
     async def set_scdiwc(ctx, tag, parameter):
+        """the set<tag> methods that set abilities individually call this method to do their work"""
         char = incomplete_characters[ctx.author.mention]
         if ctx.author.mention not in incomplete_characters:
             await ctx.send('You cannot set an attribute yet, call !new first')
@@ -288,8 +341,16 @@ class character_creation(commands.Cog):
 
     @commands.command(pass_context=True)
     async def setskills(self, ctx, skill=None, *args):
-        """sets the new character's proficiency skills.  Can be done one skill at a time, or many by listing the skills
-        desired"""
+        """sets the new character's proficiency skills.
+        requires that you have set a race, class, and background before it accepts input
+        !setskills <skill1>, <skill2>, ... <skilln>
+        accepts from 0 to n skills, case-insensitive
+        with no skills given,
+            it will print off the list of available skills, both named and numbered
+        for each skill given:
+            if the name, or number is one of those in the set provided, it will be assigned
+            note, if using numbers, list them in descending order( 3,2,1)
+        """
         if ctx.author.mention not in incomplete_characters:
             await ctx.send('You cannot select a skill yet, call !new first')
             return
@@ -349,8 +410,17 @@ class character_creation(commands.Cog):
 
     @commands.command(pass_context=True)
     async def setage(self, ctx, age=None):
-        """sets the new character's age, can be done either as a category(0-5), as the category names, or as a direct
-        value within the bounds of the race"""
+        """sets the new character's age
+        requires that you have set a race before it accepts input
+        !setage <parameter>
+        parameter can be one of a category value, category name, or direct age value.
+        ages are bound to those value for the given race, categories adjust accordingly
+        for <parameter>
+            integers with value 0-5 are considered to be categorical age assignments
+            text is considered to be categorical and must match on of those given, case-insensitive
+            integers with value where min <= value <= max, the age is assigned as given
+        if no parameter is given, the categories will be printed, and the valid range shown as well
+        """
         if ctx.author.mention not in incomplete_characters:
             await ctx.send('You cannot select an age yet, call !new first')
             return
@@ -397,8 +467,17 @@ class character_creation(commands.Cog):
 
     @commands.command(pass_context=True)
     async def setheight(self, ctx, height=None):
-        """sets the new character's height, can be done either as a category(0-5), as the category names, or as a direct
-        value within the bounds of the race"""
+        """sets the new character's height
+        requires that you have set a race before it accepts input
+        !setheight <parameter>
+        parameter can be one of a category value, category name, or direct height value, in inches.
+        heights are bound to those value for the given race, categories adjust accordingly
+        for <parameter>
+            integers with value 0-5 are considered to be categorical height assignments
+            text is considered to be categorical and must match on of those given, case-insensitive
+            integers with value where min <= value <= max, the height is assigned as given
+        if no parameter is given, the categories will be printed, and the valid range shown as well
+        """
         if ctx.author.mention not in incomplete_characters:
             await ctx.send('You cannot select an height yet, call !new first')
             return
@@ -445,8 +524,17 @@ class character_creation(commands.Cog):
 
     @commands.command(pass_context=True)
     async def setweight(self, ctx, weight=None):
-        """sets the new character's weight, can be done either as a category(0-5), as the category names, or as a direct
-        value within the bounds of the race"""
+        """sets the new character's weight
+        requires that you have set a race before it accepts input
+        !setweight <parameter>
+        parameter can be one of a category value, category name, or direct weight value, in lbs.
+        weights are bound to those value for the given race, categories adjust accordingly
+        for <parameter>
+            integers with value 0-5 are considered to be categorical weight assignments
+            text is considered to be categorical and must match on of those given, case-insensitive
+            integers with value where min <= value <= max, the weight is assigned as given
+        if no parameter is given, the categories will be printed, and the valid range shown as well
+        """
         if ctx.author.mention not in incomplete_characters:
             await ctx.send('You cannot select an height yet, call !new first')
             return
@@ -494,7 +582,12 @@ class character_creation(commands.Cog):
     # used for one line character creation
     @commands.command(pass_context=True)
     async def setnew(self, ctx, race=None, klass=None, background=None):
-        """shortcut for creating new characters.  Takes race, class, and background as parameters."""
+        """shortcut for creating new characters.
+        !setnew <race> <class> <background>
+        accepts from 0 to 3 arguments, doing nothing if no arguments are given
+        expects the text label for each of race, class, and background, case insensitive.
+        It will assign those parameters which match valid options, and note which ones do not
+        """
         if ctx.author.mention not in incomplete_characters:
             incomplete_characters[ctx.author.mention] = {}
             incomplete_characters[ctx.author.mention]['array'] = default_ability_array.copy()
@@ -527,7 +620,13 @@ class character_creation(commands.Cog):
 
     @commands.command(pass_context=True)
     async def setbackground(self, ctx, background=None):
-        """sets the new character's background, accepting input as either the background name, or its integer value"""
+        """sets the new character's background
+        !setbackground <background>
+        if no background is given, it prints off the valid choices, both text and numerical labels
+        if background is given
+            if numerical, it must be an integer, and it must be one of the options given
+            if text, it is case insensitive, it must be one of the options given, use quotes if it has spaces
+        """
         if ctx.author.mention not in incomplete_characters:
             await ctx.send('You cannot select a background yet, call !new first')
             return
@@ -589,7 +688,13 @@ class character_creation(commands.Cog):
 
     @commands.command(pass_context=True)
     async def setrace(self, ctx, race=None):
-        """sets the new character's race, accepting input as either the background name, or its integer value"""
+        """sets the new character's race
+        !setrace <race>
+        if no race is given, it prints off the valid choices, both text and numerical labels
+        if race is given
+            if numerical, it must be an integer, and it must be one of the options given
+            if text, it is case insensitive, it must be one of the options given, use quotes if it has spaces
+        """
         if ctx.author.mention not in incomplete_characters:
             await ctx.send('You cannot select a race yet, call !new first')
             return
@@ -668,7 +773,13 @@ class character_creation(commands.Cog):
 
     @commands.command(pass_context=True)
     async def setclass(self, ctx, klass=None):
-        """sets the new character's class, accepting input as either the background name, or its integer value"""
+        """sets the new character's class
+        !setclass <class>
+        if no class is given, it prints off the valid choices, both text and numerical labels
+        if class is given
+            if numerical, it must be an integer, and it must be one of the options given
+            if text, it is case insensitive, it must be one of the options given, use quotes if it has spaces
+        """
         if ctx.author.mention not in incomplete_characters:
             await ctx.send('You cannot select a class yet, call !new first')
             return

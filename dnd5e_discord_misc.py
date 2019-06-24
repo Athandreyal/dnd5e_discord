@@ -34,7 +34,7 @@ class general(commands.Cog):
         """A basic ping command"""
         await ctx.send(f"Pong! :ping_pong:\nTook {round(self.bot.latency * 1000, 2)} ms.")
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True, hidden=True)
     async def getchar(self, ctx):
         """temporary testing function"""
         int(ctx.author.mention)
@@ -84,30 +84,14 @@ class general(commands.Cog):
                     embed.description = desc
             await ctx.send(embed=embed)
 
-# irrelevant now that I'm passing discord.Member objects
-    # async def get_player_name_from_id(self, uid: discord.Member):
-    #     debug(uid.display_name)
-    #     return uid.display_name
-    #     player = [u.name for u in self.bot.users if u.id == uid]
-    #     if player:
-    #         return player
-    #     else:
-    #         return None
-
-# irrelevant now that I'm passing discord.Member objects
-    # async def get_player_id_by_name(self, ctx, name):
-    #     player = [u.id for u in self.bot.users if u.name == name]
-    #     print(player)
-    #     if player:
-    #         player_id = int(player[0])
-    #         return player_id
-    #     else:
-    #         await ctx.send('I don\'t know who %s is' % name)
-    #         return None
 
     @commands.command(pass_context=True)
     async def characters(self, ctx, player: discord.Member = None):
-        """printout of a player's characters, short form"""
+        """printout of a player's characters, short form
+        !characters <player_mention>
+        if no player_mention is given, it prints out your characters
+        if a player mention is given, it prints their characters
+        """
         # noinspection PyUnresolvedReferences
         player_id = player.mention if player else ctx.author.mention
         player = player.display_name.split('#')[0] if player else ctx.author.name

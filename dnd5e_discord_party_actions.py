@@ -13,21 +13,37 @@ class party_actions(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    # todo: implement a change leader code method
+
     @commands.command(pass_context=True)
     async def partycreate(self, ctx, leader, *args):
-        """creates a party, with the named leader as both the only member, and its leader"""
-        dnd5e_database.create_party(ctx.author.mention, leader)
+        """creates a party, with the named leader as both the only member, and its leader
+        !partycreate <character>
+        """
+        party = dnd5e_database.get_party_member(ctx.author.mention, leader)[0]
+        if not party:
+            dnd5e_database.create_party(ctx.author.mention, leader)
+        else:
+            await ctx.send(leader + ' is already in a party, leave that one before creating a new party.')
 
     @commands.command(pass_context=True)
     async def partyleave(self, ctx, character):
-        """leaves the party you are a member of\nsets a new leader if the leader leaves"""
+        """leaves the party you are a member of\nsets a new leader if the leader leaves
+        !partyleave <character>
+        drops character from a party if they are in one.
+        """
         # todo: echo 'leaving %s's party', where %s is player_id: character_name
         party = dnd5e_database.get_party_member(ctx.author.mention, character)[0]
-        dnd5e_database.leave_party(party, ctx.author.mention, character)
+        if party:
+            dnd5e_database.leave_party(party, ctx.author.mention, character)
 
     @commands.command(pass_context=True)
     async def partyjoin(self, ctx, player: discord.Member = None, leader=None, character=None):
-        """asks to join another player's character's party"""
+        """asks to join another player's character's party
+        !partyjoin <player_mention> <leader> <character>
+        Will have your character join the mentioned player's leader's party
+        Non-consensual in its current state, if oyu weren't in their party already, you are now....
+        """
         general = dnd5e_discord_misc.general
         if not player:
             await ctx.send('at minimum you must specify which player has the character you would like to invite')
@@ -62,7 +78,11 @@ class party_actions(commands.Cog):
 
     @commands.command(pass_context=True)
     async def partyinvite(self, ctx, leader=None, player: discord.Member = None, character=None):
-        """You must be the leader, invites another player's character to the party"""
+        """You must be the leader, invites another player's character to the party
+        !partyinvite <leader> <player_mention> <character>
+        Will invite the mentioned player's character to you're named leader's party
+        Non-consensual in its current state, if they weren't in a party before, they are now....
+        """
         # todo: figure out how to type check the leader type is actually the character leader, and not member
         #       short of letting the event on_command_error consume ALL exceptions and fuck up tracing, not sure what
         #       I can do here except accept that it will suffer faults, or rail in the user by not letting them type
@@ -101,7 +121,9 @@ class party_actions(commands.Cog):
 
     @commands.command(pass_context=True)
     async def partykick(self, ctx, leader=None, member=None):
-        """You must be the leader, kicks another player's character from the party"""
+        """You must be the party leader, kicks another player's character from the party
+        !partykick <leader> <character>
+        """
         if not leader:
             await ctx.send('You must state which character will be kicking members from his party')
             return
@@ -125,6 +147,13 @@ class party_actions(commands.Cog):
 
     @commands.command(pass_context=True)
     async def party(self, ctx, player: discord.Member = None, leader=None):
+        """party information,
+        !party <player_mention> <leader>
+        with no arguments, prints off your party leaders
+        given a mention, it prints off that user's leaders
+        given a mention and leader name, it prints of that user's leader's party
+        """
+
         player_id = player.mention if player else ctx.author.mention
         player = player.display_name.split('#')[0] if player else ctx.author.name
         if not player_id:

@@ -2,14 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ce54a110-60b4-4b2f-b783-675197c55daf" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/dnd5e_database.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dnd5e_discord_character_creation.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dnd5e_discord_misc.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dnd5e_discord_party_actions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/Amram.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/Amram.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dnd5e_character_sheet.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_character_sheet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dnd5e_discord.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_discord.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dnd5e_discord_character_creation.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_discord_character_creation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dnd5e_discord_misc.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_discord_misc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dnd5e_discord_party_actions.py" beforeDir="false" afterPath="$PROJECT_DIR$/dnd5e_discord_party_actions.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -24,8 +20,8 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/dnd5e_discord.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="156">
-                  <caret line="48" column="56" lean-forward="true" selection-start-line="48" selection-start-column="56" selection-end-line="48" selection-end-column="56" />
+                <state relative-caret-position="91">
+                  <caret line="43" column="48" selection-start-line="43" selection-start-column="47" selection-end-line="43" selection-end-column="48" />
                   <folding>
                     <element signature="e#0#24#0" expanded="true" />
                     <element signature="e#2242#2613#0" expanded="true" />
@@ -38,8 +34,8 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/dnd5e_discord_misc.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-302">
-                  <caret line="72" column="17" lean-forward="true" selection-start-line="72" selection-start-column="17" selection-end-line="72" selection-end-column="17" />
+                <state relative-caret-position="171">
+                  <caret line="87" column="24" selection-start-line="87" selection-start-column="24" selection-end-line="87" selection-end-column="24" />
                   <folding>
                     <element signature="e#0#32#0" expanded="true" />
                     <element signature="e#225#426#0" expanded="true" />
@@ -47,6 +43,7 @@
                     <element signature="e#784#901#0" expanded="true" />
                     <element signature="e#986#1906#0" expanded="true" />
                     <element signature="e#1992#2091#0" expanded="true" />
+                    <element signature="e#2235#3225#0" expanded="true" />
                     <element signature="e#3965#4522#0" expanded="true" />
                     <element signature="e#3990#4015#0" expanded="true" />
                   </folding>
@@ -81,40 +78,39 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/dnd5e_discord_character_creation.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="156">
-                  <caret line="12" column="37" selection-start-line="12" selection-start-column="37" selection-end-line="12" selection-end-column="37" />
+                <state relative-caret-position="275">
+                  <caret line="62" column="52" lean-forward="true" selection-start-line="62" selection-start-column="52" selection-end-line="62" selection-end-column="52" />
                   <folding>
                     <element signature="e#0#14#0" expanded="true" />
                     <element signature="e#2021#2035#0" expanded="true" />
-                    <element signature="e#2172#7756#0" expanded="true" />
                     <element signature="e#1820#2442#0" expanded="true" />
                     <element signature="e#4298#5024#0" expanded="true" />
                     <element signature="e#7224#7495#0" expanded="true" />
                     <element signature="e#7602#7855#0" expanded="true" />
                     <element signature="e#7955#7998#0" expanded="true" />
-                    <element signature="e#5820#5871#0" expanded="true" />
-                    <element signature="e#5932#5977#0" expanded="true" />
-                    <element signature="e#6041#6092#0" expanded="true" />
-                    <element signature="e#6150#6189#0" expanded="true" />
-                    <element signature="e#6249#6292#0" expanded="true" />
-                    <element signature="e#10085#11940#0" expanded="true" />
-                    <element signature="e#12014#14483#0" expanded="true" />
-                    <element signature="e#8582#8933#0" expanded="true" />
-                    <element signature="e#12330#15206#0" expanded="true" />
-                    <element signature="e#9729#9927#0" expanded="true" />
-                    <element signature="e#10362#10534#0" expanded="true" />
-                    <element signature="e#12221#12408#0" expanded="true" />
-                    <element signature="e#15393#17413#0" expanded="true" />
-                    <element signature="e#13841#14022#0" expanded="true" />
-                    <element signature="e#14274#14483#0" expanded="true" />
-                    <element signature="e#14545#16699#0" expanded="true" />
-                    <element signature="e#16003#16190#0" expanded="true" />
-                    <element signature="e#16451#16698#0" expanded="true" />
-                    <element signature="e#16759#18912#0" expanded="true" />
-                    <element signature="e#18217#18403#0" expanded="true" />
-                    <element signature="e#18664#18911#0" expanded="true" />
-                    <element signature="e#24729#25795#0" expanded="true" />
-                    <element signature="e#26386#29793#0" expanded="true" />
+                    <element signature="e#9844#10141#0" expanded="true" />
+                    <element signature="e#10239#10525#0" expanded="true" />
+                    <element signature="e#10628#10923#0" expanded="true" />
+                    <element signature="e#11077#11354#0" expanded="true" />
+                    <element signature="e#11463#11746#0" expanded="true" />
+                    <element signature="e#11841#13889#0" expanded="true" />
+                    <element signature="e#14613#17099#0" expanded="true" />
+                    <element signature="e#15972#16334#0" expanded="true" />
+                    <element signature="e#17205#20542#0" expanded="true" />
+                    <element signature="e#17511#17741#0" expanded="true" />
+                    <element signature="e#18236#18411#0" expanded="true" />
+                    <element signature="e#20351#20541#0" expanded="true" />
+                    <element signature="e#20636#23074#0" expanded="true" />
+                    <element signature="e#22358#22543#0" expanded="true" />
+                    <element signature="e#22823#23073#0" expanded="true" />
+                    <element signature="e#23174#25715#0" expanded="true" />
+                    <element signature="e#24980#25171#0" expanded="true" />
+                    <element signature="e#25460#25714#0" expanded="true" />
+                    <element signature="e#25815#28355#0" expanded="true" />
+                    <element signature="e#27621#27811#0" expanded="true" />
+                    <element signature="e#28100#28354#0" expanded="true" />
+                    <element signature="e#28522#30313#0" expanded="true" />
+                    <element signature="e#30421#33865#0" expanded="true" />
                     <element signature="e#21965#22139#0" expanded="true" />
                     <element signature="e#28485#28628#0" expanded="true" />
                     <element signature="e#22799#22938#0" expanded="true" />
@@ -170,17 +166,17 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/dnd5e_discord_party_actions.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="65">
-                  <caret line="5" column="37" selection-start-line="5" selection-start-column="37" selection-end-line="5" selection-end-column="37" />
+                <state relative-caret-position="-80">
+                  <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
                   <folding>
                     <element signature="e#0#32#0" expanded="true" />
                     <element signature="e#107#121#0" expanded="true" />
-                    <element signature="e#424#572#0" expanded="true" />
+                    <element signature="e#438#854#0" expanded="true" />
                     <element signature="e#684#1050#0" expanded="true" />
                     <element signature="e#1198#3246#0" expanded="true" />
                     <element signature="e#2579#4512#0" expanded="true" />
                     <element signature="e#5030#5919#0" expanded="true" />
-                    <element signature="e#4440#5503#0" expanded="true" />
+                    <element signature="e#6709#7794#0" expanded="true" />
                     <element signature="e#3484#3515#0" expanded="true" />
                   </folding>
                 </state>
@@ -212,7 +208,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>dnd5e_</find>
       <find>DARKV</find>
       <find>is_actiopn</find>
       <find>SHIELD</find>
@@ -242,6 +237,7 @@
       <find>.append</find>
       <find>!setback</find>
       <find>character</find>
+      <find>parameters given</find>
     </findStrings>
     <replaceStrings>
       <replace>{</replace>
@@ -317,9 +313,9 @@
         <option value="$PROJECT_DIR$/dnd5e_enums.py" />
         <option value="$PROJECT_DIR$/dnd5e_character_sheet.py" />
         <option value="$PROJECT_DIR$/dnd5e_discord.py" />
-        <option value="$PROJECT_DIR$/dnd5e_discord_misc.py" />
-        <option value="$PROJECT_DIR$/dnd5e_discord_party_actions.py" />
         <option value="$PROJECT_DIR$/dnd5e_database.py" />
+        <option value="$PROJECT_DIR$/dnd5e_discord_party_actions.py" />
+        <option value="$PROJECT_DIR$/dnd5e_discord_misc.py" />
         <option value="$PROJECT_DIR$/dnd5e_discord_character_creation.py" />
       </list>
     </option>
@@ -379,7 +375,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.dnd5e_encounter">
+  <component name="RunManager" selected="Python.dnd5e_discord">
     <configuration name="dnd5e_character_sheet" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="DnD 5e" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -487,9 +483,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.dnd5e_discord" />
         <item itemvalue="Python.dnd5e_encounter" />
         <item itemvalue="Python.dnd5e_character_sheet" />
-        <item itemvalue="Python.dnd5e_discord" />
         <item itemvalue="Python.dnd5e_discord_party_actions" />
         <item itemvalue="Python.dnd5e_discord_character_creation" />
       </list>
@@ -646,7 +642,14 @@
       <option name="project" value="LOCAL" />
       <updated>1561069905071</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="Party interactions now function in their initial state - create, join, &#10;leave, invite, kick, and a printout function exist and work with the &#10;database&#10;&#10;character_sheet:&#10;- added another assignment of self.hp_max to self.hp, given that &#10;  self.hp_max was relocated, the original assignment might not occur at&#10;  the right time, fixed&#10;&#10;database:&#10;- entirely new file with code evicted from dnd5e_discord&#10;- added the standard debug trace block at top of file&#10;- slight modifications to the database scheme&#10;- implemented the following methods: &#10;    set_party method, leave_party, get_parties, get_party_member, &#10;    create_party, parties, get_player_party_leaders, get_players_in_party, &#10;    &#10;discord:&#10;- kicked all all code not critical to initialising the bot&#10;  - database code got kicked out to dnd5e_database&#10;  - miscellaneous functions got kicked out to dnd5e_discord_misc&#10;  - reordered the on_ready logged in announcement to be the last line&#10;  &#10;discord_character_creation:&#10;- entirely new&#10;  - created from code kicked out of dnd5e_discord&#10;- added the standard debug trace block at top of file&#10;- fixed an issue with the default ability array being emptied and not&#10;  resetting on reset or new&#10;- fixed an issue with parameters being evaluated as strings, not ints&#10;&#10;discord_misc&#10;- entirely new&#10;  - created from code kicked out of dnd5e_discord&#10;- added the standard debug trace block at top of file&#10;- replaced the ping command with @Kensudo#0666's ping()&#10;- print_characters_short_form given a few named parameters, which &#10;  override its standard printout to print a given set of characters,&#10;  rather than always just the message author's&#10;- with the change over to discord.Member objects, eliminated the methods&#10;  get_player_name_from_id and get_player_id_from_name as they are now&#10;  irrelevant&#10;&#10;discord_party_actions&#10;- entirely new&#10;- added the standard debug trace block at top of file&#10;- implemented the bot command methods:&#10;    partycreate, partyleave, partyjoin, partyinvite, partykick, party">
+      <created>1561332530594</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1561332530594</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="TodoView">
@@ -767,7 +770,8 @@
     <MESSAGE value="CharacterSheet to_dict and from_dict now funciton!, Onwards to database!&#10;&#10;character_sheet:&#10;- fixed a bug in instantiating higher level characters, moved hp_max&#10;  initialisation to end of character.__init__&#10;- fixed a bug in instantiating higher level characters, moved saving &#10;  throws initialisation to end of character.__init__&#10;- completed implementation of the to_dict() method&#10;- implemented from_dict method&#10;- modified the test block to test the to/from dict methods&#10;&#10;entity:&#10;- corrected a bug introduced when changing weapon.attack_function to be &#10;  handled by item, which changed its attribute name from attack_function&#10;  to just function.&#10;&#10;inventory:&#10;- implemented to_dict method&#10;- implemented from_dict method&#10;- implemented test block to verify to/from dict methods&#10;&#10;items:&#10;- now stores the fully qualified classname in its to_dict method" />
     <MESSAGE value="Crash prevention update: &#10;  was crashing when merging player_class.traits for any class I hadn't &#10;    yet defined, now passively permits picking them.&#10;  was crashing when getting proficiencies for any class other than&#10;    barbarian because i hadn't yet defined them elsewhere, now done&#10;&#10;character_sheet:&#10;- traits = player_race.traits.union(player_class.traits) now contingent&#10;  on the race having defined traits - stops a crash&#10; &#10;classes:&#10;- Bard&#10;  - defined proficiencies&#10;  - defined saving throws&#10;- Cleric&#10;  - defined proficiencies&#10;  - defined saving throws&#10;- Druid&#10;  - defined proficiencies&#10;  - defined saving throws&#10;- Fighter&#10;  - defined proficiencies&#10;  - defined saving throws&#10;- Monk&#10;  - defined proficiencies&#10;  - defined saving throws&#10;- Paladin&#10;  - defined proficiencies&#10;  - defined saving throws&#10;- Ranger&#10;  - defined proficiencies&#10;  - defined saving throws&#10;- Rogue&#10;  - defined proficiencies&#10;  - defined saving throws&#10;- Sorcerer&#10;  - defined proficiencies&#10;  - defined saving throws&#10;- Warlock&#10;  - defined proficiencies&#10;  - defined saving throws&#10;- Wizard&#10;  - defined proficiencies&#10;  - defined saving throws&#10;&#10;discord:&#10;- database&#10;  - dropped fields user and guild fields from the players database table&#10;  - dropped fields skilln, n=1,2,3,4, from the table&#10;  - added skills field to the table&#10;  - dropped equipment field from the table&#10;    - potentially not necessary, or at least, not yet&#10;- retagged bot method get_player to get_players&#10;- implemented bot method get_player&#10;- new() now uses ctx.author.id for character UID&#10;- bot commands with underscores now truncated to no separator&#10;  - ie, set_name  -&gt;  setname&#10;- set_scdiwc now suggests only those abilities with more than zer points &#10;  assigned, so it suggests only the top two, like it should&#10;- fixed a crash in set_new for race names with spaces in them via&#10;  name.replace(' ', '')&#10;- fixed a crash in set_race for race names with spaces in them via&#10;  name.replace(' ', '')&#10;- setrace now clears age, height, and/or weight if they are defined and &#10;  out of range for the race you just set &#10;&#10;equipment:&#10;- to_dict now wrapped in a json.dumps to get it to be a string&#10;- from_dict now checks if given a string or not, to decide if it needs&#10;  to json.loads its parameter or not" />
     <MESSAGE value="mutiple saved characters per user are now a thing&#10;&#10;discord:&#10;- fixed the database schema to have a two field primary key using &#10;  ctx.author and character name.  You can have many characters, but only&#10;  one with each name.  There can be many with that name, under different &#10;  users.&#10;- retagged new parameter finish to parameter - probably going to absorb &#10;  the command abortnew under new reset or new abort or new cancel&#10;- changed setnew to indicate just what wasn't a valid choice&#10;&#10;enums:&#10;- have simplistic dummy __init__ functions to al the traits, so they &#10;  don't shit a brick when an entity tries to instantiate them." />
-    <option name="LAST_COMMIT_MESSAGE" value="mutiple saved characters per user are now a thing&#10;&#10;discord:&#10;- fixed the database schema to have a two field primary key using &#10;  ctx.author and character name.  You can have many characters, but only&#10;  one with each name.  There can be many with that name, under different &#10;  users.&#10;- retagged new parameter finish to parameter - probably going to absorb &#10;  the command abortnew under new reset or new abort or new cancel&#10;- changed setnew to indicate just what wasn't a valid choice&#10;&#10;enums:&#10;- have simplistic dummy __init__ functions to al the traits, so they &#10;  don't shit a brick when an entity tries to instantiate them." />
+    <MESSAGE value="Party interactions now function in their initial state - create, join, &#10;leave, invite, kick, and a printout function exist and work with the &#10;database&#10;&#10;character_sheet:&#10;- added another assignment of self.hp_max to self.hp, given that &#10;  self.hp_max was relocated, the original assignment might not occur at&#10;  the right time, fixed&#10;&#10;database:&#10;- entirely new file with code evicted from dnd5e_discord&#10;- added the standard debug trace block at top of file&#10;- slight modifications to the database scheme&#10;- implemented the following methods: &#10;    set_party method, leave_party, get_parties, get_party_member, &#10;    create_party, parties, get_player_party_leaders, get_players_in_party, &#10;    &#10;discord:&#10;- kicked all all code not critical to initialising the bot&#10;  - database code got kicked out to dnd5e_database&#10;  - miscellaneous functions got kicked out to dnd5e_discord_misc&#10;  - reordered the on_ready logged in announcement to be the last line&#10;  &#10;discord_character_creation:&#10;- entirely new&#10;  - created from code kicked out of dnd5e_discord&#10;- added the standard debug trace block at top of file&#10;- fixed an issue with the default ability array being emptied and not&#10;  resetting on reset or new&#10;- fixed an issue with parameters being evaluated as strings, not ints&#10;&#10;discord_misc&#10;- entirely new&#10;  - created from code kicked out of dnd5e_discord&#10;- added the standard debug trace block at top of file&#10;- replaced the ping command with @Kensudo#0666's ping()&#10;- print_characters_short_form given a few named parameters, which &#10;  override its standard printout to print a given set of characters,&#10;  rather than always just the message author's&#10;- with the change over to discord.Member objects, eliminated the methods&#10;  get_player_name_from_id and get_player_id_from_name as they are now&#10;  irrelevant&#10;&#10;discord_party_actions&#10;- entirely new&#10;- added the standard debug trace block at top of file&#10;- implemented the bot command methods:&#10;    partycreate, partyleave, partyjoin, partyinvite, partykick, party" />
+    <option name="LAST_COMMIT_MESSAGE" value="Party interactions now function in their initial state - create, join, &#10;leave, invite, kick, and a printout function exist and work with the &#10;database&#10;&#10;character_sheet:&#10;- added another assignment of self.hp_max to self.hp, given that &#10;  self.hp_max was relocated, the original assignment might not occur at&#10;  the right time, fixed&#10;&#10;database:&#10;- entirely new file with code evicted from dnd5e_discord&#10;- added the standard debug trace block at top of file&#10;- slight modifications to the database scheme&#10;- implemented the following methods: &#10;    set_party method, leave_party, get_parties, get_party_member, &#10;    create_party, parties, get_player_party_leaders, get_players_in_party, &#10;    &#10;discord:&#10;- kicked all all code not critical to initialising the bot&#10;  - database code got kicked out to dnd5e_database&#10;  - miscellaneous functions got kicked out to dnd5e_discord_misc&#10;  - reordered the on_ready logged in announcement to be the last line&#10;  &#10;discord_character_creation:&#10;- entirely new&#10;  - created from code kicked out of dnd5e_discord&#10;- added the standard debug trace block at top of file&#10;- fixed an issue with the default ability array being emptied and not&#10;  resetting on reset or new&#10;- fixed an issue with parameters being evaluated as strings, not ints&#10;&#10;discord_misc&#10;- entirely new&#10;  - created from code kicked out of dnd5e_discord&#10;- added the standard debug trace block at top of file&#10;- replaced the ping command with @Kensudo#0666's ping()&#10;- print_characters_short_form given a few named parameters, which &#10;  override its standard printout to print a given set of characters,&#10;  rather than always just the message author's&#10;- with the change over to discord.Member objects, eliminated the methods&#10;  get_player_name_from_id and get_player_id_from_name as they are now&#10;  irrelevant&#10;&#10;discord_party_actions&#10;- entirely new&#10;- added the standard debug trace block at top of file&#10;- implemented the bot command methods:&#10;    partycreate, partyleave, partyjoin, partyinvite, partykick, party" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/dnd5e_status_effects.py">
@@ -1230,49 +1234,32 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dnd5e_discord.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="156">
-          <caret line="48" column="56" lean-forward="true" selection-start-line="48" selection-start-column="56" selection-end-line="48" selection-end-column="56" />
-          <folding>
-            <element signature="e#0#24#0" expanded="true" />
-            <element signature="e#2242#2613#0" expanded="true" />
-            <element signature="e#2813#3177#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dnd5e_discord_misc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-302">
-          <caret line="72" column="17" lean-forward="true" selection-start-line="72" selection-start-column="17" selection-end-line="72" selection-end-column="17" />
-          <folding>
-            <element signature="e#0#32#0" expanded="true" />
-            <element signature="e#225#426#0" expanded="true" />
-            <element signature="e#563#577#0" expanded="true" />
-            <element signature="e#784#901#0" expanded="true" />
-            <element signature="e#986#1906#0" expanded="true" />
-            <element signature="e#1992#2091#0" expanded="true" />
-            <element signature="e#3965#4522#0" expanded="true" />
-            <element signature="e#3990#4015#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/dnd5e_discord_party_actions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="65">
-          <caret line="5" column="37" selection-start-line="5" selection-start-column="37" selection-end-line="5" selection-end-column="37" />
+        <state relative-caret-position="-80">
+          <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
           <folding>
             <element signature="e#0#32#0" expanded="true" />
             <element signature="e#107#121#0" expanded="true" />
-            <element signature="e#424#572#0" expanded="true" />
+            <element signature="e#438#854#0" expanded="true" />
             <element signature="e#684#1050#0" expanded="true" />
             <element signature="e#1198#3246#0" expanded="true" />
             <element signature="e#2579#4512#0" expanded="true" />
             <element signature="e#5030#5919#0" expanded="true" />
-            <element signature="e#4440#5503#0" expanded="true" />
+            <element signature="e#6709#7794#0" expanded="true" />
             <element signature="e#3484#3515#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dnd5e_discord.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="91">
+          <caret line="43" column="48" selection-start-line="43" selection-start-column="47" selection-end-line="43" selection-end-column="48" />
+          <folding>
+            <element signature="e#0#24#0" expanded="true" />
+            <element signature="e#2242#2613#0" expanded="true" />
+            <element signature="e#2813#3177#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1299,42 +1286,59 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/dnd5e_discord_misc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="171">
+          <caret line="87" column="24" selection-start-line="87" selection-start-column="24" selection-end-line="87" selection-end-column="24" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+            <element signature="e#225#426#0" expanded="true" />
+            <element signature="e#563#577#0" expanded="true" />
+            <element signature="e#784#901#0" expanded="true" />
+            <element signature="e#986#1906#0" expanded="true" />
+            <element signature="e#1992#2091#0" expanded="true" />
+            <element signature="e#2235#3225#0" expanded="true" />
+            <element signature="e#3965#4522#0" expanded="true" />
+            <element signature="e#3990#4015#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/dnd5e_discord_character_creation.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="156">
-          <caret line="12" column="37" selection-start-line="12" selection-start-column="37" selection-end-line="12" selection-end-column="37" />
+        <state relative-caret-position="275">
+          <caret line="62" column="52" lean-forward="true" selection-start-line="62" selection-start-column="52" selection-end-line="62" selection-end-column="52" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
             <element signature="e#2021#2035#0" expanded="true" />
-            <element signature="e#2172#7756#0" expanded="true" />
             <element signature="e#1820#2442#0" expanded="true" />
             <element signature="e#4298#5024#0" expanded="true" />
             <element signature="e#7224#7495#0" expanded="true" />
             <element signature="e#7602#7855#0" expanded="true" />
             <element signature="e#7955#7998#0" expanded="true" />
-            <element signature="e#5820#5871#0" expanded="true" />
-            <element signature="e#5932#5977#0" expanded="true" />
-            <element signature="e#6041#6092#0" expanded="true" />
-            <element signature="e#6150#6189#0" expanded="true" />
-            <element signature="e#6249#6292#0" expanded="true" />
-            <element signature="e#10085#11940#0" expanded="true" />
-            <element signature="e#12014#14483#0" expanded="true" />
-            <element signature="e#8582#8933#0" expanded="true" />
-            <element signature="e#12330#15206#0" expanded="true" />
-            <element signature="e#9729#9927#0" expanded="true" />
-            <element signature="e#10362#10534#0" expanded="true" />
-            <element signature="e#12221#12408#0" expanded="true" />
-            <element signature="e#15393#17413#0" expanded="true" />
-            <element signature="e#13841#14022#0" expanded="true" />
-            <element signature="e#14274#14483#0" expanded="true" />
-            <element signature="e#14545#16699#0" expanded="true" />
-            <element signature="e#16003#16190#0" expanded="true" />
-            <element signature="e#16451#16698#0" expanded="true" />
-            <element signature="e#16759#18912#0" expanded="true" />
-            <element signature="e#18217#18403#0" expanded="true" />
-            <element signature="e#18664#18911#0" expanded="true" />
-            <element signature="e#24729#25795#0" expanded="true" />
-            <element signature="e#26386#29793#0" expanded="true" />
+            <element signature="e#9844#10141#0" expanded="true" />
+            <element signature="e#10239#10525#0" expanded="true" />
+            <element signature="e#10628#10923#0" expanded="true" />
+            <element signature="e#11077#11354#0" expanded="true" />
+            <element signature="e#11463#11746#0" expanded="true" />
+            <element signature="e#11841#13889#0" expanded="true" />
+            <element signature="e#14613#17099#0" expanded="true" />
+            <element signature="e#15972#16334#0" expanded="true" />
+            <element signature="e#17205#20542#0" expanded="true" />
+            <element signature="e#17511#17741#0" expanded="true" />
+            <element signature="e#18236#18411#0" expanded="true" />
+            <element signature="e#20351#20541#0" expanded="true" />
+            <element signature="e#20636#23074#0" expanded="true" />
+            <element signature="e#22358#22543#0" expanded="true" />
+            <element signature="e#22823#23073#0" expanded="true" />
+            <element signature="e#23174#25715#0" expanded="true" />
+            <element signature="e#24980#25171#0" expanded="true" />
+            <element signature="e#25460#25714#0" expanded="true" />
+            <element signature="e#25815#28355#0" expanded="true" />
+            <element signature="e#27621#27811#0" expanded="true" />
+            <element signature="e#28100#28354#0" expanded="true" />
+            <element signature="e#28522#30313#0" expanded="true" />
+            <element signature="e#30421#33865#0" expanded="true" />
             <element signature="e#21965#22139#0" expanded="true" />
             <element signature="e#28485#28628#0" expanded="true" />
             <element signature="e#22799#22938#0" expanded="true" />
