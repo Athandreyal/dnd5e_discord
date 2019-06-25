@@ -159,12 +159,17 @@ class party_actions(commands.Cog):
         if not player_id:
             return
         if player and leader:
-            party_id = dnd5e_database.get_party_member(player_id, leader)[0]
-            characters = dnd5e_database.get_players_in_party(party_id)
-            await dnd5e_discord_misc.general.print_characters_short_form(ctx, player, player_id, characters,
-                                                                         number=True,
-                                                                         title='Members of %s\'s party' % leader)
-            return
+            party_member = dnd5e_database.get_party_member(player_id, leader)
+            if party_member:
+                party_id = party_member[0]
+                characters = dnd5e_database.get_players_in_party(party_id)
+                await dnd5e_discord_misc.general.print_characters_short_form(ctx, player, player_id, characters,
+                                                                             number=True,
+                                                                             title='Members of %s\'s party' % leader)
+                return
+            else:
+                await ctx.send(leader + ' is not in a party')
+                exit()
         leaders = dnd5e_database.get_player_party_leaders(player_id)
         if leaders:
             await dnd5e_discord_misc.general.print_characters_short_form(ctx, player, player_id, leaders,

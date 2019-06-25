@@ -2,6 +2,7 @@
 # prepended with owner of function, such as Giant_Spider being owner of a bite called GiantSpiderBite
 import dnd5e_enums as enums
 import dnd5e_misc as misc
+import asyncio
 # todo: assign traits which are actions, to entity actions list for choice as an action when interactive
 # todo: use status effects type class to pass/apply damage?
 
@@ -131,88 +132,6 @@ class TraitsBase:
 
     def remove_affector(self, what, where):
         misc.remove_affector(self, self.host, what, where)
-    # def add_affector(self, what, where):
-    #     if debug() is not False:
-    #         printout = {}
-    #         debug('attempting to add', what, 'in ', 'self.host.' + where)
-    #     where_set = getattr(self.host, where)
-    #     for effect in what:
-    #         where_set = getattr(self.host, where)
-    #         if effect in where_set:
-    #             debug('found', effect, ', with affectors:', effect.affectors)
-    #             affected = where_set.get(effect)
-    #             affected.affectors.append(self)
-    #         else:
-    #             debug('didn\'t find', effect, ', instantiating it with affector', self)
-    #             affected = effect()
-    #             affected.affectors.append(self)
-    #             where_set.add(affected)
-    #         debug(affected, 'affectors is now', affected.affectors)
-    #     debug('final self.host.' + where, 'is', where_set)
-    #
-    # def remove_affector(self, what, where):
-    #     remove = []
-    #     if debug() is not False:
-    #         printout = {}
-    #         debug('attempting to remove', what, 'in ', 'self.host.' + where)
-    #     where_set = getattr(self.host, where)
-    #     for w in what:
-    #         effect = where_set.get(w)
-    #         if debug() is not False:
-    #             debug('found', what, ', with affectors:', effect.affectors)
-    #             printout[effect] = effect.affectors.copy()
-    #         effect.affectors.remove(self)
-    #         if not effect.affectors:
-    #             debug('removing', self, 'from', effect.affectors)
-    #             remove.append(effect)
-    #     for r in remove:
-    #         debug('trying to remove', r, ', from', where, 'due to no affectors')
-    #         where_set.remove(r)
-    #         debug(where_set)
-
-     # def install(self):
-     #     self.host.effects.init.add(self)
-     #     self.host.effects.equip.add(self)
-     #     self.host.effects.unequip.add(self)
-     #     self.host.effects.before_battle.add(self)
-     #     self.host.effects.after_battle.add(self)
-     #     self.host.effects.before_turn.add(self)
-     #     self.host.effects.after_turn.add(self)
-     #     self.host.effects.before_action.add(self)
-     #     self.host.effects.after_action.add(self)
-     #     self.host.effects.attack.add(self)
-     #     self.host.effects.defend.add(self)
-     #     self.host.effects.critical.add(self)
-     #     self.host.effects.level_up.add(self)
-     #     self.host.effects.rest_long.add(self)
-     #     self.host.effects.rest_short.add(self)
-     #     self.host.effects.roll_attack.add(self)
-     #     self.host.effects.roll_damage.add(self)
-     #     self.host.effects.roll_dc.add(self)
-     #     self.host.effects.roll_hp.add(self)
-     #     self.host.effects.death.add(self)
-     #
-     # def uninstall(self):
-     #     self.host.effects.init.remove(self)
-     #     self.host.effects.equip.remove(self)
-     #     self.host.effects.unequip.remove(self)
-     #     self.host.effects.before_battle.remove(self)
-     #     self.host.effects.after_battle.remove(self)
-     #     self.host.effects.before_turn.remove(self)
-     #     self.host.effects.after_turn.remove(self)
-     #     self.host.effects.before_action.remove(self)
-     #     self.host.effects.after_action.remove(self)
-     #     self.host.effects.attack.remove(self)
-     #     self.host.effects.defend.remove(self)
-     #     self.host.effects.critical.remove(self)
-     #     self.host.effects.level_up.remove(self)
-     #     self.host.effects.rest_long.remove(self)
-     #     self.host.effects.rest_short.remove(self)
-     #     self.host.effects.roll_attack.remove(self)
-     #     self.host.effects.roll_damage.remove(self)
-     #     self.host.effects.roll_dc.remove(self)
-     #     self.host.effects.roll_hp.remove(self)
-     #     self.host.effects.death.remove(self)
 
 # keep trait objects in a big event pool, and throw the event name?
 # write each as a big block, and query to see what event we've been given?
@@ -256,10 +175,6 @@ class TraitNaturalDefence(TraitsBase):
 
     def init(self, *args, **kwargs):
         self.armor_class = self.host.abilities.DEX_MOD + 10
-
-#    def install(self, *args, **kwargs):
-#        self.host.effects.init.add(self.init)
-#        self.host.effects.defend.add(self.defend)
 
     def defend(self, *args, **kwargs):
         defence = kwargs['defence']
@@ -306,12 +221,12 @@ class ActionCombatAssist(TraitsBase):
         self.target = None
         self.touching = False
 
-    def assist(self, *args, **kwargs):
+    async def assist(self, *args, **kwargs):
         debug('assit called')
         self.is_assisting = True
         party = [x for x in self.host.Party.members if x is not self.host]
         from dnd5e_interactions import get_assist_target
-        self.touching, target = get_assist_target(self.host, party)
+        self.touching, target = await get_assist_target(self.host, party, **kwargs)
         misc.add_affector(self, target, enums.SKILL.Set(), 'advantage')
         if self.touching:
             misc.add_affector(self, target, enums.ADVANTAGE.ATTACK.Set(), 'advantage')
@@ -345,7 +260,8 @@ class ActionCombatDodge(TraitsBase):
             'for attacks against you'
         actions['Dodge'] = [True, self.dodge, h]
 
-    def dodge(self, *args, **kwargs):
+    async def dodge(self, *args, **kwargs):
+        debug('dodge action called')
         self.dodging = True
         self.add_affector({enums.ADVANTAGE.DEX}, 'advantage')
 
@@ -408,7 +324,7 @@ class ActionCombatAttack(TraitsBase):
         actions['Attack'] = [True, self.do_attack, h]
         # todo: implement combat attack
 
-    def do_attack(self, *args, **kwargs):
+    async def do_attack(self, *args, **kwargs):
         entity = kwargs['entity']
         event = entity.effects
         attack = kwargs['attack']
@@ -421,17 +337,25 @@ class ActionCombatAttack(TraitsBase):
         # permit players to choose their weapon equip type: hands, fingers(claws), jaw(bite)
         debug(attack.weapons)
         from dnd5e_interactions import choose_weapon
-        weapon = choose_weapon(attack.weapons, entity.auto)
+        weapon = await choose_weapon(attack.weapons, entity.auto, **kwargs)
+        debug(weapon)
 #        for weapon in attack.weapons:
         if not entity.target or entity.target.hp < 1:
-            encounter.get_target(entity, party1, party2)
+            await encounter.get_target(**kwargs)
         attack_roll, critical, target_ac = encounter.attack_roll(event, attack, entity, weapon)
         if target_ac > attack_roll:  # miss
-            encounter.miss(entity, weapon, attack_roll, target_ac)
-        else:  # hit
+            s = encounter.miss(entity, weapon, attack_roll, target_ac)
+        else:  # hitW
             # todo: currently assuming all attacks are melee attacks
             #  - allow selection and grabbing the appropriate functions.
-            encounter.target_hit(entity, weapon, attack, critical)
+            s = encounter.target_hit(entity, weapon, attack, critical)
+        if kwargs.get('action_message',None):
+            await kwargs['action_message'].edit(content = kwargs['action_message'].content + '\n' + s)
+        else:
+            if debug(end=''):
+                debug(s)
+            else:
+                print(s)
 
 
 class StatusBlinded(TraitsBase):
@@ -690,7 +614,9 @@ class ClassTraitRage(TraitsBase):
     equip = equip_change
     unequip = equip_change
 
-    def stop_raging(self, *args, **kwargs):
+    async def stop_raging(self, *args, **kwargs):
+        choices = kwargs['choices']
+        del choices['Un-enrage']  # cannot Un-enrage if you are already un-enraging this turn....
         self.raging = False
         self.rages -= 1
         self.duration = 0
@@ -702,7 +628,7 @@ class ClassTraitRage(TraitsBase):
             self.remove_affector({enums.DAMAGETYPE.BLUNT, enums.DAMAGETYPE.PIERCING,
                                   enums.DAMAGETYPE.SLASHING}, 'damage_resist')
 
-    def begin_raging(self, *args, **kwargs):
+    async def begin_raging(self, *args, **kwargs):
         choices = kwargs['choices']
         del choices['Enrage']  # cannot rage if you are already raging this turn....
         self.raging = True
@@ -777,7 +703,7 @@ class ClassTraitRecklessAttack(TraitsBase):
     def is_action(self, *args, **kwargs):
         actions = kwargs['actions']
 
-        def enable(self, *args, **kwargs):
+        async def enable(self, *args, **kwargs):
             self.activated = True
             choices = kwargs['choices']
             del choices['Reckless Attack']
@@ -953,7 +879,7 @@ class ClassTraitFrenzy(TraitsBase):
         if self.enraged and not self.frenzied:  # can frenzy only if enraged, and not currently frenzied
             actions = kwargs['actions']
 
-            def activate(*args, **kwargs):
+            async def activate(*args, **kwargs):
                 self.frenzied = True
             h = 'Allows an additional attack per turn, at the cost of a level of fatigue after the rage ends'
             actions['frenzy'] = [False, activate, h]

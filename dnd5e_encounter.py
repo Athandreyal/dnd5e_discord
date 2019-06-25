@@ -4,6 +4,8 @@ import dnd5e_creatures as creatures
 import random
 import dnd5e_misc as misc
 import dnd5e_interactions as interactions
+import asyncio
+
 
 debug = lambda *args, **kwargs: False  # dummy out the debug prints when disabled
 if debug():
@@ -59,7 +61,7 @@ class Encounter:
         self.reward = reward  # todo: implement gem/item/coin rewards
         self.debug_rewards = debug_rewards
         if party2 is None:  # generate one
-            self.generate_party2()
+            self.party2, self.reward = self.generate_party2(self.party1, debug_rewards, reward, difficulty)
         else:
             self.party2 = party2
 
@@ -67,37 +69,73 @@ class Encounter:
         self.silent = silent
         self.auto_run = auto_run
 
-#    actions:
-#       ActionAssist = None
-#       ActionAttack = None
-#       ActionDash = None
-#       ActionDisengage = None
-#       ActionDodge = None
-#       ActionHide = None
-#       ActionReady = None
-#       ActionSearch = None
-#       ActionUse = None
-
-    def do_battle(self):
-        # from dnd5e_enums import EVENT
+    async def do_battle(self, **kwargs):
         # score the choices, and use the penalty/bonus ratio to determine if the automation should spend actions on it?
-        def print_parties():
+        channel = None
+        author = None
+        ctx = kwargs.get('ctx', None)
+        self.m1 = None
+        self.m2 = None
+        self.m3 = None
+        self.m4 = None
+        self.init_print = True
+        bot = None
+        if ctx:
+            # create the party message windows
+            await ctx.send('discord encounter battle initiated')
+            channel = ctx.channel
+            bot = kwargs['bot']
+
+        def pred(m):
+            debug(m, m.author.id, author, m.channel, channel, m.author.id == author and m.channel == channel)
+            return m.author.id == author and m.channel == channel
+
+        async def print_parties():
+            debug('print parties', self.party1, self.party2)
             if not self.silent:
-                print('party1: ')
-                print(str(self.party1))
-                print('party2: ')
-                print(str(self.party2))
+                p1 = f'party1: \n{str(self.party1)}\n'
+                p2 = f'party2: \n{str(self.party2)}\n'
+                debug(p1, p2)
+                if ctx:
+                    debug('if ctx=True')
+                    # if anyone is not auto
+                    if any(not c.auto for c in self.party1.members+self.party2.members):
+                        debug('if any not auto = True')
+                        if self.init_print:
+                            debug('init_print')
+                            self.m1 = await ctx.send(p1)
+                            # last action message
+                            self.m2 = await ctx.send('Last Action:')
+                            # party1 party message
+                            self.m3 = await ctx.send(p2)
+                            # bot response/options message
+                            self.m4 = await ctx.send('Choices')
+                            self.init_print = False
+                        else:
+                            debug('not init_print,', self.m1, self.m3)
+                            await self.m1.edit(content=p1)
+                            # party1 party message
+                            await self.m3.edit(content=p2)
+                            debug('not init_print end,', self.m1, self.m3)
+                else:
+                    print(p1+p2)
 
         if not self.silent:
-            print('\n\n******************************************************')
-            print(self.difficulty + ' Difficulty Encounter start!\n')
-        print_parties()
+            s = '\n\n******************************************************\n'
+            s += self.difficulty + ' Difficulty Encounter start!'
+            if ctx:
+                await ctx.send(s)
+            else:
+                print(s)
+        await print_parties()
         # rank by initiative
         initiative_list = self.before_battle()
         while self.party1.is_able() and self.party2.is_able():
+            if ctx:
+                await self.m2.edit(content='Last Action:')
             for entity in initiative_list:  # take turns in order of initiative
                 event = entity.effects
-                debug(entity.name,'has', entity.hp, 'hp')
+                debug(entity.name, 'has', entity.hp, 'hp')
                 if debug:
                     debug('beginning %s\'s turn' % entity.name)
                 if entity.hp <= 0:  # test for incapacitated and roll for recovery
@@ -109,9 +147,14 @@ class Encounter:
                         else:
                             self.party2.members.append(entity)
                 if entity.hp > 0:
+                    try:
+                        author = int(entity.uid[2:-1])
+                    except TypeError:
+                        pass
+                    except AttributeError:
+                        author = -1
                     actions = {}
                     event.is_action(actions=actions)   # get the trait/spell/item enabled actions
-
                     # strip any unavailable or not implemented actions
                     for action in actions:
                         debug(action, actions[action][1] is not None)
@@ -119,39 +162,55 @@ class Encounter:
                     for action in remove:
                         del actions[action]
                     debug(actions)
-
                     #get attack data and throw the before_turn event
                     attack = entity.melee_attack()
-
                     # ====================================
                     # turn begins here
                     event.before_turn(attack=attack)
                     debug('attack num:', attack.num)
-                    while actions:
+                    while actions and any(x[0] for x in actions):
                         # ------------------------------------
                         # action begins here
                         event.before_action()
-                        action = interactions.ChooseCombatAction(choices=actions, entity=entity, attack=attack,
-                                                                 party1=self.party1, party2=self.party2, encounter=self)
+                        mn = self.m1 if entity.party == 1 else self.m3
+                        CombatAction = interactions.ChooseCombatAction
+                        action = await CombatAction(choices=actions, entity=entity, attack=attack,
+                                                    party1=self.party1, party2=self.party2,
+                                                    encounter=self, ctx=ctx, party_message=mn,
+                                                    action_message=self.m2, dialogue_message=self.m4,
+                                                    pred=pred, bot=bot)
+                        if action == interactions.ActionEndTurn:
+                            actions = dict()
                         debug(action)
                         event.after_action()
                         # action ends here
                         # ------------------------------------
+                        if not (self.party1.is_able() and self.party2.is_able()):
+                            break
                     # turn ends here
                     # ====================================
                 # todo: present choice of action to script/both parties players
                 # todo: a more intelligent target selection process than random choice
                 event.after_turn()
-                if debug(end='') is not False:
+                if debug():
                     debug('ending %s\'s turn' % entity.name)
                     debug('\n\n')
-                    print_parties()
-                    input()
+                    await print_parties()
+#                    input()
+                elif ctx:
+                    await print_parties()
         self.after_battle()
 
         if not self.silent:
-            print('\n\n' + str(self.party1), end='')
-            print('You have ' + ('won!' if self.party1.is_able() else 'lost!'))
+            if self.party1.is_able():
+                for char in self.party1.members:
+                    char.experience += self.reward['xp']
+                    # todo: add gold from kills
+            s = '\n\n' + str(self.party1) + 'You have ' + ('won!' if self.party1.is_able() else 'lost!')
+            if ctx:
+                await ctx.send(s)
+            else:
+                print(s)
         if not self.silent and not self.auto_run:
             input('press enter to continue')
         return self.reward if self.party1.is_able() else {'xp': 0, 'gold': 0}
@@ -215,67 +274,78 @@ class Encounter:
         return attack_roll, critical, target_ac
 
     @staticmethod
-    def get_target(entity, party1, party2):
+    async def get_target(**kwargs):
+        entity = kwargs['entity']
+        party1 = kwargs['party1']
+        party2 = kwargs['party2']
         # permit players to choose their target
         from dnd5e_interactions import get_target
         if entity.party is 1:
             if entity.auto:
                 entity.target = random.choice(party2.able_bodied())
             else:
-                entity.target = get_target(party2.able_bodied())
+                entity.target = await get_target(party2.able_bodied(), **kwargs)
         else:
             if entity.auto:
                 entity.target = random.choice(party1.able_bodied())
             else:
-                entity.target = get_target(party1.able_bodied())
+                entity.target = await get_target(party1.able_bodied(), **kwargs)
 
     def target_hit(self, entity, weapon, attack, critical):
         damage_done, counter_effects = entity.target.receive_damage(attack.damage)
+        s = ''
         if not self.silent and self.verbose:
-            print(entity.name + ' attacks ' + entity.target.name + ' with ' + str(weapon) +
-                  ' and does ' + str(damage_done) + (' critical' if critical else '') +
-                  ' damage')
+            s = entity.name + ' attacks ' + entity.target.name + ' with ' + str(weapon) + \
+               ' and does ' + str(damage_done) + (' critical' if critical else '') + \
+               ' damage'
         if entity.target.hp < 1:
-            self.incapacitate_target(entity.target)
+            s2 = self.incapacitate_target(entity.target)
+            if s2:
+                s += '\n' + s2
             entity.target = None
+        return s
 
     def miss(self, entity, weapon, attack_roll, target_ac):
         if not self.silent and self.verbose:
             if debug():
-                debug(entity.name + ' attacks ' + entity.target.name + ' with ' +
-                      str(weapon) + ' and misses because', target_ac, '>', attack_roll)
+                return entity.name + ' attacks ' + entity.target.name + ' with ' + \
+                       str(weapon) + ' and misses because', target_ac, '>', attack_roll
             else:
-                print(entity.name + ' attacks ' + entity.target.name + ' with ' +
-                      str(weapon) + ' and misses')
+                return entity.name + ' attacks ' + entity.target.name + ' with ' + \
+                       str(weapon) + ' and misses'
+        return ''
 
-    def incapacitate_target(self, target):
+    def incapacitate_target(self, target, **kwargs):
+        s = None
         if not self.silent and self.verbose:
-            print(target.name + ' has been incapacitated')
+            s = target.name + ' has been incapacitated'
         if target.party is 1:
             self.party1.members.remove(target)
         else:
             self.party2.members.remove(target)
+        return s
 
-    def generate_party2(self):
+    @staticmethod
+    def generate_party2(party1, debug_rewards=False, reward=None, difficulty='Normal'):
         # todo: make this obey region themes - no dryads among the undead....
         # get party  thresholds
         threshold = {}
-        for m in self.party1.members:
+        for m in party1.members:
             member_threshold = XP_thresholds[m.level]
             for k in member_threshold:
                 try:
                     threshold[k] += member_threshold[k]
                 except KeyError:
                     threshold[k] = member_threshold[k]
-        XP = threshold[self.difficulty]
+        XP = threshold[difficulty]
 
         creature_list = sorted(creatures.creatures, key=lambda x: x.challenge[1], reverse=True)
         hostile_xp = 0  # need this for calculating resultant xp?
-        player_average_level = sum((x.level for x in self.party1.members)) // len(self.party1.members)
+        player_average_level = sum((x.level for x in party1.members)) // len(party1.members)
 
         hostiles = []
 
-        party_mod = {1: 2,  2: 1,   3: 0,   4: -1, 5: -1,  6: -2}.get(self.party1.size(), -2) + 2
+        party_mod = {1: 2,  2: 1,   3: 0,   4: -1, 5: -1,  6: -2}.get(party1.size(), -2) + 2
         # the +2 offset is so that when combined with mobs_mod, we consider 0 as pos2, which allows the -2 to have value
         #  in the array as well
 
@@ -291,7 +361,8 @@ class Encounter:
                 creature_list.pop(0)
             elif difficulty not in ['Deadly', 'Hard'] and creature_list[0].challenge[0] >= player_average_level:
                 creature_list.pop(0)
-            elif difficulty not in ['Deadly', 'Hard', 'Normal'] and creature_list[0].challenge[0] >= int(player_average_level*.9):
+            elif difficulty not in ['Deadly', 'Hard', 'Normal'] and \
+                    creature_list[0].challenge[0] >= int(player_average_level*.9):
                 creature_list.pop(0)
             else:
                 if XP >= creature_list[0].challenge[1] * modifier:
@@ -300,14 +371,16 @@ class Encounter:
                     hostiles.append(creature_list[0]())
                 else:
                     creature_list.pop(0)
-        if not self.debug_rewards:
+        if not debug_rewards:
             reward_xp = int(hostile_xp ** 0.66)
         else:
             reward_xp = int(hostile_xp)
         reward_gold = 0
         # todo, restore sqrt exp reward once done testing faster growth rates
-        self.party2 = Party(*hostiles)
-        self.reward = {'xp': reward_xp, 'gold': reward_gold}
+        party2 = Party(*hostiles)
+        if not reward:
+            reward = {'xp': reward_xp, 'gold': reward_gold}
+        return party2, reward
 
 
 # todo: write a proper encounter generator which can poll the list of available creates, pick from there, and maintain
@@ -393,7 +466,8 @@ if __name__ == '__main__':
     while sum(p.hp for p in players) > 0 and player.level < 20:
         encounter = Encounter(party1=Party(player, player2), difficulty=difficulty, verbose=True, silent=False,
                               auto_run=True, debug_rewards=True)
-        rewards = encounter.do_battle()
+
+        rewards = asyncio.run(encounter.do_battle())
         result = 1 if rewards['xp'] > 0 else -1
         if result > 0:
             ttl_wins += 1

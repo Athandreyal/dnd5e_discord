@@ -4,7 +4,7 @@ import discord_token as token
 import dnd5e_database
 import dnd5e_discord_misc
 
-debug = lambda *args, **kwargs: True  # dummy out the debug prints when disabled
+debug = lambda *args, **kwargs: False  # dummy out the debug prints when disabled
 if debug():
     from trace import print as debug
     debug = debug
@@ -83,7 +83,7 @@ async def on_message(message):
     # allow bot on bot for the moment, need to have a test victim for stuff
     if message.author.bot:
         return  # avoid bot on bot action
-    dnd5e_discord_misc.log(f"{message.channel}: {message.author.name}: {message.content}")
+    dnd5e_discord_misc.log(f"{message.channel}: {message.author.id}: {message.author.name}: {message.content}")
     await bot.process_commands(message)
 
 bot.run(token.token())

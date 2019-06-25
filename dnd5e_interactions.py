@@ -8,7 +8,6 @@ import dnd5e_classes
 import dnd5e_enums
 import dnd5e_weaponry as weaponry
 import dnd5e_armor as armor
-import random
 
 # todo: database table: player UID and character names, and their specific UIDs
 # todo: database table: character UID and their specific init data, equipment UID, and inventory UID
@@ -185,42 +184,50 @@ def new():
 
     from dnd5e_character_sheet import CharacterSheet
     return CharacterSheet(name, age, height, weight, uid, experience, level, unspent_pts, player_race, player_class,
-                          skills, background, abilities, hp_dice, hp_current, [weapon, _armor, shield])
+                          skills, background, abilities, hp_dice, hp_current, [weapon, _armor, shield], False)
 
 
-def ActionHelp(*args, **kwargs):
-#    help_str = '''
-#    Assist:     Choose an ally, their next skill check has advantage, if within 5ft their next attack has advantage
-#    Attack:     Attack a hostile target with arcane spell/weapon, ranged weapon, or melee weapon
-#    Dash:       Cover ground equal to your speed
-#    Disengage:  Attempt to withdraw from foe without provoking an opportunity attack
-#    Dodge:      Attacks against you have disadvantage, Dexterity saving throws have advantage
-#    Hide:       Roll a stealth check, if successful, you gain stealth
-#    Use:        Use an object or item, such as potions
-#    '''
-#    print(help_str)
+async def ActionHelp(*args, **kwargs):
+
     choices = kwargs['choices']
+    s = 'Help:\n'
     for choice in choices:
         debug(choice, choices[choice])
         try:
             h = choices[choice][2]
         except IndexError:
             h = 'No help available'
-        print('\n\t', choice, '\n', h)
+        s += '\t\t' + choice + '\n' + h + '\n'
+    debug(len(s), s)
+    if kwargs.get('dialogue_message', None):
+        kwargs['dialogue_message'] = await kwargs['dialogue_message'].edit(content=s +
+                                                                           kwargs['dialogue_message'].content +
+                                                                           '\n send any message to clear the help')
+        await kwargs['bot'].wait_for('message', check=kwargs['pred'])
+    else:
+        print(s)
     return False
 
 
+async def ActionEndTurn(*args, **kwargs):
+    kwargs['choices'] = dict()
+
+
 # noinspection PyDefaultArgument
-def print_choices(full, partial=[], none=[], no_sort=False):
-    choices, s, w1, w2 = get_choices(full, partial, none, no_sort)
-    if debug() is not False:
-        debug(s)
-        debug(w1)
-        debug(w2)
+async def print_choices(full, partial=[], none=[], **kwargs):
+    choices, s, w1, w2 = get_choices(full, partial, none, kwargs.get('no_sort', False))
+    s = '\n' + s
+    if w1:
+        s += '\n' + w1
+    if w2:
+        s += '\n' + w2
+    if kwargs.get('dialogue_message', None):
+        kwargs['dialogue_message'] = await kwargs['dialogue_message'].edit(content=s)
     else:
-        print(s)
-        print(w1)
-        print(w2)
+        if debug() is not False:
+            debug(s)
+        else:
+            print(s)
     return choices
 
 
@@ -317,20 +324,50 @@ def get_implemented_names(source, dest):
     return full, partial, none
 
 
-def get_assist_target(self, party):
+async def get_assist_target(self, party, **kwargs):
     touching = True  # todo: confirm they are within 5ft or not
     names = [x.name for x in party if x.name is not self.name]
-    print_choices(names)
-    choice = getint('Which party member would you like to assist: ', 0, len(party)-1)
+    await print_choices(names, **kwargs)
+    if kwargs.get('dialogue_message', None):
+        kwargs['dialogue_message'] = kwargs['dialogue_message'].edit(content=kwargs['dialogue_message'].content +
+                                                                     'Which party member would you like to assist: ')
+        choice = -1
+        while choice < 0:
+            choice = await kwargs['bot'].wait_for('message', check=kwargs['pred'])
+            try:
+                choice = int(choice.content)
+                if not choice < len(party):
+                    choice = -1
+            except ValueError:
+                pass
+    else:
+        choice = getint('Which party member would you like to assist: ', 0, len(party)-1)
     return [touching, party[choice]]
 
 
-def choose_weapon(weapons, auto):
+async def choose_weapon(weapons, auto, **kwargs):
     if not auto:
-        print('What weapon will you attack with? ')
         weapons = [x for x in weapons if x is not None]
-        print_choices(weapons)
-        choice = getint('Your chosen weapon is? ', 0, len(weapons)-1)
+        await print_choices(weapons, **kwargs)
+        debug('choose_weapon entry not auto')
+        debug("kwargs['dialogue_message']", kwargs['dialogue_message'])
+        if kwargs.get('dialogue_message', None):
+            msg = kwargs['dialogue_message']
+            kwargs['dialogue_message'] = await msg.edit(content=msg.content + '\nYour chosen weapon is? : ')
+            choice = -1
+            while choice < 0:
+                choice = (await kwargs['bot'].wait_for('message', check=kwargs['pred'])).content
+                try:
+                    choice = int(choice)
+                    if not choice < len(weapons):
+                        debug('choice larger than weapons', choice, len(weapons))
+                        choice = -1
+                except ValueError:
+                    debug('choice not int', choice, type(choice))
+                    choice = -1
+        else:
+            choice = getint('Your chosen weapon is? ', 0, len(weapons)-1)
+        debug('exiting choose_weapon')
         return weapons[choice]
     else:
         # find the highest damage output, and run with it.
@@ -342,31 +379,47 @@ def choose_weapon(weapons, auto):
         return weapons[0]
 
 
-def get_target(targets):
-    print('choose a target: ')
+async def get_target(targets, **kwargs):
     target_list = [x.name + ' %dhp' % x.hp for x in targets]
-    print_choices(target_list, no_sort=True)
-    return targets[getint('Choose a target: ', 0, len(targets)-1)]
+    await print_choices(target_list, no_sort=True, **kwargs)
+    if kwargs.get('dialogue_message', None):
+        msg = kwargs['dialogue_message']
+        kwargs['dialogue_message'] = await msg.edit(content=msg.content + '\nChoose a target: ')
+        choice = -1
+        while choice < 0:
+            choice = await kwargs['bot'].wait_for('message', check=kwargs['pred'])
+            try:
+                choice = int(choice.content)
+                if not choice < len(target_list):
+                    choice = -1
+            except ValueError:
+                pass
+    else:
+        choice = getint('Choose a target: ', 0, len(targets)-1)
+    target = targets[choice]
+    return target
 
 
 def verify_can_attack(choices, attack, party1, party2):
     debug(attack.num < 1, not(party1.is_able() and party2.is_able()))
     if attack.num < 1 or not (party1.is_able() and party2.is_able()):
-        del choices['Attack']
+        try:
+            del choices['Attack']
+        except KeyError:
+            pass  # already removed...
 
 
-def ChooseCombatAction(*args, **kwargs):
+async def ChooseCombatAction(*args, **kwargs):
     entity = kwargs['entity']
     if entity.status.get(enums.STATUS.INCAPACITATED):
         debug(entity.status, entity.name, 'is incapacitated, actions are not possible at this time')
         return
-
     choices = kwargs['choices']
     attack = kwargs['attack']
     party1 = kwargs['party1']
     party2 = kwargs['party2']
     choices['Help'] = [False, ActionHelp, 'Your lookin at it...']
-
+    choices['End Turn'] = [True, ActionEndTurn, 'Ends the current turn']
     entity.effects.before_action()
 
     debug(choices)
@@ -376,9 +429,32 @@ def ChooseCombatAction(*args, **kwargs):
     keys = sorted(choices.keys())
 
     if not entity.auto:
-        print('\n\n', entity.name, ', what is your choice of action?')
-        print_choices(keys)
-        choice = getint('%s, what is your choice?(number): ' % entity.name, 0, len(keys)-1)
+        s = '\n' + entity.name + ', what is your choice of action?'
+        debug('choose action not auto')
+        debug("kwargs['dialogue_message']", kwargs['dialogue_message'])
+        if kwargs['ctx']:
+            debug('print_choices called')
+            await print_choices(keys, dialogue_message=kwargs['dialogue_message'])
+            debug('print_choices returned')
+            debug('edit message called')
+            await kwargs['dialogue_message'].edit(content=kwargs['dialogue_message'].content+s)
+            debug('edit message awaited')
+            choice = -1
+            while choice < 0:
+                choice = (await kwargs['bot'].wait_for('message', check=kwargs['pred'])).content
+                debug(choice, type(choice))
+                try:
+                    choice = int(choice)
+                    if not choice < len(keys):
+                        debug(choice, ' not less than len(keys):', len(keys))
+                        choice = -1
+                except ValueError:
+                    debug('valueerror,', choice, type(choice))
+                    choice = -1
+        else:
+            print(s)
+            await print_choices(keys)
+            choice = getint('%s, what is your choice?(number): ' % entity.name, 0, len(keys)-1)
     else:
         debug(choices)
         choice = 'Attack' if 'Attack' in choices else 'Dodge'
@@ -387,21 +463,23 @@ def ChooseCombatAction(*args, **kwargs):
 
     consume_turn, function, h = function
     debug(consume_turn, function)
-    function(*args, **kwargs)
+    debug(function)
+    await function(*args, **kwargs)
     debug(choices)
     debug('attack num:', attack.num)
+    debug('consume turn? ', consume_turn)
     if consume_turn:  # eliminate all the choices that consume the turn once the first action does so.
         remove = []
         for action in choices.keys():
             if choices[action][0]:
                 remove.append(action)
         for action in remove:
-            if action == 'Attack':
+            if action == 'Attack' and keys[choice] == 'Attack':
                 if attack.num < 1:
-                    debug(action)
+                    debug('removing ' + action)
                     del choices[action]
             else:
-                debug(action)
+                debug('removing ' + action)
                 del choices[action]
     del choices['Help']
 
